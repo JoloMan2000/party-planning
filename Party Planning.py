@@ -386,8 +386,7 @@ def render_guest_form() -> None:
         st.session_state.food = []
         st.session_state.food_freetext = ""
         st.session_state.songs = []
-        st.session_state.song_artist_input = ""
-        st.session_state.song_title_input = ""
+        st.session_state.song_input_generation = 0
         st.session_state.submitted = False
 
     render_hero("🌿 Bauwagen Gartenparty 🪵", "Sag uns, was du dir für unsere Gartenparty wünschst!")
@@ -445,13 +444,13 @@ def render_guest_form() -> None:
             st.subheader(f"🎵 Schritt 4 von {TOTAL_STEPS}: Songwünsche")
             st.caption("Trag Interpret und Songtitel ein und füge beliebig viele Songs hinzu.")
 
+            gen = st.session_state.song_input_generation
             col1, col2 = st.columns(2)
-            artist = col1.text_input("Interpret", key="song_artist_input")
-            title = col2.text_input("Songtitel", key="song_title_input")
+            artist = col1.text_input("Interpret", key=f"song_artist_input_{gen}")
+            title = col2.text_input("Songtitel", key=f"song_title_input_{gen}")
             if st.button("➕ Song hinzufügen", disabled=not (artist.strip() and title.strip())):
                 st.session_state.songs.append({"artist": artist.strip(), "title": title.strip()})
-                st.session_state.song_artist_input = ""
-                st.session_state.song_title_input = ""
+                st.session_state.song_input_generation += 1
                 st.rerun()
 
             if st.session_state.songs:
