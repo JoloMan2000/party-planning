@@ -1,11 +1,11 @@
 """
-Party-Planungs-Fragebogen 🌴☀️🍹
+Party-Planungs-Fragebogen 🌿🪵✨
 ==================================
 
-Linkbasierte Streamlit-App im Sommerparty-Design: Gäste öffnen einen Link und
-beantworten in drei Schritten (Name & Uhrzeit -> Getränke -> Essen) einen
-kurzen Fragebogen. Der Admin (du) öffnet einen zweiten, geheimen Link und
-bekommt eine Auswertung inkl. Einkaufsliste mit Mengen pro Person.
+Linkbasierte Streamlit-App im Bauwagen-Gartenparty-Design: Gäste öffnen einen
+Link und beantworten in drei Schritten (Name & Uhrzeit -> Getränke -> Essen)
+einen kurzen Fragebogen. Der Admin (du) öffnet einen zweiten, geheimen Link
+und bekommt eine Auswertung inkl. Einkaufsliste mit Mengen pro Person.
 
 Lokal ausführen:
     pip install streamlit
@@ -43,8 +43,14 @@ ADMIN_TOKEN = st.secrets.get("admin_token", "change-me-to-a-secret-value")
 
 DRINK_OPTIONS = [
     "Bier",
-    "Wein (Rot/Weiß)",
-    "Softdrinks (Cola, Fanta, Sprite)",
+    "Rotwein",
+    "Weißwein",
+    "Cola",
+    "Cola Zero",
+    "Fanta",
+    "Sprite",
+    "Red Bull",
+    "Alkoholfreies Bier",
     "Wasser",
 ]
 FOOD_OPTIONS = [
@@ -57,8 +63,14 @@ FOOD_OPTIONS = [
 # Geplante Menge pro Person, die die jeweilige Option ausgewählt hat: (Menge, Einheit)
 DRINK_QUANTITY_PER_PERSON = {
     "Bier": (2, "Flasche(n) à 0,5 l"),
-    "Wein (Rot/Weiß)": (0.25, "l"),
-    "Softdrinks (Cola, Fanta, Sprite)": (0.5, "l"),
+    "Rotwein": (0.25, "l"),
+    "Weißwein": (0.25, "l"),
+    "Cola": (0.5, "l"),
+    "Cola Zero": (0.5, "l"),
+    "Fanta": (0.5, "l"),
+    "Sprite": (0.5, "l"),
+    "Red Bull": (1, "Dose(n)"),
+    "Alkoholfreies Bier": (2, "Flasche(n) à 0,5 l"),
     "Wasser": (0.5, "l"),
 }
 FOOD_QUANTITY_PER_PERSON = {
@@ -68,73 +80,113 @@ FOOD_QUANTITY_PER_PERSON = {
     "Snacks/Chips": (50, "g"),
 }
 
-st.set_page_config(page_title="Summer Party Planung", page_icon="🌴", layout="centered")
+st.set_page_config(page_title="Bauwagen Gartenparty", page_icon="🌿", layout="centered")
 
-# --- Design: Sommerparty-Theme ------------------------------------------
+# --- Design: Bauwagen-Gartenparty-Theme ----------------------------------
 
 
-def inject_summer_theme() -> None:
+def inject_theme() -> None:
     st.markdown(
         """
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
         html, body, [class*="css"] {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Inter', sans-serif;
         }
 
         .stApp {
-            background: linear-gradient(160deg, #FFF7E8 0%, #FFE8C6 35%, #CDEEE8 100%);
+            background:
+                radial-gradient(circle at 15% 10%, rgba(198, 134, 66, 0.10) 0, transparent 40%),
+                radial-gradient(circle at 85% 0%, rgba(63, 91, 65, 0.12) 0, transparent 45%),
+                linear-gradient(170deg, #F7F1E3 0%, #F1E9D4 45%, #E7EFE3 100%);
         }
 
-        .summer-hero {
-            background: linear-gradient(120deg, #FF6F3C 0%, #FF9A3C 45%, #00A9A5 100%);
-            border-radius: 20px;
-            padding: 2rem 1.5rem;
+        .block-container {
+            padding-top: 2.5rem;
+            padding-bottom: 3rem;
+            max-width: 760px;
+        }
+
+        .party-hero {
+            position: relative;
+            background: linear-gradient(135deg, #3F2E22 0%, #4A342A 45%, #3F5B41 100%);
+            border-radius: 22px;
+            padding: 2.4rem 1.5rem 2.2rem 1.5rem;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(255, 111, 60, 0.25);
-            margin-bottom: 1.75rem;
+            box-shadow: 0 16px 40px rgba(63, 46, 34, 0.35);
+            margin-bottom: 2rem;
+            overflow: hidden;
         }
-        .summer-hero h1 {
-            color: white;
+        .party-hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(circle, rgba(255, 214, 130, 0.9) 2px, transparent 2.5px),
+                radial-gradient(circle, rgba(255, 214, 130, 0.55) 1.5px, transparent 2px);
+            background-size: 90px 70px, 130px 100px;
+            background-position: 10px 15px, 60px 55px;
+            opacity: 0.5;
+        }
+        .party-hero > * {
+            position: relative;
+        }
+        .party-hero h1 {
+            font-family: 'Fraunces', serif;
+            color: #FBF3E3;
             font-weight: 800;
-            font-size: 2.1rem;
+            font-size: 2.3rem;
             margin: 0;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            letter-spacing: 0.01em;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.25);
         }
-        .summer-hero p {
-            color: #FFF3E0;
-            font-weight: 600;
-            margin: 0.4rem 0 0 0;
-            font-size: 1rem;
+        .party-hero p {
+            color: #E4DAC4;
+            font-weight: 500;
+            margin: 0.55rem 0 0 0;
+            font-size: 1.05rem;
+        }
+
+        h2, h3 {
+            font-family: 'Fraunces', serif;
+            color: #3F2E22;
         }
 
         .stButton > button {
-            background: linear-gradient(120deg, #FF6F3C, #FF9A3C);
-            color: white;
+            background: linear-gradient(120deg, #C68642, #A8672F);
+            color: #FBF3E3;
             border: none;
             border-radius: 999px;
-            padding: 0.55rem 1.4rem;
+            padding: 0.55rem 1.5rem;
             font-weight: 600;
-            box-shadow: 0 6px 16px rgba(255, 111, 60, 0.35);
+            box-shadow: 0 6px 16px rgba(166, 103, 47, 0.35);
             transition: transform 0.15s ease, box-shadow 0.15s ease;
         }
         .stButton > button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(255, 111, 60, 0.45);
-            color: white;
+            box-shadow: 0 10px 22px rgba(166, 103, 47, 0.45);
+            color: #FBF3E3;
         }
 
         [data-testid="stMetricValue"] {
-            color: #FF6F3C;
+            color: #A8672F;
         }
 
-        h2, h3 {
-            color: #1B3B6F;
+        div[data-testid="stVerticalBlockBorderWrapper"] {
+            border-radius: 18px !important;
+            border-color: rgba(63, 91, 65, 0.25) !important;
+            background: rgba(255, 255, 255, 0.55);
+            box-shadow: 0 10px 26px rgba(63, 46, 34, 0.08);
         }
 
-        [data-testid="stExpander"], .stContainer, div[data-testid="stVerticalBlockBorderWrapper"] {
+        [data-testid="stExpander"] {
             border-radius: 16px !important;
+            border-color: rgba(63, 91, 65, 0.25) !important;
+        }
+
+        [data-testid="stProgress"] > div > div {
+            background-color: #3F5B41 !important;
         }
         </style>
         """,
@@ -145,7 +197,7 @@ def inject_summer_theme() -> None:
 def render_hero(title: str, subtitle: str) -> None:
     st.markdown(
         f"""
-        <div class="summer-hero">
+        <div class="party-hero">
             <h1>{title}</h1>
             <p>{subtitle}</p>
         </div>
@@ -293,17 +345,17 @@ def render_guest_form() -> None:
         st.session_state.food_freetext = ""
         st.session_state.submitted = False
 
-    render_hero("🌴 Summer Party 🍹", "Sag uns, was du dir für die Party wünschst!")
+    render_hero("🌿 Bauwagen Gartenparty 🪵", "Sag uns, was du dir für unsere Gartenparty wünschst!")
 
     if st.session_state.submitted:
-        st.success("Danke für deine Antworten! Wir sehen uns auf der Party! 🎉☀️")
+        st.success("Danke für deine Antworten! Bis bald am Bauwagen! 🔥🌙")
         return
 
     st.progress(st.session_state.step / 3)
 
     with st.container(border=True):
         if st.session_state.step == 1:
-            st.subheader("☀️ Schritt 1 von 3: Wer bist du & wann soll's losgehen?")
+            st.subheader("🌙 Schritt 1 von 3: Wer bist du & wann soll's losgehen?")
             st.session_state.name = st.text_input("Dein Name", value=st.session_state.name)
             st.session_state.start_time = st.time_input(
                 "Um wie viel Uhr soll die Party starten?", value=st.session_state.start_time
@@ -313,7 +365,7 @@ def render_guest_form() -> None:
                 st.rerun()
 
         elif st.session_state.step == 2:
-            st.subheader("🍹 Schritt 2 von 3: Getränke")
+            st.subheader("🍺 Schritt 2 von 3: Getränke")
             st.session_state.drinks = st.multiselect(
                 "Was soll's zu trinken geben?", DRINK_OPTIONS, default=st.session_state.drinks
             )
@@ -329,7 +381,7 @@ def render_guest_form() -> None:
                 st.rerun()
 
         elif st.session_state.step == 3:
-            st.subheader("🍔 Schritt 3 von 3: Essen")
+            st.subheader("🔥 Schritt 3 von 3: Essen")
             st.session_state.food = st.multiselect(
                 "Was soll's zu essen geben?", FOOD_OPTIONS, default=st.session_state.food
             )
@@ -357,7 +409,7 @@ def render_guest_form() -> None:
 
 
 def render_admin_view() -> None:
-    render_hero("🔑 Admin-Dashboard", "Auswertung & Einkaufsliste für deine Summer Party")
+    render_hero("🔑 Admin-Dashboard", "Auswertung & Einkaufsliste für deine Gartenparty")
     responses = load_responses()
 
     if not responses:
@@ -391,12 +443,12 @@ def render_admin_view() -> None:
         st.subheader(f"Gewünschte Startzeiten ({data['guest_count']} Antworten)")
         st.write(", ".join(sorted(data["times"])))
 
-        st.subheader("🍹 Getränke-Einkaufsliste")
+        st.subheader("🍺 Getränke-Einkaufsliste")
         any_drinks = False
         for item, count in data["drink_counts"].items():
             if count > 0:
                 any_drinks = True
-                amount, unit = DRINK_QUANTITY_PER_PERSON[item]
+                amount, unit = DRINK_QUANTITY_PER_PERSON.get(item, (1, "Portion(en)"))
                 st.write(f"- **{item}**: {count}x gewählt → {format_total(count, amount, unit)}")
         for item, count in data["drink_freetext_counts"].items():
             any_drinks = True
@@ -404,12 +456,12 @@ def render_admin_view() -> None:
         if not any_drinks:
             st.caption("Keine Getränke ausgewählt.")
 
-        st.subheader("🍔 Essen-Einkaufsliste")
+        st.subheader("🔥 Essen-Einkaufsliste")
         any_food = False
         for item, count in data["food_counts"].items():
             if count > 0:
                 any_food = True
-                amount, unit = FOOD_QUANTITY_PER_PERSON[item]
+                amount, unit = FOOD_QUANTITY_PER_PERSON.get(item, (1, "Portion(en)"))
                 st.write(f"- **{item}**: {count}x gewählt → {format_total(count, amount, unit)}")
         for item, count in data["food_freetext_counts"].items():
             any_food = True
@@ -420,7 +472,7 @@ def render_admin_view() -> None:
 
 # --- Einstiegspunkt -----------------------------------------------------------
 
-inject_summer_theme()
+inject_theme()
 
 query_params = st.query_params
 is_admin_token_set = ADMIN_TOKEN != "change-me-to-a-secret-value"
