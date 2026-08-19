@@ -33,6 +33,8 @@ from pathlib import Path
 
 import streamlit as st
 
+from drink_model import compute_drink_shopping_list
+
 # --- Konfiguration ------------------------------------------------------
 
 APP_DIR = Path(__file__).parent
@@ -61,18 +63,8 @@ FOOD_OPTIONS = [
 ]
 
 # Geplante Menge pro Person, die die jeweilige Option ausgewählt hat: (Menge, Einheit)
-DRINK_QUANTITY_PER_PERSON = {
-    "Bier": (2, "Flasche(n) à 0,5 l"),
-    "Rotwein": (0.25, "l"),
-    "Weißwein": (0.25, "l"),
-    "Cola": (0.5, "l"),
-    "Cola Zero": (0.5, "l"),
-    "Fanta": (0.5, "l"),
-    "Sprite": (0.5, "l"),
-    "Red Bull": (1, "Dose(n)"),
-    "Alkoholfreies Bier": (2, "Flasche(n) à 0,5 l"),
-    "Wasser": (0.5, "l"),
-}
+# Hinweis: Die Getränke-Mengen werden NICHT mehr hier berechnet, sondern über
+# das Demand-Allocation-Modell in drink_model.py (siehe compute_drink_shopping_list).
 FOOD_QUANTITY_PER_PERSON = {
     "Grillfleisch": (200, "g"),
     "Vegetarisch/Vegan": (150, "g"),
@@ -282,20 +274,13 @@ def format_total(count: int, amount: float, unit: str) -> str:
     return f"{total} {unit}"
 
 
-def build_shopping_list(responses: list[dict]) -> dict:
-    drink_counts = {opt: 0 for opt in DRINK_OPTIONS}
+def build_food_list(responses: list[dict]) -> dict:
     food_counts = {opt: 0 for opt in FOOD_OPTIONS}
-    drink_freetext_counts: dict[str, int] = {}
     food_freetext_counts: dict[str, int] = {}
     times = []
 
     for r in responses:
         times.append(r["start_time"])
-        for item in json.loads(r["drinks"]):
-            if item in drink_counts:
-                drink_counts[item] += 1
-        for item in parse_freetext_items(r["drinks_freetext"]):
-            drink_freetext_counts[item] = drink_freetext_counts.get(item, 0) + 1
         for item in json.loads(r["food"]):
             if item in food_counts:
                 food_counts[item] += 1
@@ -305,11 +290,22 @@ def build_shopping_list(responses: list[dict]) -> dict:
     return {
         "guest_count": len(responses),
         "times": times,
-        "drink_counts": drink_counts,
         "food_counts": food_counts,
-        "drink_freetext_counts": drink_freetext_counts,
         "food_freetext_counts": food_freetext_counts,
     }
+
+
+def responses_to_guests(responses: list[dict]) -> list[dict]:
+    """Wandelt SQLite-Antworten in das von drink_model.compute_drink_shopping_list
+    erwartete Gast-Dict-Format um."""
+    return [
+        {
+            "name": r["name"],
+            "drinks": json.loads(r["drinks"]),
+            "drinks_freetext": r["drinks_freetext"] or "",
+        }
+        for r in responses
+    ]
 
 
 def responses_to_csv(responses: list[dict]) -> str:
@@ -438,32 +434,56 @@ def render_admin_view() -> None:
             )
 
     if st.button("🛒 Einkaufsliste erstellen"):
-        data = build_shopping_list(responses)
+        food_data = build_food_list(responses)
 
-        st.subheader(f"Gewünschte Startzeiten ({data['guest_count']} Antworten)")
-        st.write(", ".join(sorted(data["times"])))
+        st.subheader(f"Gewünschte Startzeiten ({food_data['guest_count']} Antworten)")
+        st.write(", ".join(sorted(food_data["times"])))
 
         st.subheader("🍺 Getränke-Einkaufsliste")
-        any_drinks = False
-        for item, count in data["drink_counts"].items():
-            if count > 0:
-                any_drinks = True
-                amount, unit = DRINK_QUANTITY_PER_PERSON.get(item, (1, "Portion(en)"))
-                st.write(f"- **{item}**: {count}x gewählt → {format_total(count, amount, unit)}")
-        for item, count in data["drink_freetext_counts"].items():
-            any_drinks = True
-            st.write(f"- **{item}** (Freitext): {count}x gewünscht")
-        if not any_drinks:
-            st.caption("Keine Getränke ausgewählt.")
+        shopping = compute_drink_shopping_list(responses_to_guests(responses))
+
+        def render_drink_row(result) -> None:
+            review_flag = " ⚠️" if result.needs_review else ""
+            st.markdown(f"**{result.canonical_name}**{review_flag}")
+            st.write(
+                f"→ {result.purchase_count} × {result.purchase_unit} "
+                f"({result.actual_purchase_quantity_l:.2f} l gesamt)"
+            )
+            st.caption(result.explanation)
+            with st.expander("Details"):
+                st.write(f"Familie: {result.family}")
+                st.write(f"Unterstützende Gäste: {result.number_of_supporting_guests}")
+                st.write(f"Gewichteter Präferenz-Score: {result.weighted_preference_score}")
+                st.write(f"Berechneter Bedarf: {result.calculated_quantity_l} l")
+                st.write(f"Reserve: {result.reserve_percentage * 100:.0f}%")
+                st.write(f"Bedarf nach Reserve: {result.quantity_after_reserve_l} l")
+                st.write(f"Quelle: {result.source}")
+                st.write(f"Confidence: {result.confidence}")
+
+        render_drink_row(shopping.water)
+        if not shopping.drinks:
+            st.caption("Keine weiteren Getränke ausgewählt.")
+        for result in shopping.drinks:
+            render_drink_row(result)
+
+        if shopping.admin_hints:
+            with st.expander(f"⚠️ Freitext-Zuordnungen mit mittlerer Sicherheit ({len(shopping.admin_hints)})"):
+                for hint in shopping.admin_hints:
+                    st.write(f"- {hint}")
+
+        if shopping.unresolved_freetext:
+            with st.expander(f"❓ Nicht eindeutig zugeordnete Getränkewünsche ({len(shopping.unresolved_freetext)})"):
+                for item in shopping.unresolved_freetext:
+                    st.write(f"- „{item.raw_text}“ (von {item.guest_name})")
 
         st.subheader("🔥 Essen-Einkaufsliste")
         any_food = False
-        for item, count in data["food_counts"].items():
+        for item, count in food_data["food_counts"].items():
             if count > 0:
                 any_food = True
                 amount, unit = FOOD_QUANTITY_PER_PERSON.get(item, (1, "Portion(en)"))
                 st.write(f"- **{item}**: {count}x gewählt → {format_total(count, amount, unit)}")
-        for item, count in data["food_freetext_counts"].items():
+        for item, count in food_data["food_freetext_counts"].items():
             any_food = True
             st.write(f"- **{item}** (Freitext): {count}x gewünscht")
         if not any_food:
