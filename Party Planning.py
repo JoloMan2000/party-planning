@@ -46,6 +46,14 @@ import streamlit as st
 
 import spotify_playlist
 from drink_model import compute_drink_shopping_list
+from translations import (
+    ALL_LANGUAGES,
+    DEFAULT_LANGUAGE,
+    EXTRA_LANGUAGES,
+    PRIMARY_LANGUAGES,
+    t,
+    translate_option,
+)
 
 # --- Konfiguration ------------------------------------------------------
 
@@ -370,6 +378,30 @@ def responses_to_csv(responses: list[dict]) -> str:
     return buffer.getvalue()
 
 
+# --- Sprachauswahl (Landing Page) --------------------------------------------
+
+
+def render_language_landing() -> None:
+    """Icon-basierte Landing Page zur Sprachauswahl (8 Sprachen + 'weitere')."""
+    render_hero("🌿🪵✨", "Choose your language / Wähle deine Sprache")
+
+    cols = st.columns(3)
+    for i, (code, name, flag) in enumerate(PRIMARY_LANGUAGES):
+        with cols[i % 3]:
+            if st.button(f"{flag}\n{name}", key=f"lang_btn_{code}", use_container_width=True):
+                st.session_state.language = code
+                st.rerun()
+
+    with cols[len(PRIMARY_LANGUAGES) % 3]:
+        with st.popover("🌐\nMore", use_container_width=True):
+            options = ["–"] + [f"{flag} {name}" for _, name, flag in EXTRA_LANGUAGES]
+            choice = st.selectbox("Select language", options, key="extra_lang_select")
+            if choice != "–":
+                idx = options.index(choice) - 1
+                st.session_state.language = EXTRA_LANGUAGES[idx][0]
+                st.rerun()
+
+
 # --- Gäste-Fragebogen --------------------------------------------------------
 
 
@@ -377,6 +409,15 @@ TOTAL_STEPS = 4
 
 
 def render_guest_form() -> None:
+    if "language" not in st.session_state:
+        st.session_state.language = None
+
+    if st.session_state.language is None:
+        render_language_landing()
+        return
+
+    lang = st.session_state.language
+
     if "step" not in st.session_state:
         st.session_state.step = 1
         st.session_state.name = ""
@@ -389,72 +430,78 @@ def render_guest_form() -> None:
         st.session_state.song_input_generation = 0
         st.session_state.submitted = False
 
-    render_hero("🌿 Bauwagen Gartenparty 🪵", "Sag uns, was du dir für unsere Gartenparty wünschst!")
+    render_hero(t(lang, "landing_title"), t(lang, "hero_subtitle"))
 
     if st.session_state.submitted:
-        st.success("Danke für deine Antworten! Bis bald am Bauwagen! 🔥🌙")
+        st.success(t(lang, "submitted_msg"))
         return
 
     st.progress(st.session_state.step / TOTAL_STEPS)
 
     with st.container(border=True):
         if st.session_state.step == 1:
-            st.subheader(f"🌙 Schritt 1 von {TOTAL_STEPS}: Wer bist du & wann soll's losgehen?")
-            st.session_state.name = st.text_input("Dein Name", value=st.session_state.name)
+            st.subheader(t(lang, "step1_header", n=TOTAL_STEPS))
+            st.session_state.name = st.text_input(t(lang, "name_label"), value=st.session_state.name)
             st.session_state.start_time = st.time_input(
-                "Um wie viel Uhr soll die Party starten?", value=st.session_state.start_time
+                t(lang, "time_label"), value=st.session_state.start_time
             )
-            if st.button("Weiter ➡️", disabled=not st.session_state.name.strip()):
+            if st.button(t(lang, "btn_next"), disabled=not st.session_state.name.strip()):
                 st.session_state.step = 2
                 st.rerun()
 
         elif st.session_state.step == 2:
-            st.subheader(f"🍺 Schritt 2 von {TOTAL_STEPS}: Getränke")
+            st.subheader(t(lang, "step2_header", n=TOTAL_STEPS))
             st.session_state.drinks = st.multiselect(
-                "Was soll's zu trinken geben?", DRINK_OPTIONS, default=st.session_state.drinks
+                t(lang, "drinks_label"),
+                DRINK_OPTIONS,
+                default=st.session_state.drinks,
+                format_func=lambda opt: translate_option(lang, "drinks", opt),
             )
             st.session_state.drinks_freetext = st.text_input(
-                "Sonstige Getränkewünsche (mit Komma trennen)", value=st.session_state.drinks_freetext
+                t(lang, "drinks_freetext_label"), value=st.session_state.drinks_freetext
             )
             col1, col2 = st.columns(2)
-            if col1.button("⬅️ Zurück"):
+            if col1.button(t(lang, "btn_back")):
                 st.session_state.step = 1
                 st.rerun()
-            if col2.button("Weiter ➡️"):
+            if col2.button(t(lang, "btn_next")):
                 st.session_state.step = 3
                 st.rerun()
 
         elif st.session_state.step == 3:
-            st.subheader(f"🔥 Schritt 3 von {TOTAL_STEPS}: Essen")
+            st.subheader(t(lang, "step3_header", n=TOTAL_STEPS))
             st.session_state.food = st.multiselect(
-                "Was soll's zu essen geben?", FOOD_OPTIONS, default=st.session_state.food
+                t(lang, "food_label"),
+                FOOD_OPTIONS,
+                default=st.session_state.food,
+                format_func=lambda opt: translate_option(lang, "food", opt),
             )
             st.session_state.food_freetext = st.text_input(
-                "Sonstige Essenswünsche (mit Komma trennen)", value=st.session_state.food_freetext
+                t(lang, "food_freetext_label"), value=st.session_state.food_freetext
             )
             col1, col2 = st.columns(2)
-            if col1.button("⬅️ Zurück "):
+            if col1.button(t(lang, "btn_back"), key="btn_back_step3"):
                 st.session_state.step = 2
                 st.rerun()
-            if col2.button("Weiter ➡️ "):
+            if col2.button(t(lang, "btn_next"), key="btn_next_step3"):
                 st.session_state.step = 4
                 st.rerun()
 
         elif st.session_state.step == 4:
-            st.subheader(f"🎵 Schritt 4 von {TOTAL_STEPS}: Songwünsche")
-            st.caption("Trag Interpret und Songtitel ein und füge beliebig viele Songs hinzu.")
+            st.subheader(t(lang, "step4_header", n=TOTAL_STEPS))
+            st.caption(t(lang, "step4_caption"))
 
             gen = st.session_state.song_input_generation
             col1, col2 = st.columns(2)
-            artist = col1.text_input("Interpret", key=f"song_artist_input_{gen}")
-            title = col2.text_input("Songtitel", key=f"song_title_input_{gen}")
-            if st.button("➕ Song hinzufügen", disabled=not (artist.strip() and title.strip())):
+            artist = col1.text_input(t(lang, "artist_label"), key=f"song_artist_input_{gen}")
+            title = col2.text_input(t(lang, "title_label"), key=f"song_title_input_{gen}")
+            if st.button(t(lang, "btn_add_song"), disabled=not (artist.strip() and title.strip())):
                 st.session_state.songs.append({"artist": artist.strip(), "title": title.strip()})
                 st.session_state.song_input_generation += 1
                 st.rerun()
 
             if st.session_state.songs:
-                st.write("Deine Songwünsche:")
+                st.write(t(lang, "your_songs_label"))
                 for i, song in enumerate(st.session_state.songs):
                     row1, row2 = st.columns([5, 1])
                     row1.write(f"🎶 {song['artist']} – {song['title']}")
@@ -463,10 +510,10 @@ def render_guest_form() -> None:
                         st.rerun()
 
             col1, col2 = st.columns(2)
-            if col1.button("⬅️ Zurück  "):
+            if col1.button(t(lang, "btn_back"), key="btn_back_step4"):
                 st.session_state.step = 3
                 st.rerun()
-            if col2.button("✅ Absenden"):
+            if col2.button(t(lang, "btn_submit")):
                 save_response(
                     name=st.session_state.name.strip(),
                     start_time=st.session_state.start_time.strftime("%H:%M"),
@@ -479,30 +526,49 @@ def render_guest_form() -> None:
                 st.session_state.submitted = True
                 st.rerun()
 
+    if st.button(t(lang, "change_language")):
+        st.session_state.language = None
+        st.rerun()
+
 
 # --- Admin-Ansicht -----------------------------------------------------------
 
 
 def render_admin_view() -> None:
-    render_hero("🔑 Admin-Dashboard", "Auswertung & Einkaufsliste für deine Gartenparty")
+    if "admin_language" not in st.session_state:
+        st.session_state.admin_language = DEFAULT_LANGUAGE
+
+    lang_labels = [f"{flag} {name}" for _, name, flag in ALL_LANGUAGES]
+    lang_codes = [code for code, _, _ in ALL_LANGUAGES]
+    current_idx = lang_codes.index(st.session_state.admin_language)
+    chosen = st.selectbox(
+        t(st.session_state.admin_language, "admin_language_label"),
+        lang_labels,
+        index=current_idx,
+        key="admin_language_select",
+    )
+    st.session_state.admin_language = lang_codes[lang_labels.index(chosen)]
+    lang = st.session_state.admin_language
+
+    render_hero(t(lang, "admin_title"), t(lang, "admin_subtitle"))
     responses = load_responses()
 
     if not responses:
-        st.info("Noch keine Antworten vorhanden.")
-        render_spotify_section(responses)
+        st.info(t(lang, "no_responses_yet"))
+        render_spotify_section(responses, lang)
         return
 
-    st.metric("Anzahl Antworten", len(responses))
+    st.metric(t(lang, "metric_responses"), len(responses))
 
     st.download_button(
-        "⬇️ Antworten als CSV sichern",
+        t(lang, "btn_csv"),
         data=responses_to_csv(responses),
         file_name="party_antworten.csv",
         mime="text/csv",
-        help="Backup empfohlen, da Hosting-Speicher nicht dauerhaft garantiert ist.",
+        help=t(lang, "csv_help"),
     )
 
-    with st.expander("Alle Antworten (Rohdaten)"):
+    with st.expander(t(lang, "raw_responses_expander")):
         for r in responses:
             drinks = ", ".join(json.loads(r["drinks"])) or "–"
             food = ", ".join(json.loads(r["food"])) or "–"
@@ -510,17 +576,17 @@ def render_admin_view() -> None:
             extra_food = f" + {r['food_freetext']}" if r["food_freetext"] else ""
             songs = format_songs(r["songs"]) or "–"
             st.write(
-                f"**{r['name']}** – Startzeit: {r['start_time']} | "
-                f"Getränke: {drinks}{extra_drinks} | Essen: {food}{extra_food} | Songs: {songs}"
+                f"**{r['name']}** – {r['start_time']} | "
+                f"{drinks}{extra_drinks} | {food}{extra_food} | {songs}"
             )
 
-    if st.button("🛒 Einkaufsliste erstellen"):
+    if st.button(t(lang, "btn_create_shopping_list")):
         food_data = build_food_list(responses)
 
-        st.subheader(f"Gewünschte Startzeiten ({food_data['guest_count']} Antworten)")
+        st.subheader(t(lang, "times_header", n=food_data["guest_count"]))
         st.write(", ".join(sorted(food_data["times"])))
 
-        st.subheader("🍺 Getränke-Einkaufsliste")
+        st.subheader(t(lang, "drinks_shopping_header"))
         shopping = compute_drink_shopping_list(responses_to_guests(responses))
 
         def render_drink_row(result) -> None:
@@ -531,87 +597,86 @@ def render_admin_view() -> None:
                 f"({result.actual_purchase_quantity_l:.2f} l gesamt)"
             )
             st.caption(result.explanation)
-            with st.expander("Details"):
-                st.write(f"Familie: {result.family}")
-                st.write(f"Unterstützende Gäste: {result.number_of_supporting_guests}")
-                st.write(f"Gewichteter Präferenz-Score: {result.weighted_preference_score}")
-                st.write(f"Berechneter Bedarf: {result.calculated_quantity_l} l")
-                st.write(f"Reserve: {result.reserve_percentage * 100:.0f}%")
-                st.write(f"Bedarf nach Reserve: {result.quantity_after_reserve_l} l")
-                st.write(f"Quelle: {result.source}")
-                st.write(f"Confidence: {result.confidence}")
+            with st.expander(t(lang, "details_expander")):
+                st.write(f"{t(lang, 'family_label')}: {result.family}")
+                st.write(f"{t(lang, 'supporting_guests_label')}: {result.number_of_supporting_guests}")
+                st.write(f"{t(lang, 'weighted_score_label')}: {result.weighted_preference_score}")
+                st.write(f"{t(lang, 'calc_qty_label')}: {result.calculated_quantity_l} l")
+                st.write(f"{t(lang, 'reserve_label')}: {result.reserve_percentage * 100:.0f}%")
+                st.write(f"{t(lang, 'qty_after_reserve_label')}: {result.quantity_after_reserve_l} l")
+                st.write(f"{t(lang, 'source_label')}: {result.source}")
+                st.write(f"{t(lang, 'confidence_label')}: {result.confidence}")
 
         render_drink_row(shopping.water)
         if not shopping.drinks:
-            st.caption("Keine weiteren Getränke ausgewählt.")
+            st.caption(t(lang, "no_more_drinks"))
         for result in shopping.drinks:
             render_drink_row(result)
 
         if shopping.admin_hints:
-            with st.expander(f"⚠️ Freitext-Zuordnungen mit mittlerer Sicherheit ({len(shopping.admin_hints)})"):
+            with st.expander(t(lang, "review_hints_expander", n=len(shopping.admin_hints))):
                 for hint in shopping.admin_hints:
                     st.write(f"- {hint}")
 
         if shopping.unresolved_freetext:
-            with st.expander(f"❓ Nicht eindeutig zugeordnete Getränkewünsche ({len(shopping.unresolved_freetext)})"):
+            with st.expander(t(lang, "unresolved_expander", n=len(shopping.unresolved_freetext))):
                 for item in shopping.unresolved_freetext:
-                    st.write(f"- „{item.raw_text}“ (von {item.guest_name})")
+                    st.write(f"- „{item.raw_text}“ ({t(lang, 'from_guest', name=item.guest_name)})")
 
-        st.subheader("🔥 Essen-Einkaufsliste")
+        st.subheader(t(lang, "food_shopping_header"))
         any_food = False
         for item, count in food_data["food_counts"].items():
             if count > 0:
                 any_food = True
                 amount, unit = FOOD_QUANTITY_PER_PERSON.get(item, (1, "Portion(en)"))
-                st.write(f"- **{item}**: {count}x gewählt → {format_total(count, amount, unit)}")
+                label = translate_option(lang, "food", item)
+                st.write(f"- **{label}**: {count}x → {format_total(count, amount, unit)}")
         for item, count in food_data["food_freetext_counts"].items():
             any_food = True
-            st.write(f"- **{item}** (Freitext): {count}x gewünscht")
+            st.write(f"- **{item}**: {count}x")
         if not any_food:
-            st.caption("Keine Essenswünsche ausgewählt.")
+            st.caption(t(lang, "no_food"))
 
-    render_spotify_section(responses)
+    render_spotify_section(responses, lang)
 
 
-def render_spotify_section(responses: list[dict]) -> None:
-    st.subheader("🎵 Spotify-Playlist")
+def render_spotify_section(responses: list[dict], lang: str = DEFAULT_LANGUAGE) -> None:
+    st.subheader(t(lang, "spotify_header"))
 
     if not SPOTIFY_CONFIGURED:
-        st.info(
-            "Spotify ist noch nicht eingerichtet. Trage `spotify_client_id`, "
-            "`spotify_client_secret` und `spotify_redirect_uri` in den Secrets ein "
-            "(siehe README)."
-        )
+        st.info(t(lang, "spotify_not_configured"))
         return
 
     status_msg = st.session_state.pop("spotify_status_msg", None)
     if status_msg:
-        (st.success if status_msg.startswith("✅") else st.error)(status_msg)
+        is_success, msg_key, msg_kwargs = status_msg
+        text = t(lang, msg_key, **msg_kwargs)
+        (st.success if is_success else st.error)(text)
 
     if not spotify_playlist.is_connected():
         authorize_url = spotify_playlist.build_authorize_url(
             SPOTIFY_CLIENT_ID, SPOTIFY_REDIRECT_URI, state="admin"
         )
-        st.markdown(f"[🔗 Mit Spotify verbinden]({authorize_url})")
-        st.caption("Einmalig nötig – danach merkt sich die App die Verbindung.")
+        st.markdown(f"[{t(lang, 'spotify_connect_link')}]({authorize_url})")
+        st.caption(t(lang, "spotify_connect_caption"))
         return
 
     col1, col2 = st.columns([3, 1])
-    col1.success("Mit Spotify verbunden.")
-    if col2.button("Trennen"):
+    col1.success(t(lang, "spotify_connected"))
+    if col2.button(t(lang, "btn_disconnect")):
         spotify_playlist.disconnect()
         st.rerun()
 
-    if st.button("🎵 Spotify-Playlist erstellen"):
+    if st.button(t(lang, "btn_create_playlist")):
         songs = [
             {"artist": song["artist"], "title": song["title"], "guest_name": r["name"]}
             for r in responses
             for song in json.loads(r["songs"] or "[]")
         ]
         if not songs:
-            st.caption("Keine Songwünsche vorhanden.")
+            st.caption(t(lang, "no_songs"))
         else:
-            with st.spinner("Playlist wird erstellt..."):
+            with st.spinner(t(lang, "playlist_creating")):
                 try:
                     result = spotify_playlist.build_playlist_from_songs(
                         SPOTIFY_CLIENT_ID,
@@ -621,16 +686,17 @@ def render_spotify_section(responses: list[dict]) -> None:
                         playlist_description="Automatisch erstellt aus den Songwünschen der Gäste.",
                     )
                 except Exception as e:
-                    st.error(f"Playlist-Erstellung fehlgeschlagen: {e}")
+                    st.error(t(lang, "playlist_error", e=e))
                 else:
-                    st.success(
-                        f"Playlist erstellt mit {result['track_count']} Songs (Duplikate entfernt)."
-                    )
-                    st.markdown(f"[▶️ Playlist auf Spotify öffnen]({result['playlist_url']})")
+                    st.success(t(lang, "playlist_success", n=result["track_count"]))
+                    st.markdown(f"[{t(lang, 'playlist_open_link')}]({result['playlist_url']})")
                     if result["not_found"]:
-                        with st.expander(f"⚠️ Nicht gefundene Songs ({len(result['not_found'])})"):
+                        with st.expander(t(lang, "not_found_expander", n=len(result["not_found"]))):
                             for s in result["not_found"]:
-                                st.write(f"- {s['artist']} – {s['title']} (von {s['guest_name']})")
+                                st.write(
+                                    f"- {s['artist']} – {s['title']} "
+                                    f"({t(lang, 'from_guest', name=s['guest_name'])})"
+                                )
 
 
 def handle_spotify_callback(code: str) -> None:
@@ -638,9 +704,9 @@ def handle_spotify_callback(code: str) -> None:
         spotify_playlist.exchange_code_for_token(
             SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REDIRECT_URI, code
         )
-        st.session_state["spotify_status_msg"] = "✅ Spotify erfolgreich verbunden!"
+        st.session_state["spotify_status_msg"] = (True, "spotify_connect_success", {})
     except Exception as e:
-        st.session_state["spotify_status_msg"] = f"❌ Spotify-Verbindung fehlgeschlagen: {e}"
+        st.session_state["spotify_status_msg"] = (False, "spotify_connect_error", {"e": e})
 
 
 # --- Einstiegspunkt -----------------------------------------------------------
@@ -661,4 +727,5 @@ if is_admin:
 else:
     render_guest_form()
     st.divider()
-    st.caption("Bist du der Admin? Nutze deinen geheimen Admin-Link.")
+    footer_lang = st.session_state.get("language") or DEFAULT_LANGUAGE
+    st.caption(t(footer_lang, "admin_hint"))
