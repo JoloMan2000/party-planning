@@ -490,6 +490,7 @@ def render_admin_view() -> None:
 
     if not responses:
         st.info("Noch keine Antworten vorhanden.")
+        render_spotify_section(responses)
         return
 
     st.metric("Anzahl Antworten", len(responses))
