@@ -1,5 +1,6 @@
 responses.db
 .streamlit/secrets.toml
+.spotify_token.json
 __pycache__/
 *.pyc
 .venv/

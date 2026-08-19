@@ -3,12 +3,14 @@ Party-Planungs-Fragebogen 🌿🪵✨
 ==================================
 
 Linkbasierte Streamlit-App im Bauwagen-Gartenparty-Design: Gäste öffnen einen
-Link und beantworten in drei Schritten (Name & Uhrzeit -> Getränke -> Essen)
-einen kurzen Fragebogen. Der Admin (du) öffnet einen zweiten, geheimen Link
-und bekommt eine Auswertung inkl. Einkaufsliste mit Mengen pro Person.
+Link und beantworten in vier Schritten (Name & Uhrzeit -> Getränke -> Essen ->
+Songwünsche) einen kurzen Fragebogen. Der Admin (du) öffnet einen zweiten,
+geheimen Link und bekommt eine Auswertung inkl. Einkaufsliste mit Mengen pro
+Person sowie die Möglichkeit, aus den Songwünschen automatisch eine
+Spotify-Playlist zu erstellen.
 
 Lokal ausführen:
-    pip install streamlit
+    pip install -r requirements.txt
     streamlit run "Party Planning.py"
 
 Admin-Token:
@@ -20,6 +22,15 @@ Admin-Token:
 
     Der Admin-Bereich ist dann erreichbar über:
         <deine-app-url>/?admin=<admin_token>
+
+Spotify-Playlist (optional):
+    Für die Playlist-Erstellung im Admin-Bereich zusätzlich in den Secrets:
+
+        spotify_client_id = "..."
+        spotify_client_secret = "..."
+        spotify_redirect_uri = "<deine-app-url>/?admin=<admin_token>"
+
+    Details zur Einrichtung siehe README.
 """
 
 from __future__ import annotations
@@ -33,6 +44,7 @@ from pathlib import Path
 
 import streamlit as st
 
+import spotify_playlist
 from drink_model import compute_drink_shopping_list
 
 # --- Konfiguration ------------------------------------------------------
@@ -42,6 +54,12 @@ DB_PATH = APP_DIR / "responses.db"
 
 # Admin-Token kommt aus Streamlit Secrets (siehe Modul-Docstring oben).
 ADMIN_TOKEN = st.secrets.get("admin_token", "change-me-to-a-secret-value")
+
+# Spotify-Zugangsdaten kommen ebenfalls aus Streamlit Secrets (optional).
+SPOTIFY_CLIENT_ID = st.secrets.get("spotify_client_id", "")
+SPOTIFY_CLIENT_SECRET = st.secrets.get("spotify_client_secret", "")
+SPOTIFY_REDIRECT_URI = st.secrets.get("spotify_redirect_uri", "")
+SPOTIFY_CONFIGURED = bool(SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET and SPOTIFY_REDIRECT_URI)
 
 DRINK_OPTIONS = [
     "Bier",
@@ -213,10 +231,16 @@ def init_db() -> None:
                 drinks_freetext TEXT,
                 food TEXT NOT NULL,
                 food_freetext TEXT,
+                songs TEXT NOT NULL DEFAULT '[]',
                 submitted_at TEXT NOT NULL
             )
             """
         )
+        # Migration für Datenbanken, die vor der Songwunsch-Funktion angelegt wurden.
+        try:
+            conn.execute("ALTER TABLE responses ADD COLUMN songs TEXT NOT NULL DEFAULT '[]'")
+        except sqlite3.OperationalError:
+            pass  # Spalte existiert bereits
 
 
 def save_response(
@@ -226,13 +250,14 @@ def save_response(
     drinks_freetext: str,
     food: list[str],
     food_freetext: str,
+    songs: list[dict],
 ) -> None:
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute(
             """
             INSERT INTO responses
-                (name, start_time, drinks, drinks_freetext, food, food_freetext, submitted_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+                (name, start_time, drinks, drinks_freetext, food, food_freetext, songs, submitted_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 name,
@@ -241,6 +266,7 @@ def save_response(
                 drinks_freetext,
                 json.dumps(food),
                 food_freetext,
+                json.dumps(songs),
                 datetime.now().isoformat(timespec="seconds"),
             ),
         )
@@ -308,10 +334,26 @@ def responses_to_guests(responses: list[dict]) -> list[dict]:
     ]
 
 
+def format_songs(songs_json: str | None) -> str:
+    songs = json.loads(songs_json) if songs_json else []
+    return "; ".join(f"{s['artist']} – {s['title']}" for s in songs)
+
+
 def responses_to_csv(responses: list[dict]) -> str:
     buffer = io.StringIO()
     writer = csv.writer(buffer)
-    writer.writerow(["Name", "Startzeit", "Getränke", "Getränke (Freitext)", "Essen", "Essen (Freitext)", "Eingereicht am"])
+    writer.writerow(
+        [
+            "Name",
+            "Startzeit",
+            "Getränke",
+            "Getränke (Freitext)",
+            "Essen",
+            "Essen (Freitext)",
+            "Songwünsche",
+            "Eingereicht am",
+        ]
+    )
     for r in responses:
         writer.writerow(
             [
@@ -321,6 +363,7 @@ def responses_to_csv(responses: list[dict]) -> str:
                 r["drinks_freetext"] or "",
                 ", ".join(json.loads(r["food"])),
                 r["food_freetext"] or "",
+                format_songs(r["songs"]),
                 r["submitted_at"],
             ]
         )
@@ -328,6 +371,9 @@ def responses_to_csv(responses: list[dict]) -> str:
 
 
 # --- Gäste-Fragebogen --------------------------------------------------------
+
+
+TOTAL_STEPS = 4
 
 
 def render_guest_form() -> None:
@@ -339,6 +385,9 @@ def render_guest_form() -> None:
         st.session_state.drinks_freetext = ""
         st.session_state.food = []
         st.session_state.food_freetext = ""
+        st.session_state.songs = []
+        st.session_state.song_artist_input = ""
+        st.session_state.song_title_input = ""
         st.session_state.submitted = False
 
     render_hero("🌿 Bauwagen Gartenparty 🪵", "Sag uns, was du dir für unsere Gartenparty wünschst!")
@@ -347,11 +396,11 @@ def render_guest_form() -> None:
         st.success("Danke für deine Antworten! Bis bald am Bauwagen! 🔥🌙")
         return
 
-    st.progress(st.session_state.step / 3)
+    st.progress(st.session_state.step / TOTAL_STEPS)
 
     with st.container(border=True):
         if st.session_state.step == 1:
-            st.subheader("🌙 Schritt 1 von 3: Wer bist du & wann soll's losgehen?")
+            st.subheader(f"🌙 Schritt 1 von {TOTAL_STEPS}: Wer bist du & wann soll's losgehen?")
             st.session_state.name = st.text_input("Dein Name", value=st.session_state.name)
             st.session_state.start_time = st.time_input(
                 "Um wie viel Uhr soll die Party starten?", value=st.session_state.start_time
@@ -361,7 +410,7 @@ def render_guest_form() -> None:
                 st.rerun()
 
         elif st.session_state.step == 2:
-            st.subheader("🍺 Schritt 2 von 3: Getränke")
+            st.subheader(f"🍺 Schritt 2 von {TOTAL_STEPS}: Getränke")
             st.session_state.drinks = st.multiselect(
                 "Was soll's zu trinken geben?", DRINK_OPTIONS, default=st.session_state.drinks
             )
@@ -377,7 +426,7 @@ def render_guest_form() -> None:
                 st.rerun()
 
         elif st.session_state.step == 3:
-            st.subheader("🔥 Schritt 3 von 3: Essen")
+            st.subheader(f"🔥 Schritt 3 von {TOTAL_STEPS}: Essen")
             st.session_state.food = st.multiselect(
                 "Was soll's zu essen geben?", FOOD_OPTIONS, default=st.session_state.food
             )
@@ -388,6 +437,36 @@ def render_guest_form() -> None:
             if col1.button("⬅️ Zurück "):
                 st.session_state.step = 2
                 st.rerun()
+            if col2.button("Weiter ➡️ "):
+                st.session_state.step = 4
+                st.rerun()
+
+        elif st.session_state.step == 4:
+            st.subheader(f"🎵 Schritt 4 von {TOTAL_STEPS}: Songwünsche")
+            st.caption("Trag Interpret und Songtitel ein und füge beliebig viele Songs hinzu.")
+
+            col1, col2 = st.columns(2)
+            artist = col1.text_input("Interpret", key="song_artist_input")
+            title = col2.text_input("Songtitel", key="song_title_input")
+            if st.button("➕ Song hinzufügen", disabled=not (artist.strip() and title.strip())):
+                st.session_state.songs.append({"artist": artist.strip(), "title": title.strip()})
+                st.session_state.song_artist_input = ""
+                st.session_state.song_title_input = ""
+                st.rerun()
+
+            if st.session_state.songs:
+                st.write("Deine Songwünsche:")
+                for i, song in enumerate(st.session_state.songs):
+                    row1, row2 = st.columns([5, 1])
+                    row1.write(f"🎶 {song['artist']} – {song['title']}")
+                    if row2.button("❌", key=f"remove_song_{i}"):
+                        st.session_state.songs.pop(i)
+                        st.rerun()
+
+            col1, col2 = st.columns(2)
+            if col1.button("⬅️ Zurück  "):
+                st.session_state.step = 3
+                st.rerun()
             if col2.button("✅ Absenden"):
                 save_response(
                     name=st.session_state.name.strip(),
@@ -396,6 +475,7 @@ def render_guest_form() -> None:
                     drinks_freetext=st.session_state.drinks_freetext,
                     food=st.session_state.food,
                     food_freetext=st.session_state.food_freetext,
+                    songs=st.session_state.songs,
                 )
                 st.session_state.submitted = True
                 st.rerun()
@@ -428,9 +508,10 @@ def render_admin_view() -> None:
             food = ", ".join(json.loads(r["food"])) or "–"
             extra_drinks = f" + {r['drinks_freetext']}" if r["drinks_freetext"] else ""
             extra_food = f" + {r['food_freetext']}" if r["food_freetext"] else ""
+            songs = format_songs(r["songs"]) or "–"
             st.write(
                 f"**{r['name']}** – Startzeit: {r['start_time']} | "
-                f"Getränke: {drinks}{extra_drinks} | Essen: {food}{extra_food}"
+                f"Getränke: {drinks}{extra_drinks} | Essen: {food}{extra_food} | Songs: {songs}"
             )
 
     if st.button("🛒 Einkaufsliste erstellen"):
@@ -489,6 +570,78 @@ def render_admin_view() -> None:
         if not any_food:
             st.caption("Keine Essenswünsche ausgewählt.")
 
+    render_spotify_section(responses)
+
+
+def render_spotify_section(responses: list[dict]) -> None:
+    st.subheader("🎵 Spotify-Playlist")
+
+    if not SPOTIFY_CONFIGURED:
+        st.info(
+            "Spotify ist noch nicht eingerichtet. Trage `spotify_client_id`, "
+            "`spotify_client_secret` und `spotify_redirect_uri` in den Secrets ein "
+            "(siehe README)."
+        )
+        return
+
+    status_msg = st.session_state.pop("spotify_status_msg", None)
+    if status_msg:
+        (st.success if status_msg.startswith("✅") else st.error)(status_msg)
+
+    if not spotify_playlist.is_connected():
+        authorize_url = spotify_playlist.build_authorize_url(
+            SPOTIFY_CLIENT_ID, SPOTIFY_REDIRECT_URI, state="admin"
+        )
+        st.markdown(f"[🔗 Mit Spotify verbinden]({authorize_url})")
+        st.caption("Einmalig nötig – danach merkt sich die App die Verbindung.")
+        return
+
+    col1, col2 = st.columns([3, 1])
+    col1.success("Mit Spotify verbunden.")
+    if col2.button("Trennen"):
+        spotify_playlist.disconnect()
+        st.rerun()
+
+    if st.button("🎵 Spotify-Playlist erstellen"):
+        songs = [
+            {"artist": song["artist"], "title": song["title"], "guest_name": r["name"]}
+            for r in responses
+            for song in json.loads(r["songs"] or "[]")
+        ]
+        if not songs:
+            st.caption("Keine Songwünsche vorhanden.")
+        else:
+            with st.spinner("Playlist wird erstellt..."):
+                try:
+                    result = spotify_playlist.build_playlist_from_songs(
+                        SPOTIFY_CLIENT_ID,
+                        SPOTIFY_CLIENT_SECRET,
+                        songs,
+                        playlist_name="Bauwagen Gartenparty",
+                        playlist_description="Automatisch erstellt aus den Songwünschen der Gäste.",
+                    )
+                except Exception as e:
+                    st.error(f"Playlist-Erstellung fehlgeschlagen: {e}")
+                else:
+                    st.success(
+                        f"Playlist erstellt mit {result['track_count']} Songs (Duplikate entfernt)."
+                    )
+                    st.markdown(f"[▶️ Playlist auf Spotify öffnen]({result['playlist_url']})")
+                    if result["not_found"]:
+                        with st.expander(f"⚠️ Nicht gefundene Songs ({len(result['not_found'])})"):
+                            for s in result["not_found"]:
+                                st.write(f"- {s['artist']} – {s['title']} (von {s['guest_name']})")
+
+
+def handle_spotify_callback(code: str) -> None:
+    try:
+        spotify_playlist.exchange_code_for_token(
+            SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REDIRECT_URI, code
+        )
+        st.session_state["spotify_status_msg"] = "✅ Spotify erfolgreich verbunden!"
+    except Exception as e:
+        st.session_state["spotify_status_msg"] = f"❌ Spotify-Verbindung fehlgeschlagen: {e}"
+
 
 # --- Einstiegspunkt -----------------------------------------------------------
 
@@ -499,6 +652,11 @@ is_admin_token_set = ADMIN_TOKEN != "change-me-to-a-secret-value"
 is_admin = query_params.get("admin") == ADMIN_TOKEN and is_admin_token_set
 
 if is_admin:
+    if "code" in query_params and SPOTIFY_CONFIGURED:
+        handle_spotify_callback(query_params.get("code"))
+        st.query_params.clear()
+        st.query_params["admin"] = ADMIN_TOKEN
+        st.rerun()
     render_admin_view()
 else:
     render_guest_form()
