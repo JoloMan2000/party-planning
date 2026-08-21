@@ -37,6 +37,8 @@ from party_engine.domain import (
     RecipeComponent,
     SubstitutionRule,
 )
+from party_engine.recommendation_domain import RecommendationMetadata
+from party_engine.recommendation_tagging import derive_recommendation_metadata
 
 # Default: <repo_root>/catalog  (dieses Modul liegt in <repo_root>/party_engine/)
 _DEFAULT_CATALOG_DIR = Path(__file__).resolve().parent.parent / "catalog"
@@ -47,19 +49,48 @@ def _read_json(path: Path):
         return json.load(fh)
 
 
-def _build_ingredient(row: dict) -> Ingredient:
-    return Ingredient(**row)
-
-
-def _build_direct_consumable(row: dict) -> DirectConsumable:
-    return DirectConsumable(**row)
-
-
-def _build_recipe(row: dict) -> Recipe:
+def _build_recommendation(row: dict | None) -> RecommendationMetadata | None:
+    """Deserialisiert den JSON-'recommendation'-Key (tags: list) zurück in ein
+    RecommendationMetadata-Objekt (tags: set). None, falls der Key fehlt (z.B.
+    bei älteren/handgepflegten JSON-Zeilen) — dann greift in den Aufrufern ein
+    defensiver Fallback über derive_recommendation_metadata()."""
+    if not row:
+        return None
     row = dict(row)
+    row["tags"] = set(row.get("tags", []))
+    return RecommendationMetadata(**row)
+
+
+def _build_ingredient(row: dict) -> Ingredient:
+    row = dict(row)
+    rec_row = row.pop("recommendation", None)
+    ingredient = Ingredient(**row)
+    ingredient.recommendation = (
+        _build_recommendation(rec_row) or derive_recommendation_metadata(ingredient, None)
+    )
+    return ingredient
+
+
+def _build_direct_consumable(row: dict, catalog: PartyCatalog | None = None) -> DirectConsumable:
+    row = dict(row)
+    rec_row = row.pop("recommendation", None)
+    direct_consumable = DirectConsumable(**row)
+    direct_consumable.recommendation = (
+        _build_recommendation(rec_row) or derive_recommendation_metadata(direct_consumable, catalog)
+    )
+    return direct_consumable
+
+
+def _build_recipe(row: dict, catalog: PartyCatalog | None = None) -> Recipe:
+    row = dict(row)
+    rec_row = row.pop("recommendation", None)
     components_raw = row.pop("components", [])
     components = [RecipeComponent(**c) for c in components_raw]
-    return Recipe(components=components, **row)
+    recipe = Recipe(components=components, **row)
+    recipe.recommendation = (
+        _build_recommendation(rec_row) or derive_recommendation_metadata(recipe, catalog)
+    )
+    return recipe
 
 
 def _build_modifier(row: dict) -> Modifier:
@@ -89,11 +120,18 @@ def _load_catalog_cached(catalog_dir_str: str) -> PartyCatalog:
     ingredients = {
         k: _build_ingredient(v) for k, v in _read_json(catalog_dir / "ingredients.json").items()
     }
+    # Partielles Catalog-Objekt, nur für den defensiven Fallback
+    # (derive_recommendation_metadata) benötigt, falls einer DirectConsumable/
+    # Recipe-Zeile das persistierte "recommendation"-Feld fehlt.
+    _partial_catalog = PartyCatalog(ingredients=ingredients)
     direct_consumables = {
-        k: _build_direct_consumable(v)
+        k: _build_direct_consumable(v, _partial_catalog)
         for k, v in _read_json(catalog_dir / "direct_consumables.json").items()
     }
-    recipes = {k: _build_recipe(v) for k, v in _read_json(catalog_dir / "recipes.json").items()}
+    recipes = {
+        k: _build_recipe(v, _partial_catalog)
+        for k, v in _read_json(catalog_dir / "recipes.json").items()
+    }
     modifiers = {
         k: _build_modifier(v) for k, v in _read_json(catalog_dir / "modifiers.json").items()
     }

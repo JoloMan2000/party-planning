@@ -1,0 +1,28 @@
+{
+  "id": "casual_get_together",
+  "label_de": "Lockeres Beisammensein",
+  "label_en": "Casual Get-Together",
+  "preferred_tags": {
+    "casual": 0.9,
+    "social": 0.85,
+    "crowd_pleaser": 0.8,
+    "easy_service": 0.75,
+    "shareable": 0.7
+  },
+  "discouraged_tags": {},
+  "admin_food_slots": {
+    "grill_main": 1,
+    "vegetarian_main": 1,
+    "fingerfood": 2,
+    "snack": 2,
+    "dessert": 1
+  },
+  "admin_beverage_slots": {
+    "beer": 2,
+    "wine_spritz": 2,
+    "softdrink": 2,
+    "water_non_alcoholic": 3
+  },
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

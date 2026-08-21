@@ -1,0 +1,37 @@
+{
+  "id": "winter_party",
+  "label_de": "Winterparty",
+  "label_en": "Winter Party",
+  "preferred_tags": {
+    "winter": 1.0,
+    "cold_weather": 1.0,
+    "indoor": 0.9,
+    "comfort_food": 0.9,
+    "rich": 0.75,
+    "evening": 0.8,
+    "hot_drink": 0.7,
+    "coffee": 0.55,
+    "wine": 0.6
+  },
+  "discouraged_tags": {
+    "summer": 0.7,
+    "tropical": 0.7,
+    "hot_weather": 0.7
+  },
+  "admin_food_slots": {
+    "warm_buffet": 3,
+    "vegetarian_main": 1,
+    "side_salad": 1,
+    "bread": 1,
+    "dessert": 2
+  },
+  "admin_beverage_slots": {
+    "wine_spritz": 2,
+    "coffee_hot_drink": 2,
+    "beer": 1,
+    "cocktail_longdrink": 1,
+    "water_non_alcoholic": 2
+  },
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

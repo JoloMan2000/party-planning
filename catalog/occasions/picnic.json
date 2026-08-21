@@ -1,0 +1,38 @@
+{
+  "id": "picnic",
+  "label_de": "Picknick",
+  "label_en": "Picnic",
+  "preferred_tags": {
+    "outdoor": 0.9,
+    "portable": 1.0,
+    "low_mess": 0.9,
+    "handheld": 0.85,
+    "daytime": 0.8,
+    "summer": 0.7,
+    "spring": 0.7,
+    "fresh": 0.8,
+    "shareable": 0.75,
+    "easy_service": 0.8,
+    "picnic": 1.0
+  },
+  "discouraged_tags": {
+    "fresh_to_order": 0.6,
+    "fried": 0.5,
+    "bar_required": 0.7,
+    "high_mess": 0.7
+  },
+  "admin_food_slots": {
+    "bread": 2,
+    "side_salad": 2,
+    "fingerfood": 2,
+    "fruit": 2,
+    "snack": 1
+  },
+  "admin_beverage_slots": {
+    "water_non_alcoholic": 3,
+    "juice_schorle": 2,
+    "wine_spritz": 1
+  },
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

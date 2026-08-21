@@ -1,0 +1,36 @@
+{
+  "id": "house_party",
+  "label_de": "Hausparty / WG-Party",
+  "label_en": "House Party",
+  "preferred_tags": {
+    "indoor": 0.8,
+    "casual": 1.0,
+    "social": 1.0,
+    "party_classic": 0.9,
+    "easy_service": 0.9,
+    "self_service": 0.9,
+    "crowd_pleaser": 0.85,
+    "late_night": 0.75,
+    "snack": 0.9,
+    "fingerfood": 0.9,
+    "energy": 0.4
+  },
+  "discouraged_tags": {
+    "table_service": 0.6,
+    "fresh_to_order": 0.45
+  },
+  "admin_food_slots": {
+    "pizza": 3,
+    "fingerfood": 3,
+    "snack": 3,
+    "dessert": 1
+  },
+  "admin_beverage_slots": {
+    "beer": 3,
+    "softdrink": 2,
+    "cocktail_longdrink": 3,
+    "water_non_alcoholic": 2
+  },
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

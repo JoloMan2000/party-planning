@@ -1,0 +1,36 @@
+{
+  "id": "daydrinking",
+  "label_de": "Daydrinking",
+  "label_en": "Daydrinking",
+  "preferred_tags": {
+    "daytime": 1.0,
+    "afternoon": 0.9,
+    "social": 0.9,
+    "refreshing": 1.0,
+    "hydrating": 1.0,
+    "outdoor": 0.75,
+    "light_drink": 0.85,
+    "low_alcohol": 0.7,
+    "fingerfood": 0.75,
+    "snack": 0.7,
+    "casual": 0.8,
+    "beer": 0.65
+  },
+  "discouraged_tags": {
+    "strong_alcohol": 0.6
+  },
+  "admin_food_slots": {
+    "grill_main": 2,
+    "fingerfood": 3,
+    "snack": 3,
+    "side_salad": 1
+  },
+  "admin_beverage_slots": {
+    "water_non_alcoholic": 3,
+    "beer": 3,
+    "wine_spritz": 3,
+    "cocktail_longdrink": 2
+  },
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

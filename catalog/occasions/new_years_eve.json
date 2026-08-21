@@ -1,0 +1,31 @@
+{
+  "id": "new_years_eve",
+  "label_de": "Silvesterparty",
+  "label_en": "New Year's Eve",
+  "preferred_tags": {
+    "celebratory": 1.0,
+    "festive": 1.0,
+    "sparkling": 1.0,
+    "evening": 1.0,
+    "late_night": 1.0,
+    "social": 0.9,
+    "cocktail": 0.8,
+    "fingerfood": 0.8,
+    "snack": 0.75
+  },
+  "discouraged_tags": {},
+  "admin_food_slots": {
+    "fingerfood": 3,
+    "late_night_food": 2,
+    "snack": 2,
+    "dessert": 1
+  },
+  "admin_beverage_slots": {
+    "sparkling_wine": 3,
+    "cocktail_longdrink": 2,
+    "beer": 1,
+    "water_non_alcoholic": 2
+  },
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

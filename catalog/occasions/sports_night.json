@@ -1,0 +1,31 @@
+{
+  "id": "sports_night",
+  "label_de": "Sportabend / Fußballabend",
+  "label_en": "Sports Night",
+  "preferred_tags": {
+    "social": 0.85,
+    "casual": 0.9,
+    "party_classic": 0.75,
+    "beer": 0.95,
+    "snack": 0.85,
+    "fingerfood": 0.85,
+    "handheld": 0.75,
+    "easy_service": 0.85,
+    "shareable": 0.8,
+    "crowd_pleaser": 0.85
+  },
+  "discouraged_tags": {},
+  "admin_food_slots": {
+    "grill_main": 2,
+    "fingerfood": 3,
+    "snack": 3,
+    "dessert": 1
+  },
+  "admin_beverage_slots": {
+    "beer": 4,
+    "softdrink": 2,
+    "water_non_alcoholic": 2
+  },
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

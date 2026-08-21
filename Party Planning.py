@@ -48,9 +48,17 @@ import streamlit as st
 import event_theme
 import spotify_playlist
 from party_engine.catalog import load_catalog
-from party_engine.domain import CatalogItem, PartyCatalog, PartyConfig
+from party_engine.domain import CatalogItem, DietaryProfile, GuestResponse, PartyCatalog, PartyConfig
 from party_engine.engine import compute_party_demand
 from party_engine.legacy_adapter import guest_response_from_row
+from party_engine.occasions import load_all_occasions
+from party_engine.recommendation import (
+    format_score_explanation,
+    recommend_for_admin,
+    recommend_for_guest,
+    resolve_occasion_for_scoring,
+)
+from party_engine.recommendation_domain import OccasionProfile, PartyContext
 from translations import (
     ALL_LANGUAGES,
     DEFAULT_LANGUAGE,
@@ -86,6 +94,24 @@ def get_catalog() -> PartyCatalog:
     party_engine.catalog (Streamlit-frei), hier kommt nur die
     Streamlit-Cache-Anbindung dazu (siehe party_engine/catalog.py Docstring)."""
     return load_catalog()
+
+
+@st.cache_resource
+def get_occasions() -> dict[str, OccasionProfile]:
+    """Lädt alle 23 Occasion-Profile der Recommendation Engine genau einmal
+    pro Streamlit-Prozess (analog zu get_catalog() - siehe
+    party_engine/occasions.py Docstring)."""
+    return load_all_occasions()
+
+
+def get_active_occasion() -> OccasionProfile:
+    """Löst den aktuell vom Admin konfigurierten Event-Typ (event_theme.py)
+    auf das zugehörige OccasionProfile der Recommendation Engine auf (siehe
+    EVENT_TYPES[...]['occasion_id']). Empfehlungen sind rein additiv (§78/§79
+    der Recommendation-Spec) - beeinflussen niemals den Getränke-/Essenskatalog
+    oder die Demand-Pipeline, nur was als "✨ empfohlen" hervorgehoben wird."""
+    occasion_id = event_theme.resolve_occasion_id(_PARTY_SETTINGS["event_type"])
+    return resolve_occasion_for_scoring([occasion_id], get_occasions())
 
 
 # --- Katalog-getriebene Getränke-/Essens-Auswahl (AUFGABE §38-39, §45) ------
@@ -199,14 +225,29 @@ def render_catalog_picker(
     group_order: list[str],
     group_label_keys: dict[str, str],
     state_key_prefix: str,
+    recommended_ids: list[str] = (),
+    recommended_label: str = "",
 ) -> list[str]:
-    """Rendert eine kompakte, katalog-getriebene Auswahl: "Beliebt"-Sektion +
-    globale Suche + Kategorie-Tabs (AUFGABE §38-39, §45) - bewusst KEINE
-    hunderte Checkboxen untereinander. Jedes Sub-Widget hat einen eigenen,
-    eindeutigen Streamlit-Key (persistiert automatisch beim Vor-/Zurück-
-    Navigieren im Wizard); die Rückgabe ist die deduplizierte Vereinigung
-    aller Sub-Auswahlen als flache Liste von Katalog-IDs."""
+    """Rendert eine kompakte, katalog-getriebene Auswahl: optionale
+    "✨ Empfohlen"-Sektion + "Beliebt"-Sektion + globale Suche +
+    Kategorie-Tabs (AUFGABE §38-39, §45) - bewusst KEINE hunderte Checkboxen
+    untereinander. Jedes Sub-Widget hat einen eigenen, eindeutigen
+    Streamlit-Key (persistiert automatisch beim Vor-/Zurück-Navigieren im
+    Wizard); die Rückgabe ist die deduplizierte Vereinigung aller
+    Sub-Auswahlen als flache Liste von Katalog-IDs.
+
+    `recommended_ids` (optional, score-sortiert von der Occasion
+    Recommendation Engine - siehe party_engine/recommendation.py) rendert
+    NUR eine zusätzliche Hervorhebung (eigene Sektion + "✨ "-Präfix in allen
+    anderen Listen) - erzeugt selbst KEINE Auswahl und keine Demand (§77/§79
+    der Recommendation-Spec: eine Empfehlung ist niemals ein Auto-Select)."""
     by_id = {i.id: i for i in items}
+    recommended_set = set(recommended_ids)
+
+    def _format_name(iid: str) -> str:
+        prefix = t(lang, "recommended_item_prefix") if iid in recommended_set else ""
+        return f"{prefix}{by_id[iid].name}"
+
     popular_items = sorted((i for i in items if i.popular), key=lambda i: i.name)
     grouped: dict[str, list[CatalogItem]] = defaultdict(list)
     for item in items:
@@ -214,12 +255,23 @@ def render_catalog_picker(
 
     selected_ids: list[str] = []
 
+    recommended_in_items = [iid for iid in recommended_ids if iid in by_id]
+    if recommended_in_items:
+        st.markdown(f"**{t(lang, 'recommended_for_label', occasion=recommended_label)}**")
+        selected_ids += st.multiselect(
+            t(lang, "recommended_for_label", occasion=recommended_label),
+            options=recommended_in_items,
+            format_func=lambda iid: by_id[iid].name,
+            key=f"{state_key_prefix}_recommended",
+            label_visibility="collapsed",
+        )
+
     if popular_items:
         st.markdown(f"**{t(lang, 'popular_label')}**")
         selected_ids += st.multiselect(
             t(lang, "popular_label"),
             options=[i.id for i in popular_items],
-            format_func=lambda iid: by_id[iid].name,
+            format_func=_format_name,
             key=f"{state_key_prefix}_popular",
             label_visibility="collapsed",
         )
@@ -229,7 +281,7 @@ def render_catalog_picker(
     selected_ids += st.multiselect(
         t(lang, "catalog_search_label"),
         options=[i.id for i in all_sorted],
-        format_func=lambda iid: by_id[iid].name,
+        format_func=_format_name,
         key=f"{state_key_prefix}_search",
         label_visibility="collapsed",
         placeholder=t(lang, "catalog_search_placeholder"),
@@ -244,7 +296,7 @@ def render_catalog_picker(
                 selected_ids += st.multiselect(
                     t(lang, group_label_keys[group_key]),
                     options=[i.id for i in group_items],
-                    format_func=lambda iid: by_id[iid].name,
+                    format_func=_format_name,
                     key=f"{state_key_prefix}_cat_{group_key}",
                     label_visibility="collapsed",
                 )
@@ -564,6 +616,29 @@ def render_language_landing() -> None:
 TOTAL_STEPS = 4
 
 
+def _guest_recommended_ids(catalog: PartyCatalog, top_n: int = 16) -> list[str]:
+    """Liefert score-sortierte Item-IDs für den aktuell im Wizard befindlichen
+    Gast (§60/§61/§77 der Recommendation-Spec) - rein additive Hervorhebung,
+    erzeugt selbst NIE eine Preference/DemandAllocation (§78). Da der Wizard
+    noch keine Diät-Abfrage kennt, wird ein Gast ohne Constraints angenommen
+    (DietaryProfile() == keine Einschränkungen == nichts wird ausgeschlossen)."""
+    stub_guest = GuestResponse(
+        guest_name=st.session_state.get("name", ""),
+        start_time="",
+        drink_selections=list(st.session_state.get("drinks", [])),
+        food_selections=list(st.session_state.get("food", [])),
+        dietary=DietaryProfile(),
+    )
+    already_selected = set(st.session_state.get("drinks", [])) | set(st.session_state.get("food", []))
+    occasion_profile = get_active_occasion()
+    party_context = PartyContext(occasion_ids=[occasion_profile.id])
+    recommended = recommend_for_guest(
+        catalog, occasion_profile, party_context, stub_guest,
+        already_selected_ids=already_selected, top_n=top_n,
+    )
+    return [item.id for item, _score in recommended]
+
+
 def render_guest_form() -> None:
     if "entered_intro" not in st.session_state:
         st.session_state.entered_intro = False
@@ -616,6 +691,8 @@ def render_guest_form() -> None:
             st.subheader(t(lang, "step2_header", n=TOTAL_STEPS))
             st.caption(t(lang, "drinks_label"))
             catalog = get_catalog()
+            occasion_profile = get_active_occasion()
+            occasion_label = occasion_profile.label_de if lang == "de" else occasion_profile.label_en
             st.session_state.drinks = render_catalog_picker(
                 lang,
                 _drink_items(catalog),
@@ -623,6 +700,8 @@ def render_guest_form() -> None:
                 _DRINK_GROUP_ORDER,
                 _DRINK_GROUP_LABEL_KEYS,
                 state_key_prefix="drinks",
+                recommended_ids=_guest_recommended_ids(catalog),
+                recommended_label=occasion_label,
             )
             st.session_state.drinks_freetext = st.text_input(
                 t(lang, "drinks_freetext_label"), value=st.session_state.drinks_freetext
@@ -639,6 +718,8 @@ def render_guest_form() -> None:
             st.subheader(t(lang, "step3_header", n=TOTAL_STEPS))
             st.caption(t(lang, "food_label"))
             catalog = get_catalog()
+            occasion_profile = get_active_occasion()
+            occasion_label = occasion_profile.label_de if lang == "de" else occasion_profile.label_en
             st.session_state.food = render_catalog_picker(
                 lang,
                 _food_items(catalog),
@@ -646,6 +727,8 @@ def render_guest_form() -> None:
                 _FOOD_GROUP_ORDER,
                 _FOOD_GROUP_LABEL_KEYS,
                 state_key_prefix="food",
+                recommended_ids=_guest_recommended_ids(catalog),
+                recommended_label=occasion_label,
             )
             st.session_state.food_freetext = st.text_input(
                 t(lang, "food_freetext_label"), value=st.session_state.food_freetext
@@ -739,6 +822,36 @@ def render_party_settings_section(lang: str) -> None:
             st.rerun()
 
 
+def render_recommendations_section(lang: str, responses: list[dict], catalog: PartyCatalog) -> None:
+    """Admin-Sortiment-Empfehlungen (§58/§59/§83 der Recommendation-Spec):
+    rein informativer Vorschlag für den Sortiment-Aufbau basierend auf dem
+    aktuell konfigurierten Event-Typ (event_theme.py -> Occasion Recommendation
+    Engine). Erzeugt garantiert KEINE Preference/DemandAllocation/
+    IngredientDemand (§78) und kauft/wählt nichts automatisch (§79) - die
+    Einkaufsliste basiert weiterhin ausschließlich auf tatsächlichen
+    Gäste-Antworten (siehe render_shopping_list/compute_party_demand)."""
+    already_selected_ids: set[str] = set()
+    for r in responses:
+        already_selected_ids.update(json.loads(r["drinks"]))
+        already_selected_ids.update(json.loads(r["food"]))
+
+    occasion_profile = get_active_occasion()
+    occasion_label = occasion_profile.label_de if lang == "de" else occasion_profile.label_en
+    party_context = PartyContext(occasion_ids=[occasion_profile.id], guest_count=len(responses) or None)
+
+    recommended = recommend_for_admin(
+        catalog, occasion_profile, party_context,
+        already_selected_ids=already_selected_ids, top_n=20,
+    )
+
+    with st.expander(t(lang, "admin_recommendations_header", occasion=occasion_label), expanded=False):
+        st.caption(t(lang, "admin_recommendations_caption"))
+        for item, score in recommended:
+            st.markdown(f"- **{item.name}** — {score.total_score:.2f}")
+            with st.expander(t(lang, "admin_recommendations_score_expander"), expanded=False):
+                st.text(format_score_explanation(score, lang=lang if lang in ("de", "en") else "en"))
+
+
 def render_admin_view() -> None:
     if "admin_language" not in st.session_state:
         st.session_state.admin_language = DEFAULT_LANGUAGE
@@ -761,6 +874,8 @@ def render_admin_view() -> None:
 
     responses = load_responses()
     catalog = get_catalog()
+
+    render_recommendations_section(lang, responses, catalog)
 
     if not responses:
         st.info(t(lang, "no_responses_yet"))

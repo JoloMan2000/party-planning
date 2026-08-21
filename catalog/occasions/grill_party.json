@@ -1,0 +1,45 @@
+{
+  "id": "grill_party",
+  "label_de": "Grillparty",
+  "label_en": "Grill Party",
+  "preferred_tags": {
+    "grill": 1.0,
+    "grilled_food": 1.0,
+    "outdoor": 0.9,
+    "garden": 0.85,
+    "casual": 0.8,
+    "social": 0.8,
+    "buffet": 0.75,
+    "shareable": 0.75,
+    "crowd_pleaser": 0.75,
+    "party_classic": 0.7,
+    "refreshing": 0.65,
+    "easy_service": 0.55,
+    "beer": 0.8,
+    "salad": 0.85,
+    "bread": 0.8,
+    "side": 0.8
+  },
+  "discouraged_tags": {
+    "table_service": 0.5,
+    "bar_required": 0.25,
+    "high_mess": 0.2
+  },
+  "admin_food_slots": {
+    "grill_main": 4,
+    "vegetarian_main": 2,
+    "side_salad": 4,
+    "bread": 1,
+    "sauce": 2,
+    "snack": 1,
+    "dessert": 1
+  },
+  "admin_beverage_slots": {
+    "water_non_alcoholic": 3,
+    "beer": 2,
+    "wine_spritz": 2,
+    "cocktail_longdrink": 2
+  },
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

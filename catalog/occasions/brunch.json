@@ -1,0 +1,37 @@
+{
+  "id": "brunch",
+  "label_de": "Brunch",
+  "label_en": "Brunch",
+  "preferred_tags": {
+    "brunch": 1.0,
+    "morning": 1.0,
+    "daytime": 0.9,
+    "sparkling": 0.75,
+    "coffee": 1.0,
+    "non_alcoholic": 0.9,
+    "fresh": 0.9,
+    "shareable": 0.65,
+    "bread": 0.6,
+    "fruit": 0.6
+  },
+  "discouraged_tags": {
+    "strong_alcohol": 0.7,
+    "late_night": 0.8,
+    "grill": 0.4
+  },
+  "admin_food_slots": {
+    "bread": 3,
+    "fruit": 2,
+    "side_salad": 2,
+    "fingerfood": 2,
+    "dessert": 1
+  },
+  "admin_beverage_slots": {
+    "coffee_hot_drink": 3,
+    "juice_schorle": 2,
+    "sparkling_wine": 2,
+    "water_non_alcoholic": 2
+  },
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

@@ -1,0 +1,38 @@
+{
+  "id": "family_party",
+  "label_de": "Familienfeier",
+  "label_en": "Family Party",
+  "preferred_tags": {
+    "crowd_pleaser": 1.0,
+    "high_dietary_coverage": 0.9,
+    "non_alcoholic": 0.85,
+    "shareable": 0.85,
+    "buffet": 0.85,
+    "traditional": 0.65,
+    "easy_service": 0.65,
+    "dessert": 0.7,
+    "salad": 0.7,
+    "bread": 0.55
+  },
+  "discouraged_tags": {
+    "strong_alcohol": 0.7,
+    "energy": 0.7,
+    "spicy_food": 0.6,
+    "special_interest": 0.5
+  },
+  "admin_food_slots": {
+    "buffet_main": 3,
+    "vegetarian_main": 2,
+    "side_salad": 3,
+    "bread": 1,
+    "dessert": 2
+  },
+  "admin_beverage_slots": {
+    "water_non_alcoholic": 3,
+    "juice_schorle": 2,
+    "wine_spritz": 2,
+    "beer": 1
+  },
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

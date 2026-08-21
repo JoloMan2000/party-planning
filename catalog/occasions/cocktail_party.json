@@ -1,0 +1,32 @@
+{
+  "id": "cocktail_party",
+  "label_de": "Cocktailabend",
+  "label_en": "Cocktail Party",
+  "preferred_tags": {
+    "cocktail": 1.0,
+    "bar_style": 1.0,
+    "premium": 0.8,
+    "trendy": 0.8,
+    "evening": 0.9,
+    "social": 0.9,
+    "celebratory": 0.7,
+    "fresh_to_order": 0.65,
+    "fingerfood": 0.75,
+    "shareable": 0.6
+  },
+  "discouraged_tags": {},
+  "admin_food_slots": {
+    "fingerfood": 4,
+    "cheese_platter": 1,
+    "snack": 2,
+    "dessert": 1
+  },
+  "admin_beverage_slots": {
+    "cocktail_longdrink": 5,
+    "sparkling_wine": 1,
+    "water_non_alcoholic": 2,
+    "non_alcoholic_cocktail": 1
+  },
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

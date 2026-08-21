@@ -15,6 +15,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from party_engine.recommendation_domain import RecommendationMetadata
+
 
 # --- Konfiguration -----------------------------------------------------------
 
@@ -130,6 +132,11 @@ class CatalogItem:
     tags: list[str] = field(default_factory=list)
     popular: bool = False
     aliases_hint: list[str] = field(default_factory=list)  # nur informativ
+
+    # Empfehlungs-Metadaten (Tag-/Occasion-Mapping). Rein additiv, wird von der
+    # Demand-Pipeline (engine.py/allocation.py/bom.py) nicht gelesen — siehe
+    # recommendation_domain.py für die Architekturregel "Empfehlung != Demand".
+    recommendation: RecommendationMetadata = field(default_factory=RecommendationMetadata)
 
 
 @dataclass

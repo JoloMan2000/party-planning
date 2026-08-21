@@ -1,0 +1,34 @@
+{
+  "id": "birthday",
+  "label_de": "Geburtstagsfeier",
+  "label_en": "Birthday Party",
+  "preferred_tags": {
+    "celebratory": 1.0,
+    "social": 0.9,
+    "crowd_pleaser": 1.0,
+    "party_classic": 0.85,
+    "shareable": 0.8,
+    "casual": 0.7,
+    "sparkling": 0.65,
+    "dessert": 0.8
+  },
+  "discouraged_tags": {},
+  "admin_food_slots": {
+    "grill_main": 2,
+    "pizza": 2,
+    "fingerfood": 3,
+    "side_salad": 2,
+    "snack": 2,
+    "dessert": 2
+  },
+  "admin_beverage_slots": {
+    "beer": 2,
+    "wine_spritz": 2,
+    "sparkling_wine": 2,
+    "cocktail_longdrink": 2,
+    "water_non_alcoholic": 2,
+    "softdrink": 2
+  },
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

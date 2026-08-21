@@ -1,0 +1,31 @@
+{
+  "id": "movie_night",
+  "label_de": "Filmabend",
+  "label_en": "Movie Night",
+  "preferred_tags": {
+    "indoor": 0.9,
+    "casual": 0.9,
+    "comfort_food": 0.9,
+    "snack": 1.0,
+    "shareable": 0.8,
+    "easy_service": 0.85,
+    "low_mess": 0.8,
+    "dessert": 0.6
+  },
+  "discouraged_tags": {
+    "cocktail": 0.3,
+    "table_service": 0.5
+  },
+  "admin_food_slots": {
+    "pizza": 2,
+    "snack": 3,
+    "dessert": 2
+  },
+  "admin_beverage_slots": {
+    "softdrink": 3,
+    "water_non_alcoholic": 2,
+    "beer": 1
+  },
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

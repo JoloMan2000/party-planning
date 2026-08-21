@@ -42,6 +42,16 @@ from pathlib import Path
 #                       (".party-hero" background in inject_theme())
 #   accent_gradient  - 2 CSS-Farben für Buttons/Akzente
 #                       (".stButton > button" background in inject_theme())
+#   occasion_id      - Fremdschlüssel in die Occasion Recommendation Engine
+#                       (party_engine/occasions.py, catalog/occasions/*.json)
+#                       - steuert NICHT die Optik, sondern welches
+#                       Anlass-Profil beim Empfehlungs-Scoring
+#                       (party_engine/recommendation.py) verwendet wird.
+#
+# Die Keys entsprechen absichtlich 1:1 den 23 Occasion-IDs der Recommendation
+# Engine (Ausnahme: "bauwagen_sommerparty" ist ein zusätzlicher, rein
+# optischer Sonder-Eintrag für den bisherigen Default-Look und mappt für die
+# Empfehlungslogik auf die Occasion "summer_party").
 #
 # WICHTIG: "bauwagen_sommerparty" ist der Default und muss exakt die heute
 # fest codierten Farben aus inject_theme()/render_hero() abbilden (siehe
@@ -56,6 +66,7 @@ EVENT_TYPES: dict[str, dict] = {
         "intro_subtitle": "Schön, dass du dabei bist! · So glad you're joining!",
         "hero_gradient": ("#3F2E22", "#4A342A", "#3F5B41"),
         "accent_gradient": ("#C68642", "#A8672F"),
+        "occasion_id": "summer_party",
     },
     "birthday": {
         "emoji": "🎂🎈🎉",
@@ -65,15 +76,57 @@ EVENT_TYPES: dict[str, dict] = {
         "intro_subtitle": "Schön, dass du mitfeierst! · So glad you're celebrating with us!",
         "hero_gradient": ("#4A1F33", "#7A2E4A", "#C9873A"),
         "accent_gradient": ("#E8A24A", "#C9873A"),
+        "occasion_id": "birthday",
     },
-    "anniversary": {
-        "emoji": "💍✨🥂",
-        "label_de": "Jubiläum",
-        "label_en": "Anniversary",
-        "default_title": "Jubiläumsfeier",
-        "intro_subtitle": "Schön, dass du dabei bist! · So glad you're joining us!",
-        "hero_gradient": ("#1A1A1A", "#2B2418", "#3D3320"),
+    "grill_party": {
+        "emoji": "🔥🍖🌭",
+        "label_de": "Grillparty",
+        "label_en": "Grill party",
+        "default_title": "Grillparty",
+        "intro_subtitle": "Lust auf Gegrilltes? · Ready to fire up the grill?",
+        "hero_gradient": ("#2B1A0F", "#4A2A12", "#7A3B12"),
+        "accent_gradient": ("#E8722A", "#C25A1A"),
+        "occasion_id": "grill_party",
+    },
+    "garden_party": {
+        "emoji": "🌸🌿✨",
+        "label_de": "Gartenparty",
+        "label_en": "Garden party",
+        "default_title": "Gartenparty",
+        "intro_subtitle": "Schön, dass du dabei bist! · So glad you're joining!",
+        "hero_gradient": ("#1E2B1A", "#2E4023", "#4A6B2F"),
+        "accent_gradient": ("#8FBF5A", "#6B9E3E"),
+        "occasion_id": "garden_party",
+    },
+    "daydrinking": {
+        "emoji": "🍹☀️✨",
+        "label_de": "Daydrinking",
+        "label_en": "Daydrinking",
+        "default_title": "Daydrinking-Session",
+        "intro_subtitle": "Bereit für ein paar Drinks bei Sonne? · Ready for some sunny sipping?",
+        "hero_gradient": ("#2B2410", "#4A3D14", "#C9873A"),
+        "accent_gradient": ("#F2C14E", "#D9A62D"),
+        "occasion_id": "daydrinking",
+    },
+    "house_party": {
+        "emoji": "🏠🎶✨",
+        "label_de": "Hausparty",
+        "label_en": "House party",
+        "default_title": "Hausparty",
+        "intro_subtitle": "Bereit für eine Wohnzimmer-Party? · Ready for a house party?",
+        "hero_gradient": ("#1C1730", "#2E2350", "#5C2E6B"),
+        "accent_gradient": ("#B14FD1", "#8E2FA8"),
+        "occasion_id": "house_party",
+    },
+    "cocktail_party": {
+        "emoji": "🍸🌃✨",
+        "label_de": "Cocktailabend",
+        "label_en": "Cocktail party",
+        "default_title": "Cocktailabend",
+        "intro_subtitle": "Zeit für gute Drinks! · Time for great drinks!",
+        "hero_gradient": ("#150F1F", "#2A1A3A", "#4A2050"),
         "accent_gradient": ("#D4AF37", "#B8952E"),
+        "occasion_id": "cocktail_party",
     },
     "game_night": {
         "emoji": "🎲🕹️✨",
@@ -83,6 +136,87 @@ EVENT_TYPES: dict[str, dict] = {
         "intro_subtitle": "Bereit zum Zocken? · Ready to play?",
         "hero_gradient": ("#241B3F", "#382A5C", "#1F4E5F"),
         "accent_gradient": ("#8E6FE0", "#5C3FB8"),
+        "occasion_id": "game_night",
+    },
+    "sports_night": {
+        "emoji": "⚽📺✨",
+        "label_de": "Sportabend",
+        "label_en": "Sports night",
+        "default_title": "Sportabend",
+        "intro_subtitle": "Anpfiff! · Kick-off!",
+        "hero_gradient": ("#0F1F14", "#1B3322", "#245C2E"),
+        "accent_gradient": ("#4CC26B", "#2E9E4A"),
+        "occasion_id": "sports_night",
+    },
+    "movie_night": {
+        "emoji": "🎬🍿✨",
+        "label_de": "Filmabend",
+        "label_en": "Movie night",
+        "default_title": "Filmabend",
+        "intro_subtitle": "Film ab! · Lights, camera, action!",
+        "hero_gradient": ("#160F14", "#2A1620", "#4A1F30"),
+        "accent_gradient": ("#E0475C", "#B8324A"),
+        "occasion_id": "movie_night",
+    },
+    "dinner_party": {
+        "emoji": "🍽️🕯️✨",
+        "label_de": "Dinner-Abend",
+        "label_en": "Dinner party",
+        "default_title": "Dinner-Abend",
+        "intro_subtitle": "Guten Appetit! · Bon appétit!",
+        "hero_gradient": ("#241A16", "#3A2620", "#5C3428"),
+        "accent_gradient": ("#D9A25E", "#B8813E"),
+        "occasion_id": "dinner_party",
+    },
+    "brunch": {
+        "emoji": "🥐☕✨",
+        "label_de": "Brunch",
+        "label_en": "Brunch",
+        "default_title": "Brunch",
+        "intro_subtitle": "Guten Morgen! · Good morning!",
+        "hero_gradient": ("#2E2418", "#4A3826", "#C9A24A"),
+        "accent_gradient": ("#F2C879", "#D9A24E"),
+        "occasion_id": "brunch",
+    },
+    "summer_party": {
+        "emoji": "☀️🍉✨",
+        "label_de": "Sommerparty",
+        "label_en": "Summer party",
+        "default_title": "Sommerparty",
+        "intro_subtitle": "Sommer, Sonne, gute Laune! · Summer, sun, good vibes!",
+        "hero_gradient": ("#102030", "#1B3A4A", "#2C8FA8"),
+        "accent_gradient": ("#4FC7D9", "#2E9EAF"),
+        "occasion_id": "summer_party",
+    },
+    "pool_party": {
+        "emoji": "🏊🌊✨",
+        "label_de": "Poolparty",
+        "label_en": "Pool party",
+        "default_title": "Poolparty",
+        "intro_subtitle": "Ab ins kühle Nass! · Dive in!",
+        "hero_gradient": ("#0C1F2A", "#153A4A", "#1E6E8A"),
+        "accent_gradient": ("#4FD9E8", "#2EA8B8"),
+        "occasion_id": "pool_party",
+    },
+    "picnic": {
+        "emoji": "🧺🌼✨",
+        "label_de": "Picknick",
+        "label_en": "Picnic",
+        "default_title": "Picknick",
+        "intro_subtitle": "Decke ausbreiten und genießen! · Spread the blanket and enjoy!",
+        "hero_gradient": ("#242E14", "#3A4A20", "#6B8F3E"),
+        "accent_gradient": ("#C9DB7A", "#A8C24E"),
+        "occasion_id": "picnic",
+    },
+    "festival_outdoor": {
+        "emoji": "🎪🎶✨",
+        "label_de": "Festival / Open-Air-Party",
+        "label_en": "Festival / outdoor party",
+        "default_title": "Open-Air-Party",
+        "intro_subtitle": "Bühne frei! · Let the show begin!",
+        "hero_gradient": ("#1F1030", "#3A1850", "#6B1F70"),
+        "accent_gradient": ("#E85FD1", "#B82FA8"),
+        "occasion_id": "festival_outdoor",
     },
     "winter_party": {
         "emoji": "❄️🎄✨",
@@ -92,19 +226,89 @@ EVENT_TYPES: dict[str, dict] = {
         "intro_subtitle": "Schön, dass du dabei bist! · So glad you're joining!",
         "hero_gradient": ("#0F2027", "#203A43", "#2C5364"),
         "accent_gradient": ("#7FC7D9", "#3E8FA8"),
+        "occasion_id": "winter_party",
     },
-    "custom": {
-        "emoji": "🎊🎈✨",
-        "label_de": "Sonstiges",
-        "label_en": "Other",
-        "default_title": "Meine Party",
+    "christmas_party": {
+        "emoji": "🎄🎅✨",
+        "label_de": "Weihnachtsfeier",
+        "label_en": "Christmas party",
+        "default_title": "Weihnachtsfeier",
+        "intro_subtitle": "Frohe Weihnachten! · Merry Christmas!",
+        "hero_gradient": ("#0F2418", "#1B3D26", "#7A1F24"),
+        "accent_gradient": ("#D4AF37", "#B8952E"),
+        "occasion_id": "christmas_party",
+    },
+    "new_years_eve": {
+        "emoji": "🎆🥂✨",
+        "label_de": "Silvesterparty",
+        "label_en": "New Year's Eve",
+        "default_title": "Silvesterparty",
+        "intro_subtitle": "Auf ein neues Jahr! · To a new year!",
+        "hero_gradient": ("#0A0A14", "#1A1A2E", "#2E2A50"),
+        "accent_gradient": ("#D4AF37", "#F2C14E"),
+        "occasion_id": "new_years_eve",
+    },
+    "wedding": {
+        "emoji": "💍👰✨",
+        "label_de": "Hochzeit",
+        "label_en": "Wedding",
+        "default_title": "Hochzeitsfeier",
+        "intro_subtitle": "Schön, dass du dabei bist! · So glad you're celebrating with us!",
+        "hero_gradient": ("#241E1A", "#3A2E24", "#C9A24A"),
+        "accent_gradient": ("#E8C97A", "#C9A24A"),
+        "occasion_id": "wedding",
+    },
+    "engagement_party": {
+        "emoji": "💍💕✨",
+        "label_de": "Verlobungsfeier",
+        "label_en": "Engagement party",
+        "default_title": "Verlobungsfeier",
+        "intro_subtitle": "Herzlichen Glückwunsch! · Congratulations!",
+        "hero_gradient": ("#2A1A20", "#4A2830", "#7A3A4A"),
+        "accent_gradient": ("#E88FA8", "#C9607F"),
+        "occasion_id": "engagement_party",
+    },
+    "bachelor_party": {
+        "emoji": "🥳🍾✨",
+        "label_de": "Junggesell(inn)enabschied",
+        "label_en": "Bachelor / bachelorette party",
+        "default_title": "JGA",
+        "intro_subtitle": "Let's party! · Let's celebrate!",
+        "hero_gradient": ("#160F1C", "#2E1030", "#5C1750"),
+        "accent_gradient": ("#E845B8", "#B82F8E"),
+        "occasion_id": "bachelor_party",
+    },
+    "family_party": {
+        "emoji": "👨‍👩‍👧‍👦🎉✨",
+        "label_de": "Familienfeier",
+        "label_en": "Family party",
+        "default_title": "Familienfeier",
+        "intro_subtitle": "Schön, dass die Familie zusammenkommt! · So glad the family is together!",
+        "hero_gradient": ("#2A1F14", "#4A3620", "#7A5A2E"),
+        "accent_gradient": ("#E8A24A", "#C9873A"),
+        "occasion_id": "family_party",
+    },
+    "casual_get_together": {
+        "emoji": "🍻😊✨",
+        "label_de": "Lockeres Beisammensein",
+        "label_en": "Casual get-together",
+        "default_title": "Gemütliches Beisammensein",
         "intro_subtitle": "Schön, dass du dabei bist! · So glad you're joining!",
-        "hero_gradient": ("#2C2A26", "#3A3733", "#4A4842"),
-        "accent_gradient": ("#C68642", "#A8672F"),
+        "hero_gradient": ("#1F2420", "#333D34", "#4A5C4A"),
+        "accent_gradient": ("#8FBF7A", "#6B9E5E"),
+        "occasion_id": "casual_get_together",
     },
 }
 
 DEFAULT_EVENT_TYPE = "bauwagen_sommerparty"
+
+
+def resolve_occasion_id(event_type: str) -> str:
+    """Löst den admin-konfigurierten Event-Typ auf die zugehörige Occasion-ID
+    der Recommendation Engine auf (siehe ``occasion_id``-Feld oben). Fällt bei
+    unbekanntem ``event_type`` auf den Default-Event-Typ zurück; wirft nie."""
+    theme = EVENT_TYPES.get(event_type, EVENT_TYPES[DEFAULT_EVENT_TYPE])
+    return theme["occasion_id"]
 
 
 # --- Storage (SQLite) ------------------------------------------------------

@@ -1,0 +1,29 @@
+{
+  "id": "bachelor_party",
+  "label_de": "Junggesell(inn)enabschied",
+  "label_en": "Bachelor / Bachelorette Party",
+  "preferred_tags": {
+    "social": 0.9,
+    "celebratory": 0.9,
+    "trendy": 0.8,
+    "cocktail": 0.9,
+    "party_classic": 0.65,
+    "late_night": 0.75,
+    "fingerfood": 0.7,
+    "snack": 0.65
+  },
+  "discouraged_tags": {},
+  "admin_food_slots": {
+    "fingerfood": 3,
+    "snack": 2,
+    "dessert": 1
+  },
+  "admin_beverage_slots": {
+    "cocktail_longdrink": 4,
+    "sparkling_wine": 2,
+    "beer": 2,
+    "water_non_alcoholic": 2
+  },
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

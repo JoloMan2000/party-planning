@@ -1,0 +1,42 @@
+{
+  "id": "garden_party",
+  "label_de": "Gartenparty",
+  "label_en": "Garden Party",
+  "preferred_tags": {
+    "garden": 1.0,
+    "outdoor": 0.95,
+    "summer": 0.75,
+    "refreshing": 0.9,
+    "social": 0.8,
+    "shareable": 0.65,
+    "sparkling": 0.75,
+    "wine": 0.65,
+    "cocktail": 0.7,
+    "light_drink": 0.75,
+    "salad": 0.7,
+    "fingerfood": 0.65,
+    "grilled_food": 0.55,
+    "fresh": 0.65
+  },
+  "discouraged_tags": {
+    "heavy_drink": 0.35,
+    "winter": 0.35,
+    "indoor": 0.25
+  },
+  "admin_food_slots": {
+    "grill_main": 2,
+    "vegetarian_main": 2,
+    "side_salad": 3,
+    "fingerfood": 3,
+    "bread": 1,
+    "dessert": 1
+  },
+  "admin_beverage_slots": {
+    "sparkling_wine": 2,
+    "wine_spritz": 3,
+    "cocktail_longdrink": 2,
+    "water_non_alcoholic": 3
+  },
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

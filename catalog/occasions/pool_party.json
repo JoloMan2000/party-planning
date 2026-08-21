@@ -1,0 +1,39 @@
+{
+  "id": "pool_party",
+  "label_de": "Poolparty",
+  "label_en": "Pool Party",
+  "preferred_tags": {
+    "poolside": 1.0,
+    "summer": 1.0,
+    "hot_weather": 1.0,
+    "refreshing": 1.0,
+    "hydrating": 1.0,
+    "portable": 0.75,
+    "handheld": 0.75,
+    "fingerfood": 0.75,
+    "fruity": 0.75,
+    "tropical": 0.8,
+    "easy_service": 0.7
+  },
+  "discouraged_tags": {
+    "high_mess": 0.7,
+    "table_service": 0.7,
+    "hot_drink": 0.7,
+    "winter": 0.7
+  },
+  "admin_food_slots": {
+    "grill_main": 2,
+    "fingerfood": 3,
+    "fruit": 2,
+    "snack": 2,
+    "dessert": 1
+  },
+  "admin_beverage_slots": {
+    "water_non_alcoholic": 4,
+    "softdrink": 2,
+    "cocktail_longdrink": 3,
+    "non_alcoholic_cocktail": 2
+  },
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

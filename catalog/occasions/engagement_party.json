@@ -1,0 +1,34 @@
+{
+  "id": "engagement_party",
+  "label_de": "Verlobungsfeier",
+  "label_en": "Engagement Party",
+  "preferred_tags": {
+    "celebratory": 1.0,
+    "elegant": 0.75,
+    "premium": 0.65,
+    "sparkling": 0.85,
+    "wine": 0.65,
+    "high_dietary_coverage": 0.75,
+    "crowd_pleaser": 0.85,
+    "social": 0.7,
+    "shareable": 0.6
+  },
+  "discouraged_tags": {
+    "special_interest": 0.3
+  },
+  "admin_food_slots": {
+    "grill_main": 1,
+    "vegetarian_main": 2,
+    "side_salad": 2,
+    "fingerfood": 2,
+    "dessert": 2
+  },
+  "admin_beverage_slots": {
+    "sparkling_wine": 2,
+    "wine_spritz": 2,
+    "cocktail_longdrink": 2,
+    "water_non_alcoholic": 2
+  },
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

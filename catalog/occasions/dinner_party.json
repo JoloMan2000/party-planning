@@ -1,0 +1,33 @@
+{
+  "id": "dinner_party",
+  "label_de": "Dinner-Abend",
+  "label_en": "Dinner Party",
+  "preferred_tags": {
+    "evening": 0.9,
+    "elegant": 1.0,
+    "premium": 0.9,
+    "wine": 0.85,
+    "table_service": 0.75,
+    "dessert": 0.75,
+    "small_group_friendly": 0.6
+  },
+  "discouraged_tags": {
+    "snack": 0.4,
+    "energy": 0.7,
+    "shot": 0.6
+  },
+  "admin_food_slots": {
+    "elegant_main": 3,
+    "side_salad": 2,
+    "bread": 1,
+    "dessert": 2
+  },
+  "admin_beverage_slots": {
+    "wine_spritz": 3,
+    "sparkling_wine": 1,
+    "cocktail_longdrink": 2,
+    "water_non_alcoholic": 2
+  },
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

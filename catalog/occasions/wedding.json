@@ -1,0 +1,35 @@
+{
+  "id": "wedding",
+  "label_de": "Hochzeit",
+  "label_en": "Wedding",
+  "preferred_tags": {
+    "celebratory": 1.0,
+    "elegant": 0.9,
+    "premium": 0.8,
+    "sparkling": 0.85,
+    "wine": 0.75,
+    "high_dietary_coverage": 0.85,
+    "crowd_pleaser": 0.8,
+    "large_group_friendly": 0.65
+  },
+  "discouraged_tags": {
+    "special_interest": 0.4
+  },
+  "admin_food_slots": {
+    "elegant_main": 2,
+    "vegetarian_main": 2,
+    "vegan_main": 1,
+    "side_salad": 2,
+    "bread": 1,
+    "dessert": 2
+  },
+  "admin_beverage_slots": {
+    "sparkling_wine": 3,
+    "wine_spritz": 2,
+    "cocktail_longdrink": 1,
+    "water_non_alcoholic": 3,
+    "softdrink": 1
+  },
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

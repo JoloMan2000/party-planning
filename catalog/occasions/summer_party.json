@@ -1,0 +1,41 @@
+{
+  "id": "summer_party",
+  "label_de": "Sommerparty",
+  "label_en": "Summer Party",
+  "preferred_tags": {
+    "summer": 1.0,
+    "hot_weather": 1.0,
+    "refreshing": 1.0,
+    "outdoor": 0.8,
+    "hydrating": 0.9,
+    "fruity": 0.75,
+    "citrus": 0.75,
+    "sparkling": 0.7,
+    "light_drink": 0.8,
+    "salad": 0.75,
+    "fresh": 0.8,
+    "light_food": 0.7
+  },
+  "discouraged_tags": {
+    "hot_drink": 0.7,
+    "winter": 0.7,
+    "heavy_drink": 0.6,
+    "rich": 0.5
+  },
+  "admin_food_slots": {
+    "grill_main": 3,
+    "vegetarian_main": 2,
+    "side_salad": 3,
+    "fingerfood": 2,
+    "fruit": 1,
+    "dessert": 1
+  },
+  "admin_beverage_slots": {
+    "water_non_alcoholic": 3,
+    "beer": 2,
+    "wine_spritz": 2,
+    "cocktail_longdrink": 3
+  },
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

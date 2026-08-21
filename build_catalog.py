@@ -17,7 +17,18 @@ oder direkt in den JSON-Dateien nachgepflegt werden.
 from __future__ import annotations
 
 import json
+from dataclasses import asdict
 from pathlib import Path
+
+from party_engine.domain import (
+    DirectConsumable,
+    Ingredient,
+    PartyCatalog,
+    Recipe,
+    RecipeComponent,
+)
+from party_engine.recommendation_tagging import apply_recommendation_metadata
+from party_engine.tags import validate_tags
 
 CATALOG_DIR = Path(__file__).parent / "catalog"
 
@@ -2601,6 +2612,45 @@ def build_catalog() -> dict:
     )
 
 
+def _serialize_recommendation(meta) -> dict:
+    """Wandelt ein RecommendationMetadata-Objekt in ein JSON-taugliches dict um
+    (tags: set -> sortierte Liste, restliche Felder sind bereits JSON-safe)."""
+    d = asdict(meta)
+    d["tags"] = sorted(meta.tags)
+    return d
+
+
+def _apply_recommendations(cat: dict) -> None:
+    """Reichert jedes Ingredient/DirectConsumable/Recipe um ein
+    ``recommendation``-Feld an (§4/§81 der Recommendation-Spec). Rein additiv:
+    schreibt ausschließlich den neuen "recommendation"-Key in die bereits
+    gebauten Rohdicts, rührt keine demand-relevanten Felder an.
+
+    Ingredients zuerst (unabhängig), danach DirectConsumables/Recipes, die für
+    die Ableitung ein (partielles) PartyCatalog mit den fertigen Ingredient-
+    Objekten benötigen (§81: Vererbung über Ingredient-Family/-Eigenschaften).
+    """
+    ingredient_objs = {iid: Ingredient(**row) for iid, row in cat["ingredients"].items()}
+    partial_catalog = PartyCatalog(ingredients=ingredient_objs)
+
+    for iid, ing_obj in ingredient_objs.items():
+        meta = apply_recommendation_metadata(ing_obj, partial_catalog)
+        cat["ingredients"][iid]["recommendation"] = _serialize_recommendation(meta)
+
+    for did, row in cat["direct_consumables"].items():
+        dc_obj = DirectConsumable(**row)
+        meta = apply_recommendation_metadata(dc_obj, partial_catalog)
+        cat["direct_consumables"][did]["recommendation"] = _serialize_recommendation(meta)
+
+    for rid, row in cat["recipes"].items():
+        row_copy = dict(row)
+        components_raw = row_copy.pop("components", [])
+        components = [RecipeComponent(**c) for c in components_raw]
+        recipe_obj = Recipe(components=components, **row_copy)
+        meta = apply_recommendation_metadata(recipe_obj, partial_catalog)
+        cat["recipes"][rid]["recommendation"] = _serialize_recommendation(meta)
+
+
 def _validate_catalog(cat: dict) -> None:
     """Prüft referenzielle Integrität über alle Katalogteile hinweg."""
     ing_ids = set(cat["ingredients"].keys())
@@ -2641,6 +2691,27 @@ def _validate_catalog(cat: dict) -> None:
     for iid in cat["purchase_skus"]:
         assert iid in ing_ids, f"PurchaseSKU: unbekannte ingredient_id {iid!r}"
 
+    # §70: Jedes direkt wählbare Item (DirectConsumable/Recipe) braucht
+    # mindestens 2 Recommendation-Tags, ausschließlich aus tags.ALL_TAGS.
+    offenders = []
+    for group in ("direct_consumables", "recipes"):
+        for iid, row in cat[group].items():
+            rec = row.get("recommendation") or {}
+            item_tags = rec.get("tags", [])
+            invalid = validate_tags(item_tags)
+            if len(item_tags) < 2 or invalid:
+                offenders.append((group, iid, len(item_tags), invalid))
+    if offenders:
+        preview = offenders[:20]
+        detail = "\n".join(
+            f"  - {group}/{iid}: {n_tags} tag(s), invalid={invalid}"
+            for group, iid, n_tags, invalid in preview
+        )
+        raise AssertionError(
+            f"§70 Recommendation-Tag-Coverage verletzt für {len(offenders)} Item(e) "
+            f"(mind. 2 Tags aus tags.ALL_TAGS erforderlich). Erste {len(preview)}:\n{detail}"
+        )
+
 
 def write_catalog(cat: dict) -> None:
     CATALOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -2661,6 +2732,7 @@ def write_catalog(cat: dict) -> None:
 
 if __name__ == "__main__":
     catalog = build_catalog()
+    _apply_recommendations(catalog)
     _validate_catalog(catalog)
     write_catalog(catalog)
 

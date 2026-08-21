@@ -1,0 +1,34 @@
+{
+  "id": "game_night",
+  "label_de": "Spieleabend",
+  "label_en": "Game Night",
+  "preferred_tags": {
+    "indoor": 1.0,
+    "casual": 1.0,
+    "low_mess": 1.0,
+    "fingerfood": 1.0,
+    "snack": 1.0,
+    "handheld": 0.9,
+    "easy_service": 0.9,
+    "shareable": 0.9,
+    "self_service": 0.9
+  },
+  "discouraged_tags": {
+    "high_mess": 0.8,
+    "table_service": 0.8
+  },
+  "admin_food_slots": {
+    "pizza": 2,
+    "fingerfood": 3,
+    "snack": 3,
+    "dessert": 1
+  },
+  "admin_beverage_slots": {
+    "softdrink": 3,
+    "beer": 2,
+    "water_non_alcoholic": 2,
+    "cocktail_longdrink": 1
+  },
+  "inherits_from": [],
+  "profile_version": "1.0"
+}
