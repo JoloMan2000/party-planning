@@ -45,6 +45,7 @@ from pathlib import Path
 
 import streamlit as st
 
+import event_theme
 import spotify_playlist
 from party_engine.catalog import load_catalog
 from party_engine.domain import CatalogItem, PartyCatalog, PartyConfig
@@ -71,6 +72,12 @@ SPOTIFY_CLIENT_ID = st.secrets.get("spotify_client_id", "")
 SPOTIFY_CLIENT_SECRET = st.secrets.get("spotify_client_secret", "")
 SPOTIFY_REDIRECT_URI = st.secrets.get("spotify_redirect_uri", "")
 SPOTIFY_CONFIGURED = bool(SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET and SPOTIFY_REDIRECT_URI)
+
+# Event-Typ + Party-Name (admin-konfigurierbar, siehe event_theme.py). Reine
+# SQLite-Operationen (keine Streamlit-Rendering-Calls) - dürfen daher schon
+# vor st.set_page_config() laufen, um den dynamischen page_title zu setzen.
+event_theme.init_party_settings(DB_PATH)
+_PARTY_SETTINGS = event_theme.get_party_settings(DB_PATH)
 
 @st.cache_resource
 def get_catalog() -> PartyCatalog:
@@ -244,14 +251,30 @@ def render_catalog_picker(
 
     return list(dict.fromkeys(selected_ids))
 
-st.set_page_config(page_title="Bauwagen Gartenparty", page_icon="🌿", layout="centered")
+st.set_page_config(
+    page_title=event_theme.resolve_party_title(_PARTY_SETTINGS), page_icon="🌿", layout="centered"
+)
 
 # --- Design: Bauwagen-Gartenparty-Theme ----------------------------------
 
 
-def inject_theme() -> None:
-    st.markdown(
-        """
+def inject_theme(
+    hero_gradient: tuple[str, str, str] = ("#3F2E22", "#4A342A", "#3F5B41"),
+    accent_gradient: tuple[str, str] = ("#C68642", "#A8672F"),
+) -> None:
+    """Injiziert das App-weite CSS-Theme. `hero_gradient` (3 Farben, 135deg,
+    für den `.party-hero`-Hintergrund) und `accent_gradient` (2 Farben, für
+    `.stButton > button`) kommen vom aktuell aktiven Event-Typ (siehe
+    event_theme.py) - Default-Werte entsprechen exakt dem bisherigen fest
+    codierten Bauwagen-Sommerparty-Theme (Regressions-Vorgabe: für diesen
+    Event-Typ muss die App optisch identisch zum bisherigen Stand bleiben)."""
+    hero_c1, hero_c2, hero_c3 = hero_gradient
+    accent_c1, accent_c2 = accent_gradient
+    # Platzhalter-Token statt f-string/.format(): die CSS-Regeln unten
+    # enthalten sehr viele geschweifte Klammern, ein f-string würde jede
+    # davon verdoppelt erfordern (fehleranfällig) - str.replace() auf
+    # eindeutigen Tokens ist robuster und diff-freundlicher.
+    css = """
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
@@ -274,7 +297,7 @@ def inject_theme() -> None:
 
         .party-hero {
             position: relative;
-            background: linear-gradient(135deg, #3F2E22 0%, #4A342A 45%, #3F5B41 100%);
+            background: linear-gradient(135deg, __HERO_C1__ 0%, __HERO_C2__ 45%, __HERO_C3__ 100%);
             border-radius: 22px;
             padding: 2.4rem 1.5rem 2.2rem 1.5rem;
             text-align: center;
@@ -318,7 +341,7 @@ def inject_theme() -> None:
         }
 
         .stButton > button {
-            background: linear-gradient(120deg, #C68642, #A8672F);
+            background: linear-gradient(120deg, __ACCENT_C1__, __ACCENT_C2__);
             color: #FBF3E3;
             border: none;
             border-radius: 999px;
@@ -353,9 +376,15 @@ def inject_theme() -> None:
             background-color: #3F5B41 !important;
         }
         </style>
-        """,
-        unsafe_allow_html=True,
+        """
+    css = (
+        css.replace("__HERO_C1__", hero_c1)
+        .replace("__HERO_C2__", hero_c2)
+        .replace("__HERO_C3__", hero_c3)
+        .replace("__ACCENT_C1__", accent_c1)
+        .replace("__ACCENT_C2__", accent_c2)
     )
+    st.markdown(css, unsafe_allow_html=True)
 
 
 def render_hero(title: str, subtitle: str) -> None:
@@ -486,6 +515,25 @@ def responses_to_csv(responses: list[dict], catalog: PartyCatalog) -> str:
     return buffer.getvalue()
 
 
+# --- Event-Intro (Landing Page vor der Sprachauswahl) -----------------------
+
+
+def render_event_intro(settings: dict) -> None:
+    """Themen-Intro-Screen (Party-Name + Event-Branding), der VOR der
+    Sprachauswahl angezeigt wird - die Sprache ist an dieser Stelle noch
+    nicht bekannt, daher bewusst nur ein pragmatischer zweisprachiger
+    Continue-Button statt des vollen t()-i18n-Systems (siehe event_theme.py:
+    EVENT_TYPES[...]['intro_subtitle'] folgt demselben Muster)."""
+    theme = event_theme.EVENT_TYPES.get(
+        settings["event_type"], event_theme.EVENT_TYPES[event_theme.DEFAULT_EVENT_TYPE]
+    )
+    render_hero(f"{theme['emoji']} {event_theme.resolve_party_title(settings)}", theme["intro_subtitle"])
+
+    if st.button("Weiter / Continue ➡️", key="btn_enter_intro", use_container_width=True):
+        st.session_state.entered_intro = True
+        st.rerun()
+
+
 # --- Sprachauswahl (Landing Page) --------------------------------------------
 
 
@@ -517,6 +565,13 @@ TOTAL_STEPS = 4
 
 
 def render_guest_form() -> None:
+    if "entered_intro" not in st.session_state:
+        st.session_state.entered_intro = False
+
+    if not st.session_state.entered_intro:
+        render_event_intro(_PARTY_SETTINGS)
+        return
+
     if "language" not in st.session_state:
         st.session_state.language = None
 
@@ -650,6 +705,40 @@ def render_guest_form() -> None:
 # --- Admin-Ansicht -----------------------------------------------------------
 
 
+def render_party_settings_section(lang: str) -> None:
+    """Admin-Sektion zum EINMALIGEN Festlegen von Event-Typ + Party-Name für
+    die gesamte Party (siehe event_theme.py) - beeinflusst nur Optik/Text
+    (Titel, Icon, Hero-/Button-Farbverlauf, Intro-Untertitel), NICHT den
+    Getränke-/Essenskatalog oder die Wizard-Fragen."""
+    settings = event_theme.get_party_settings(DB_PATH)
+    event_type_keys = list(event_theme.EVENT_TYPES.keys())
+
+    def _format_event_type(key: str) -> str:
+        theme = event_theme.EVENT_TYPES[key]
+        label = theme["label_de"] if lang == "de" else theme["label_en"]
+        return f"{theme['emoji']} {label}"
+
+    with st.expander(t(lang, "party_settings_header"), expanded=not settings["party_name"]):
+        chosen_type = st.selectbox(
+            t(lang, "event_type_label"),
+            event_type_keys,
+            index=event_type_keys.index(settings["event_type"]),
+            format_func=_format_event_type,
+            key="party_settings_event_type",
+        )
+        default_title = event_theme.EVENT_TYPES[chosen_type]["default_title"]
+        party_name = st.text_input(
+            t(lang, "party_name_label"),
+            value=settings["party_name"],
+            placeholder=t(lang, "party_name_placeholder", default_title=default_title),
+            key="party_settings_party_name",
+        )
+        if st.button(t(lang, "btn_save_party_settings"), key="party_settings_save_btn"):
+            event_theme.save_party_settings(DB_PATH, chosen_type, party_name)
+            st.success(t(lang, "party_settings_saved"))
+            st.rerun()
+
+
 def render_admin_view() -> None:
     if "admin_language" not in st.session_state:
         st.session_state.admin_language = DEFAULT_LANGUAGE
@@ -667,6 +756,9 @@ def render_admin_view() -> None:
     lang = st.session_state.admin_language
 
     render_hero(t(lang, "admin_title"), t(lang, "admin_subtitle"))
+
+    render_party_settings_section(lang)
+
     responses = load_responses()
     catalog = get_catalog()
 
@@ -811,7 +903,7 @@ def render_spotify_section(responses: list[dict], lang: str = DEFAULT_LANGUAGE) 
                         SPOTIFY_CLIENT_ID,
                         SPOTIFY_CLIENT_SECRET,
                         songs,
-                        playlist_name="Bauwagen Gartenparty",
+                        playlist_name=event_theme.resolve_party_title(event_theme.get_party_settings(DB_PATH)),
                         playlist_description="Automatisch erstellt aus den Songwünschen der Gäste.",
                     )
                 except Exception as e:
@@ -840,7 +932,10 @@ def handle_spotify_callback(code: str) -> None:
 
 # --- Einstiegspunkt -----------------------------------------------------------
 
-inject_theme()
+_ACTIVE_EVENT_THEME = event_theme.EVENT_TYPES.get(
+    _PARTY_SETTINGS["event_type"], event_theme.EVENT_TYPES[event_theme.DEFAULT_EVENT_TYPE]
+)
+inject_theme(_ACTIVE_EVENT_THEME["hero_gradient"], _ACTIVE_EVENT_THEME["accent_gradient"])
 
 query_params = st.query_params
 is_admin_token_set = ADMIN_TOKEN != "change-me-to-a-secret-value"
