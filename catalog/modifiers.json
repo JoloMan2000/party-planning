@@ -1,0 +1,281 @@
+{
+  "mod_add_cheddar": {
+    "id": "mod_add_cheddar",
+    "name": "Extra Cheddar",
+    "applies_to": [
+      "burger"
+    ],
+    "effect_type": "add_component",
+    "target_ingredient_id": "cheddar",
+    "amount": 0.02,
+    "unit": "kg",
+    "brand": ""
+  },
+  "mod_add_bacon": {
+    "id": "mod_add_bacon",
+    "name": "Extra Bacon",
+    "applies_to": [
+      "burger",
+      "fingerfood",
+      "grill"
+    ],
+    "effect_type": "add_component",
+    "target_ingredient_id": "bacon",
+    "amount": 0.03,
+    "unit": "kg",
+    "brand": ""
+  },
+  "mod_add_fried_onions": {
+    "id": "mod_add_fried_onions",
+    "name": "Extra Röstzwiebeln",
+    "applies_to": [
+      "grill",
+      "burger"
+    ],
+    "effect_type": "add_component",
+    "target_ingredient_id": "fried_onions",
+    "amount": 0.02,
+    "unit": "kg",
+    "brand": ""
+  },
+  "mod_add_herb_butter": {
+    "id": "mod_add_herb_butter",
+    "name": "Mit Kräuterbutter",
+    "applies_to": [
+      "grill",
+      "main_dish"
+    ],
+    "effect_type": "add_component",
+    "target_ingredient_id": "herb_butter",
+    "amount": 0.02,
+    "unit": "l",
+    "brand": ""
+  },
+  "mod_add_guacamole_dip": {
+    "id": "mod_add_guacamole_dip",
+    "name": "Mit Guacamole-Dip",
+    "applies_to": [
+      "fingerfood",
+      "main_dish"
+    ],
+    "effect_type": "add_component",
+    "target_ingredient_id": "guacamole",
+    "amount": 0.05,
+    "unit": "l",
+    "brand": ""
+  },
+  "mod_add_avocado": {
+    "id": "mod_add_avocado",
+    "name": "Extra Avocado",
+    "applies_to": [
+      "burger",
+      "salad"
+    ],
+    "effect_type": "add_component",
+    "target_ingredient_id": "avocado",
+    "amount": 0.03,
+    "unit": "kg",
+    "brand": ""
+  },
+  "mod_add_jalapeno": {
+    "id": "mod_add_jalapeno",
+    "name": "Extra Jalapeños",
+    "applies_to": [
+      "burger",
+      "main_dish",
+      "fingerfood"
+    ],
+    "effect_type": "add_component",
+    "target_ingredient_id": "jalapeno",
+    "amount": 0.015,
+    "unit": "kg",
+    "brand": ""
+  },
+  "mod_add_chili_flakes": {
+    "id": "mod_add_chili_flakes",
+    "name": "Extra scharf (Chiliflocken)",
+    "applies_to": [
+      "*"
+    ],
+    "effect_type": "add_component",
+    "target_ingredient_id": "chili_flakes",
+    "amount": 0.002,
+    "unit": "kg",
+    "brand": ""
+  },
+  "mod_add_extra_ketchup": {
+    "id": "mod_add_extra_ketchup",
+    "name": "Extra Ketchup",
+    "applies_to": [
+      "burger",
+      "grill",
+      "fingerfood"
+    ],
+    "effect_type": "add_component",
+    "target_ingredient_id": "ketchup",
+    "amount": 0.01,
+    "unit": "l",
+    "brand": ""
+  },
+  "mod_add_cheese_sauce_dip": {
+    "id": "mod_add_cheese_sauce_dip",
+    "name": "Mit Cheese Sauce",
+    "applies_to": [
+      "fingerfood",
+      "main_dish"
+    ],
+    "effect_type": "add_component",
+    "target_ingredient_id": "cheese_sauce",
+    "amount": 0.04,
+    "unit": "l",
+    "brand": ""
+  },
+  "mod_add_bbq_sauce": {
+    "id": "mod_add_bbq_sauce",
+    "name": "Mit BBQ-Sauce",
+    "applies_to": [
+      "grill",
+      "burger"
+    ],
+    "effect_type": "add_component",
+    "target_ingredient_id": "bbq_sauce",
+    "amount": 0.02,
+    "unit": "l",
+    "brand": ""
+  },
+  "mod_double_patty": {
+    "id": "mod_double_patty",
+    "name": "Doppel-Patty",
+    "applies_to": [
+      "burger"
+    ],
+    "effect_type": "add_component",
+    "target_ingredient_id": "beef_patty",
+    "amount": 0.15,
+    "unit": "kg",
+    "brand": ""
+  },
+  "mod_remove_cheese": {
+    "id": "mod_remove_cheese",
+    "name": "Ohne Käse",
+    "applies_to": [
+      "burger"
+    ],
+    "effect_type": "remove_component",
+    "target_ingredient_id": "cheddar",
+    "amount": 0.0,
+    "unit": "l",
+    "brand": ""
+  },
+  "mod_remove_onion": {
+    "id": "mod_remove_onion",
+    "name": "Ohne Zwiebeln",
+    "applies_to": [
+      "burger",
+      "grill"
+    ],
+    "effect_type": "remove_component",
+    "target_ingredient_id": "onion",
+    "amount": 0.0,
+    "unit": "l",
+    "brand": ""
+  },
+  "mod_remove_mustard": {
+    "id": "mod_remove_mustard",
+    "name": "Ohne Senf",
+    "applies_to": [
+      "burger",
+      "grill"
+    ],
+    "effect_type": "remove_component",
+    "target_ingredient_id": "mustard",
+    "amount": 0.0,
+    "unit": "l",
+    "brand": ""
+  },
+  "mod_double_portion": {
+    "id": "mod_double_portion",
+    "name": "Doppelte Portion",
+    "applies_to": [
+      "*"
+    ],
+    "effect_type": "scale",
+    "target_ingredient_id": "",
+    "amount": 2.0,
+    "unit": "",
+    "brand": ""
+  },
+  "mod_half_portion": {
+    "id": "mod_half_portion",
+    "name": "Halbe Portion",
+    "applies_to": [
+      "*"
+    ],
+    "effect_type": "scale",
+    "target_ingredient_id": "",
+    "amount": 0.5,
+    "unit": "",
+    "brand": ""
+  },
+  "mod_brand_gin_hendricks": {
+    "id": "mod_brand_gin_hendricks",
+    "name": "Gin: Hendrick's bevorzugt",
+    "applies_to": [
+      "cocktail_gin"
+    ],
+    "effect_type": "set_brand_preference",
+    "target_ingredient_id": "gin",
+    "amount": 0.0,
+    "unit": "l",
+    "brand": "Hendrick's"
+  },
+  "mod_brand_coffee_liqueur_kahlua": {
+    "id": "mod_brand_coffee_liqueur_kahlua",
+    "name": "Kaffeelikör: Kahlúa bevorzugt",
+    "applies_to": [
+      "cocktail_vodka"
+    ],
+    "effect_type": "set_brand_preference",
+    "target_ingredient_id": "coffee_liqueur",
+    "amount": 0.0,
+    "unit": "l",
+    "brand": "Kahlúa"
+  },
+  "mod_brand_vodka_absolut": {
+    "id": "mod_brand_vodka_absolut",
+    "name": "Vodka: Absolut bevorzugt",
+    "applies_to": [
+      "cocktail_vodka",
+      "spirit"
+    ],
+    "effect_type": "set_brand_preference",
+    "target_ingredient_id": "vodka",
+    "amount": 0.0,
+    "unit": "l",
+    "brand": "Absolut"
+  },
+  "mod_brand_rum_bacardi": {
+    "id": "mod_brand_rum_bacardi",
+    "name": "Rum: Bacardi bevorzugt",
+    "applies_to": [
+      "cocktail_rum"
+    ],
+    "effect_type": "set_brand_preference",
+    "target_ingredient_id": "rum_white",
+    "amount": 0.0,
+    "unit": "l",
+    "brand": "Bacardi"
+  },
+  "mod_brand_whiskey_jd": {
+    "id": "mod_brand_whiskey_jd",
+    "name": "Whiskey: Jack Daniel's bevorzugt",
+    "applies_to": [
+      "cocktail_whiskey"
+    ],
+    "effect_type": "set_brand_preference",
+    "target_ingredient_id": "tennessee_whiskey",
+    "amount": 0.0,
+    "unit": "l",
+    "brand": "Jack Daniel's"
+  }
+}

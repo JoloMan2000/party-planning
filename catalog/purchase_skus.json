@@ -1,0 +1,5976 @@
+{
+  "vodka": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "vodka_vanilla": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "gin": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "gin_london_dry": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "gin_pink": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "rum_white": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "rum_dark": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "rum_aged": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "rum_spiced": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "rum_overproof": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "bourbon": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "rye_whiskey": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "scotch_whisky": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "irish_whiskey": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "tennessee_whiskey": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "canadian_whisky": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "tequila_blanco": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "tequila_reposado": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "tequila_anejo": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "mezcal": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "cachaca": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "pisco": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "cognac": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "brandy": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "calvados": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "grappa": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "korn": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "doppelkorn": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "obstler": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "williams_birne": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "kirschwasser": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "sambuca": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "ouzo": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "raki": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "aquavit": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "jaegermeister": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "baileys": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "amaretto": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "limoncello": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "aperol": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "campari": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "cynar": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "fernet": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "ramazzotti": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "averna": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "amaro_generic": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "coffee_liqueur": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "triple_sec": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "grand_marnier": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "peach_liqueur": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "maraschino": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "blackberry_liqueur": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "raspberry_liqueur": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "passionfruit_liqueur": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "elderflower_liqueur": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "creme_de_cassis": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "blue_curacao": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "malibu": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "dry_vermouth": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "sweet_vermouth": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "lillet_blanc": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "sherry": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "port_wine": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "chartreuse_green": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "chartreuse_yellow": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "red_wine": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "white_wine": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "rose_wine": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "grauburgunder": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "weissburgunder": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "riesling": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "chardonnay": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "sauvignon_blanc": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "silvaner": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "mueller_thurgau": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "gruener_veltliner": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "gewuerztraminer": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "primitivo": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "merlot": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "cabernet_sauvignon": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "pinot_noir": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "spaetburgunder": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "tempranillo": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "syrah": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "shiraz": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "rioja": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "chianti": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "lambrusco": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "wine_alcohol_free": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "prosecco": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "sekt": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "champagne": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "cremant": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "cava": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "franciacorta": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "sparkling_wine_alcohol_free": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "beer_pils": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "beer_helles": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "beer_export": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "beer_kellerbier": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "beer_zwickel": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "beer_hefeweizen": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "beer_kristallweizen": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "beer_dunkelweizen": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "beer_dunkel": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "beer_schwarzbier": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "beer_bockbier": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "beer_doppelbock": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "beer_maerzen": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "beer_festbier": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "beer_koelsch": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "beer_altbier": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "beer_lager": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "beer_pale_ale": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "beer_ipa": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "beer_double_ipa": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "beer_session_ipa": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "beer_stout": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "beer_porter": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "beer_sour": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "beer_craft_generic": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "beer_pils_alcohol_free": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "beer_helles_alcohol_free": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "beer_weizen_alcohol_free": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "cola": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.25,
+      "unit": "l",
+      "pack_label": "Flasche 1,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 2.0,
+      "unit": "l",
+      "pack_label": "Flasche 2L",
+      "pack_count": 1
+    }
+  ],
+  "cola_zero": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.25,
+      "unit": "l",
+      "pack_label": "Flasche 1,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 2.0,
+      "unit": "l",
+      "pack_label": "Flasche 2L",
+      "pack_count": 1
+    }
+  ],
+  "cola_light": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.25,
+      "unit": "l",
+      "pack_label": "Flasche 1,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 2.0,
+      "unit": "l",
+      "pack_label": "Flasche 2L",
+      "pack_count": 1
+    }
+  ],
+  "fanta_orange": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.25,
+      "unit": "l",
+      "pack_label": "Flasche 1,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 2.0,
+      "unit": "l",
+      "pack_label": "Flasche 2L",
+      "pack_count": 1
+    }
+  ],
+  "fanta_lemon": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.25,
+      "unit": "l",
+      "pack_label": "Flasche 1,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 2.0,
+      "unit": "l",
+      "pack_label": "Flasche 2L",
+      "pack_count": 1
+    }
+  ],
+  "sprite": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.25,
+      "unit": "l",
+      "pack_label": "Flasche 1,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 2.0,
+      "unit": "l",
+      "pack_label": "Flasche 2L",
+      "pack_count": 1
+    }
+  ],
+  "seven_up": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.25,
+      "unit": "l",
+      "pack_label": "Flasche 1,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 2.0,
+      "unit": "l",
+      "pack_label": "Flasche 2L",
+      "pack_count": 1
+    }
+  ],
+  "lemonade_orange": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.25,
+      "unit": "l",
+      "pack_label": "Flasche 1,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 2.0,
+      "unit": "l",
+      "pack_label": "Flasche 2L",
+      "pack_count": 1
+    }
+  ],
+  "lemonade_lemon": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.25,
+      "unit": "l",
+      "pack_label": "Flasche 1,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 2.0,
+      "unit": "l",
+      "pack_label": "Flasche 2L",
+      "pack_count": 1
+    }
+  ],
+  "tonic_water": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.25,
+      "unit": "l",
+      "pack_label": "Flasche 1,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 2.0,
+      "unit": "l",
+      "pack_label": "Flasche 2L",
+      "pack_count": 1
+    }
+  ],
+  "bitter_lemon": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.25,
+      "unit": "l",
+      "pack_label": "Flasche 1,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 2.0,
+      "unit": "l",
+      "pack_label": "Flasche 2L",
+      "pack_count": 1
+    }
+  ],
+  "ginger_ale": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.25,
+      "unit": "l",
+      "pack_label": "Flasche 1,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 2.0,
+      "unit": "l",
+      "pack_label": "Flasche 2L",
+      "pack_count": 1
+    }
+  ],
+  "ginger_beer": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.25,
+      "unit": "l",
+      "pack_label": "Flasche 1,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 2.0,
+      "unit": "l",
+      "pack_label": "Flasche 2L",
+      "pack_count": 1
+    }
+  ],
+  "wild_berry_soda": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.25,
+      "unit": "l",
+      "pack_label": "Flasche 1,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 2.0,
+      "unit": "l",
+      "pack_label": "Flasche 2L",
+      "pack_count": 1
+    }
+  ],
+  "grapefruit_soda": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.25,
+      "unit": "l",
+      "pack_label": "Flasche 1,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 2.0,
+      "unit": "l",
+      "pack_label": "Flasche 2L",
+      "pack_count": 1
+    }
+  ],
+  "club_mate": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.25,
+      "unit": "l",
+      "pack_label": "Flasche 1,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 2.0,
+      "unit": "l",
+      "pack_label": "Flasche 2L",
+      "pack_count": 1
+    }
+  ],
+  "mate_lemonade": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.25,
+      "unit": "l",
+      "pack_label": "Flasche 1,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 2.0,
+      "unit": "l",
+      "pack_label": "Flasche 2L",
+      "pack_count": 1
+    }
+  ],
+  "fassbrause": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.25,
+      "unit": "l",
+      "pack_label": "Flasche 1,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 2.0,
+      "unit": "l",
+      "pack_label": "Flasche 2L",
+      "pack_count": 1
+    }
+  ],
+  "malt_beer": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.25,
+      "unit": "l",
+      "pack_label": "Flasche 1,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 2.0,
+      "unit": "l",
+      "pack_label": "Flasche 2L",
+      "pack_count": 1
+    }
+  ],
+  "root_beer": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.25,
+      "unit": "l",
+      "pack_label": "Flasche 1,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 2.0,
+      "unit": "l",
+      "pack_label": "Flasche 2L",
+      "pack_count": 1
+    }
+  ],
+  "cream_soda": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.25,
+      "unit": "l",
+      "pack_label": "Flasche 1,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 2.0,
+      "unit": "l",
+      "pack_label": "Flasche 2L",
+      "pack_count": 1
+    }
+  ],
+  "soda_water": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.25,
+      "unit": "l",
+      "pack_label": "Flasche 1,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 2.0,
+      "unit": "l",
+      "pack_label": "Flasche 2L",
+      "pack_count": 1
+    }
+  ],
+  "mineral_water_still": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Kasten (6x1,5L)",
+      "pack_count": 6
+    }
+  ],
+  "mineral_water_medium": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Kasten (6x1,5L)",
+      "pack_count": 6
+    }
+  ],
+  "mineral_water_sparkling": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Kasten (6x1,5L)",
+      "pack_count": 6
+    }
+  ],
+  "water": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Kasten (6x1,5L)",
+      "pack_count": 6
+    }
+  ],
+  "energy_drink_generic": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Dose 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Dose 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Dose 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "energy_drink_sugarfree": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Dose 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Dose 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Dose 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "energy_drink_tropical": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Dose 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Dose 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Dose 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "coffee_beans": [
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Packung",
+      "pack_count": 1
+    }
+  ],
+  "orange_juice": [
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    }
+  ],
+  "apple_juice": [
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    }
+  ],
+  "pineapple_juice": [
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    }
+  ],
+  "cranberry_juice": [
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    }
+  ],
+  "cherry_juice": [
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    }
+  ],
+  "banana_juice": [
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    }
+  ],
+  "passionfruit_juice": [
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    }
+  ],
+  "mango_juice": [
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    }
+  ],
+  "peach_juice": [
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    }
+  ],
+  "grapefruit_juice": [
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    }
+  ],
+  "tomato_juice": [
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    }
+  ],
+  "grape_juice": [
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    }
+  ],
+  "currant_juice": [
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    }
+  ],
+  "multivitamin_juice": [
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    }
+  ],
+  "rhubarb_juice": [
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    }
+  ],
+  "grenadine": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    }
+  ],
+  "lime_cordial": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    }
+  ],
+  "elderflower_syrup": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    }
+  ],
+  "passionfruit_syrup": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    }
+  ],
+  "raspberry_syrup": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    }
+  ],
+  "vanilla_syrup": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    }
+  ],
+  "agave_syrup": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    }
+  ],
+  "orgeat_syrup": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    }
+  ],
+  "cane_sugar_syrup": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    }
+  ],
+  "milk": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Packung 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Packung 1L",
+      "pack_count": 1
+    }
+  ],
+  "cream": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Packung 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Packung 1L",
+      "pack_count": 1
+    }
+  ],
+  "yogurt": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Packung 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Packung 1L",
+      "pack_count": 1
+    }
+  ],
+  "sour_cream": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Packung 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Packung 1L",
+      "pack_count": 1
+    }
+  ],
+  "butter": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Packung 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Packung 1L",
+      "pack_count": 1
+    }
+  ],
+  "mascarpone": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Packung 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Packung 1L",
+      "pack_count": 1
+    }
+  ],
+  "cream_cheese": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Packung 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Packung 1L",
+      "pack_count": 1
+    }
+  ],
+  "apple": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "banana": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "strawberry": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "blueberry": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "raspberry": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "blackberry": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "pineapple": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "watermelon": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "grape": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "peach": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "mango": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "passionfruit": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "cherry": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "pomegranate": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "mixed_berries": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "lime": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "lemon": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "orange": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "grapefruit": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "mint": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Bund/Topf",
+      "pack_count": 1
+    }
+  ],
+  "basil": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Bund/Topf",
+      "pack_count": 1
+    }
+  ],
+  "rosemary": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Bund/Topf",
+      "pack_count": 1
+    }
+  ],
+  "thyme": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Bund/Topf",
+      "pack_count": 1
+    }
+  ],
+  "parsley": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Bund/Topf",
+      "pack_count": 1
+    }
+  ],
+  "dill": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Bund/Topf",
+      "pack_count": 1
+    }
+  ],
+  "chives": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Bund/Topf",
+      "pack_count": 1
+    }
+  ],
+  "cilantro": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Bund/Topf",
+      "pack_count": 1
+    }
+  ],
+  "ginger": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Bund/Topf",
+      "pack_count": 1
+    }
+  ],
+  "beef_patty": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "beef_steak_ribeye": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "beef_steak_rump": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "beef_entrecote": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "ground_beef": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "beef_sausage": [
+    {
+      "size": 0.4,
+      "unit": "kg",
+      "pack_label": "4er Pack",
+      "pack_count": 4
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "10er Pack",
+      "pack_count": 10
+    }
+  ],
+  "pork_sausage_bratwurst": [
+    {
+      "size": 0.4,
+      "unit": "kg",
+      "pack_label": "4er Pack",
+      "pack_count": 4
+    },
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "5er Pack",
+      "pack_count": 5
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "10er Pack",
+      "pack_count": 10
+    }
+  ],
+  "pork_sausage_nuernberger": [
+    {
+      "size": 0.4,
+      "unit": "kg",
+      "pack_label": "8er Pack",
+      "pack_count": 8
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "20er Pack",
+      "pack_count": 20
+    }
+  ],
+  "pork_sausage_thueringer": [
+    {
+      "size": 0.4,
+      "unit": "kg",
+      "pack_label": "4er Pack",
+      "pack_count": 4
+    },
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "5er Pack",
+      "pack_count": 5
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "10er Pack",
+      "pack_count": 10
+    }
+  ],
+  "pork_sausage_krakauer": [
+    {
+      "size": 0.3,
+      "unit": "kg",
+      "pack_label": "2er Pack",
+      "pack_count": 2
+    },
+    {
+      "size": 0.6,
+      "unit": "kg",
+      "pack_label": "4er Pack",
+      "pack_count": 4
+    }
+  ],
+  "pork_sausage_currywurst": [
+    {
+      "size": 0.4,
+      "unit": "kg",
+      "pack_label": "4er Pack",
+      "pack_count": 4
+    },
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "5er Pack",
+      "pack_count": 5
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "10er Pack",
+      "pack_count": 10
+    }
+  ],
+  "pork_neck_steak": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "pork_belly": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "pork_chop": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "pork_ribs": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "ground_pork": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "bacon": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "ham": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "lamb_chop": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "lamb_skewer_meat": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "chicken_breast": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "chicken_thigh": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "chicken_wing": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "chicken_drumstick": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "ground_chicken": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "turkey_breast": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "salmon_fillet": [
+    {
+      "size": 0.3,
+      "unit": "kg",
+      "pack_label": "Packung 300g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    }
+  ],
+  "shrimp": [
+    {
+      "size": 0.3,
+      "unit": "kg",
+      "pack_label": "Packung 300g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    }
+  ],
+  "dorade": [
+    {
+      "size": 0.3,
+      "unit": "kg",
+      "pack_label": "Packung 300g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    }
+  ],
+  "trout": [
+    {
+      "size": 0.3,
+      "unit": "kg",
+      "pack_label": "Packung 300g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    }
+  ],
+  "tuna_steak": [
+    {
+      "size": 0.3,
+      "unit": "kg",
+      "pack_label": "Packung 300g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    }
+  ],
+  "cod": [
+    {
+      "size": 0.3,
+      "unit": "kg",
+      "pack_label": "Packung 300g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    }
+  ],
+  "halloumi": [
+    {
+      "size": 0.4,
+      "unit": "kg",
+      "pack_label": "Packung 400g",
+      "pack_count": 1
+    }
+  ],
+  "feta": [
+    {
+      "size": 0.4,
+      "unit": "kg",
+      "pack_label": "Packung 400g",
+      "pack_count": 1
+    }
+  ],
+  "tofu": [
+    {
+      "size": 0.25,
+      "unit": "kg",
+      "pack_label": "Packung 250g",
+      "pack_count": 1
+    }
+  ],
+  "tofu_marinated": [
+    {
+      "size": 0.25,
+      "unit": "kg",
+      "pack_label": "Packung 250g",
+      "pack_count": 1
+    }
+  ],
+  "tempeh": [
+    {
+      "size": 0.25,
+      "unit": "kg",
+      "pack_label": "Packung 250g",
+      "pack_count": 1
+    }
+  ],
+  "seitan": [
+    {
+      "size": 0.25,
+      "unit": "kg",
+      "pack_label": "Packung 250g",
+      "pack_count": 1
+    }
+  ],
+  "vegan_sausage": [
+    {
+      "size": 0.25,
+      "unit": "kg",
+      "pack_label": "Packung 250g",
+      "pack_count": 1
+    }
+  ],
+  "vegan_burger_patty": [
+    {
+      "size": 0.25,
+      "unit": "kg",
+      "pack_label": "Packung 250g",
+      "pack_count": 1
+    }
+  ],
+  "vegetarian_sausage": [
+    {
+      "size": 0.4,
+      "unit": "kg",
+      "pack_label": "Packung 400g",
+      "pack_count": 1
+    }
+  ],
+  "vegetarian_burger_patty": [
+    {
+      "size": 0.4,
+      "unit": "kg",
+      "pack_label": "Packung 400g",
+      "pack_count": 1
+    }
+  ],
+  "jackfruit": [
+    {
+      "size": 0.25,
+      "unit": "kg",
+      "pack_label": "Packung 250g",
+      "pack_count": 1
+    }
+  ],
+  "burger_bun": [
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "4er Pack",
+      "pack_count": 4
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "6er Pack",
+      "pack_count": 6
+    }
+  ],
+  "hotdog_bun": [
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "4er Pack",
+      "pack_count": 4
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "6er Pack",
+      "pack_count": 6
+    }
+  ],
+  "baguette": [
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "Stück",
+      "pack_count": 1
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "4er Pack",
+      "pack_count": 4
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "6er Pack",
+      "pack_count": 6
+    }
+  ],
+  "ciabatta": [
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "Stück",
+      "pack_count": 1
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "4er Pack",
+      "pack_count": 4
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "6er Pack",
+      "pack_count": 6
+    }
+  ],
+  "flatbread": [
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "Stück",
+      "pack_count": 1
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "4er Pack",
+      "pack_count": 4
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "6er Pack",
+      "pack_count": 6
+    }
+  ],
+  "bread_roll": [
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "Stück",
+      "pack_count": 1
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "4er Pack",
+      "pack_count": 4
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "6er Pack",
+      "pack_count": 6
+    }
+  ],
+  "pretzel": [
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "Stück",
+      "pack_count": 1
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "4er Pack",
+      "pack_count": 4
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "6er Pack",
+      "pack_count": 6
+    }
+  ],
+  "laugenstange": [
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "Stück",
+      "pack_count": 1
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "4er Pack",
+      "pack_count": 4
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "6er Pack",
+      "pack_count": 6
+    }
+  ],
+  "white_bread": [
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "Stück",
+      "pack_count": 1
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "4er Pack",
+      "pack_count": 4
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "6er Pack",
+      "pack_count": 6
+    }
+  ],
+  "toast_bread": [
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "Stück",
+      "pack_count": 1
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "4er Pack",
+      "pack_count": 4
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "6er Pack",
+      "pack_count": 6
+    }
+  ],
+  "tortilla_wrap": [
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "Stück",
+      "pack_count": 1
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "4er Pack",
+      "pack_count": 4
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "6er Pack",
+      "pack_count": 6
+    }
+  ],
+  "potato": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    },
+    {
+      "size": 2.5,
+      "unit": "kg",
+      "pack_label": "Netz 2,5kg",
+      "pack_count": 1
+    },
+    {
+      "size": 5.0,
+      "unit": "kg",
+      "pack_label": "Netz 5kg",
+      "pack_count": 1
+    }
+  ],
+  "sweet_potato": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    },
+    {
+      "size": 2.5,
+      "unit": "kg",
+      "pack_label": "Netz 2,5kg",
+      "pack_count": 1
+    },
+    {
+      "size": 5.0,
+      "unit": "kg",
+      "pack_label": "Netz 5kg",
+      "pack_count": 1
+    }
+  ],
+  "pasta_penne": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "pasta_spaghetti": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "tortellini": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "macaroni": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "rice": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "basmati_rice": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "couscous": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "bulgur": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "quinoa": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "lettuce": [
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Kopf/Beutel",
+      "pack_count": 1
+    }
+  ],
+  "arugula": [
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Kopf/Beutel",
+      "pack_count": 1
+    }
+  ],
+  "romaine_lettuce": [
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Kopf/Beutel",
+      "pack_count": 1
+    }
+  ],
+  "mixed_greens": [
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Kopf/Beutel",
+      "pack_count": 1
+    }
+  ],
+  "tomato": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "cucumber": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "onion": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "red_onion": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "bell_pepper": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "corn": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "zucchini": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "eggplant": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "mushroom": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "avocado": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "carrot": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "cabbage": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "kidney_beans": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "chickpeas": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "lentils": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "garlic": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "jalapeno": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "olives": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "cheddar": [
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Packung 200g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Block 1kg",
+      "pack_count": 1
+    }
+  ],
+  "mozzarella": [
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Packung 200g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Block 1kg",
+      "pack_count": 1
+    }
+  ],
+  "parmesan": [
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Packung 200g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Block 1kg",
+      "pack_count": 1
+    }
+  ],
+  "gouda": [
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Packung 200g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Block 1kg",
+      "pack_count": 1
+    }
+  ],
+  "blue_cheese": [
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Packung 200g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Block 1kg",
+      "pack_count": 1
+    }
+  ],
+  "cheese_slices_generic": [
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Packung 200g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Block 1kg",
+      "pack_count": 1
+    }
+  ],
+  "ketchup": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.875,
+      "unit": "l",
+      "pack_label": "Catering-Flasche 875ml",
+      "pack_count": 1
+    }
+  ],
+  "mayonnaise": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.875,
+      "unit": "l",
+      "pack_label": "Catering-Flasche 875ml",
+      "pack_count": 1
+    }
+  ],
+  "mustard": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "sweet_mustard": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "bbq_sauce": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "burger_sauce": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "cocktail_sauce": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "curry_sauce": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "aioli": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "garlic_dip": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "herb_dip": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "tzatziki": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "hummus": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "salsa_mild": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "salsa_hot": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "guacamole": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "sweet_chili_sauce": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "sriracha": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "hot_sauce": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "tabasco": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "remoulade": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "honey_mustard_sauce": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "teriyaki_sauce": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "cheese_sauce": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "chili_cheese_sauce": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "herb_butter": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "garlic_butter": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "tomato_sauce": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "pesto": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "salt": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Streuer/Tüte",
+      "pack_count": 1
+    }
+  ],
+  "pepper": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Streuer/Tüte",
+      "pack_count": 1
+    }
+  ],
+  "paprika_powder": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Streuer/Tüte",
+      "pack_count": 1
+    }
+  ],
+  "cumin": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Streuer/Tüte",
+      "pack_count": 1
+    }
+  ],
+  "oregano": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Streuer/Tüte",
+      "pack_count": 1
+    }
+  ],
+  "chili_flakes": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Streuer/Tüte",
+      "pack_count": 1
+    }
+  ],
+  "cinnamon": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Streuer/Tüte",
+      "pack_count": 1
+    }
+  ],
+  "sugar": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Streuer/Tüte",
+      "pack_count": 1
+    }
+  ],
+  "vanilla_sugar": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Streuer/Tüte",
+      "pack_count": 1
+    }
+  ],
+  "potato_chips": [
+    {
+      "size": 0.1,
+      "unit": "kg",
+      "pack_label": "Tüte 100g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.15,
+      "unit": "kg",
+      "pack_label": "Tüte 150g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Tüte 200g",
+      "pack_count": 1
+    }
+  ],
+  "paprika_chips": [
+    {
+      "size": 0.1,
+      "unit": "kg",
+      "pack_label": "Tüte 100g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.15,
+      "unit": "kg",
+      "pack_label": "Tüte 150g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Tüte 200g",
+      "pack_count": 1
+    }
+  ],
+  "salt_vinegar_chips": [
+    {
+      "size": 0.1,
+      "unit": "kg",
+      "pack_label": "Tüte 100g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.15,
+      "unit": "kg",
+      "pack_label": "Tüte 150g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Tüte 200g",
+      "pack_count": 1
+    }
+  ],
+  "tortilla_chips": [
+    {
+      "size": 0.1,
+      "unit": "kg",
+      "pack_label": "Tüte 100g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.15,
+      "unit": "kg",
+      "pack_label": "Tüte 150g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Tüte 200g",
+      "pack_count": 1
+    }
+  ],
+  "pretzel_sticks": [
+    {
+      "size": 0.1,
+      "unit": "kg",
+      "pack_label": "Tüte 100g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.15,
+      "unit": "kg",
+      "pack_label": "Tüte 150g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Tüte 200g",
+      "pack_count": 1
+    }
+  ],
+  "crackers": [
+    {
+      "size": 0.1,
+      "unit": "kg",
+      "pack_label": "Tüte 100g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.15,
+      "unit": "kg",
+      "pack_label": "Tüte 150g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Tüte 200g",
+      "pack_count": 1
+    }
+  ],
+  "cheese_crackers": [
+    {
+      "size": 0.1,
+      "unit": "kg",
+      "pack_label": "Tüte 100g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.15,
+      "unit": "kg",
+      "pack_label": "Tüte 150g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Tüte 200g",
+      "pack_count": 1
+    }
+  ],
+  "peanuts": [
+    {
+      "size": 0.1,
+      "unit": "kg",
+      "pack_label": "Tüte 100g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.15,
+      "unit": "kg",
+      "pack_label": "Tüte 150g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Tüte 200g",
+      "pack_count": 1
+    }
+  ],
+  "cashews": [
+    {
+      "size": 0.1,
+      "unit": "kg",
+      "pack_label": "Tüte 100g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.15,
+      "unit": "kg",
+      "pack_label": "Tüte 150g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Tüte 200g",
+      "pack_count": 1
+    }
+  ],
+  "almonds": [
+    {
+      "size": 0.1,
+      "unit": "kg",
+      "pack_label": "Tüte 100g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.15,
+      "unit": "kg",
+      "pack_label": "Tüte 150g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Tüte 200g",
+      "pack_count": 1
+    }
+  ],
+  "nut_mix": [
+    {
+      "size": 0.1,
+      "unit": "kg",
+      "pack_label": "Tüte 100g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.15,
+      "unit": "kg",
+      "pack_label": "Tüte 150g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Tüte 200g",
+      "pack_count": 1
+    }
+  ],
+  "popcorn_salty": [
+    {
+      "size": 0.1,
+      "unit": "kg",
+      "pack_label": "Tüte 100g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.15,
+      "unit": "kg",
+      "pack_label": "Tüte 150g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Tüte 200g",
+      "pack_count": 1
+    }
+  ],
+  "popcorn_sweet": [
+    {
+      "size": 0.1,
+      "unit": "kg",
+      "pack_label": "Tüte 100g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.15,
+      "unit": "kg",
+      "pack_label": "Tüte 150g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Tüte 200g",
+      "pack_count": 1
+    }
+  ],
+  "rice_cakes": [
+    {
+      "size": 0.1,
+      "unit": "kg",
+      "pack_label": "Tüte 100g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.15,
+      "unit": "kg",
+      "pack_label": "Tüte 150g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Tüte 200g",
+      "pack_count": 1
+    }
+  ],
+  "grissini": [
+    {
+      "size": 0.1,
+      "unit": "kg",
+      "pack_label": "Tüte 100g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.15,
+      "unit": "kg",
+      "pack_label": "Tüte 150g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Tüte 200g",
+      "pack_count": 1
+    }
+  ],
+  "mini_salami": [
+    {
+      "size": 0.1,
+      "unit": "kg",
+      "pack_label": "Tüte 100g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.15,
+      "unit": "kg",
+      "pack_label": "Tüte 150g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Tüte 200g",
+      "pack_count": 1
+    }
+  ],
+  "beef_jerky": [
+    {
+      "size": 0.1,
+      "unit": "kg",
+      "pack_label": "Tüte 100g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.15,
+      "unit": "kg",
+      "pack_label": "Tüte 150g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Tüte 200g",
+      "pack_count": 1
+    }
+  ],
+  "snack_sausages": [
+    {
+      "size": 0.1,
+      "unit": "kg",
+      "pack_label": "Tüte 100g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.15,
+      "unit": "kg",
+      "pack_label": "Tüte 150g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Tüte 200g",
+      "pack_count": 1
+    }
+  ],
+  "grapes_snack": [
+    {
+      "size": 0.1,
+      "unit": "kg",
+      "pack_label": "Tüte 100g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.15,
+      "unit": "kg",
+      "pack_label": "Tüte 150g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Tüte 200g",
+      "pack_count": 1
+    }
+  ],
+  "flour": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    }
+  ],
+  "eggs": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    }
+  ],
+  "cocoa_powder": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    }
+  ],
+  "vanilla_ice_cream": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    }
+  ],
+  "chocolate_ice_cream": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    }
+  ],
+  "strawberry_ice_cream": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    }
+  ],
+  "sorbet": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    }
+  ],
+  "pudding_vanilla": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    }
+  ],
+  "pudding_chocolate": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    }
+  ],
+  "gelatin": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    }
+  ],
+  "biscuit_base": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    }
+  ],
+  "chocolate": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    }
+  ],
+  "ice_cubes": [
+    {
+      "size": 2.0,
+      "unit": "kg",
+      "pack_label": "Beutel 2kg",
+      "pack_count": 1
+    }
+  ],
+  "crushed_ice": [
+    {
+      "size": 2.0,
+      "unit": "kg",
+      "pack_label": "Beutel 2kg",
+      "pack_count": 1
+    }
+  ],
+  "angostura_bitters": [
+    {
+      "size": 0.2,
+      "unit": "l",
+      "pack_label": "Flasche 0,2L",
+      "pack_count": 1
+    }
+  ],
+  "peychauds_bitters": [
+    {
+      "size": 0.2,
+      "unit": "l",
+      "pack_label": "Flasche 0,2L",
+      "pack_count": 1
+    }
+  ],
+  "orange_bitters": [
+    {
+      "size": 0.2,
+      "unit": "l",
+      "pack_label": "Flasche 0,2L",
+      "pack_count": 1
+    }
+  ],
+  "absinthe": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "egg_white": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    }
+  ],
+  "coconut_cream": [
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Packung 1L",
+      "pack_count": 1
+    }
+  ],
+  "coconut_milk": [
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Packung 1L",
+      "pack_count": 1
+    }
+  ],
+  "drambuie": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "creme_de_cacao": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "melon_liqueur": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "cherry_liqueur": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "falernum": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "honey_syrup": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    }
+  ],
+  "ginger_syrup": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    }
+  ],
+  "cinnamon_syrup": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    }
+  ],
+  "worcestershire_sauce": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "peanut_sauce": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "celery_salt": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Streuer/Tüte",
+      "pack_count": 1
+    }
+  ],
+  "pork_shoulder": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "salami": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "beef_stew_meat": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "pizza_dough": [
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "Stück",
+      "pack_count": 1
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "4er Pack",
+      "pack_count": 4
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "6er Pack",
+      "pack_count": 6
+    }
+  ],
+  "taco_shell": [
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "Stück",
+      "pack_count": 1
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "4er Pack",
+      "pack_count": 4
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "6er Pack",
+      "pack_count": 6
+    }
+  ],
+  "spring_roll_wrapper": [
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "Stück",
+      "pack_count": 1
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "4er Pack",
+      "pack_count": 4
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "6er Pack",
+      "pack_count": 6
+    }
+  ],
+  "puff_pastry": [
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "Stück",
+      "pack_count": 1
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "4er Pack",
+      "pack_count": 4
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "6er Pack",
+      "pack_count": 6
+    }
+  ],
+  "croutons": [
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "Stück",
+      "pack_count": 1
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "4er Pack",
+      "pack_count": 4
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "6er Pack",
+      "pack_count": 6
+    }
+  ],
+  "lasagne_sheets": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "vegan_cheese": [
+    {
+      "size": 0.25,
+      "unit": "kg",
+      "pack_label": "Packung 250g",
+      "pack_count": 1
+    }
+  ],
+  "green_beans": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "dates": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "ice_pop": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    }
+  ],
+  "frosting": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    }
+  ],
+  "cold_brew": [
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Packung",
+      "pack_count": 1
+    }
+  ],
+  "licor_43": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "baking_powder": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Streuer/Tüte",
+      "pack_count": 1
+    }
+  ],
+  "vanilla_extract": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Streuer/Tüte",
+      "pack_count": 1
+    }
+  ],
+  "powdered_sugar": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Streuer/Tüte",
+      "pack_count": 1
+    }
+  ],
+  "breadcrumbs": [
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "Stück",
+      "pack_count": 1
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "4er Pack",
+      "pack_count": 4
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "6er Pack",
+      "pack_count": 6
+    }
+  ],
+  "cooking_oil": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "olive_oil": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "caesar_dressing": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "vinaigrette": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "vegetable_stock": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "beef_stock": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "fried_onions": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "soy_mince": [
+    {
+      "size": 0.25,
+      "unit": "kg",
+      "pack_label": "Packung 250g",
+      "pack_count": 1
+    }
+  ],
+  "curry_paste": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "garam_masala": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Streuer/Tüte",
+      "pack_count": 1
+    }
+  ],
+  "peas": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "pickles": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "taco_seasoning": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Streuer/Tüte",
+      "pack_count": 1
+    }
+  ],
+  "honey": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    }
+  ],
+  "cornstarch": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Streuer/Tüte",
+      "pack_count": 1
+    }
+  ],
+  "galliano": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ]
+}

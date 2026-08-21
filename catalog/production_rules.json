@@ -1,0 +1,168 @@
+[
+  {
+    "output_ingredient_id": "lime_juice_fresh",
+    "inputs": [
+      {
+        "ingredient_id": "lime",
+        "ratio": 2.9
+      }
+    ],
+    "note": "ca. 2,9 kg Limetten ergeben 1 L frisch gepressten Saft"
+  },
+  {
+    "output_ingredient_id": "lemon_juice_fresh",
+    "inputs": [
+      {
+        "ingredient_id": "lemon",
+        "ratio": 2.5
+      }
+    ],
+    "note": "ca. 2,5 kg Zitronen ergeben 1 L frisch gepressten Saft"
+  },
+  {
+    "output_ingredient_id": "orange_juice",
+    "inputs": [
+      {
+        "ingredient_id": "orange",
+        "ratio": 2.0
+      }
+    ],
+    "note": "Optional: Orangensaft wird normalerweise direkt eingekauft; ca. 2 kg Orangen ergeben 1 L frisch gepressten Saft"
+  },
+  {
+    "output_ingredient_id": "espresso",
+    "inputs": [
+      {
+        "ingredient_id": "coffee_beans",
+        "ratio": 1.2
+      }
+    ],
+    "note": "Espresso wird aus Kaffeebohnen gebrüht (Espresso-Shots)"
+  },
+  {
+    "output_ingredient_id": "simple_syrup",
+    "inputs": [
+      {
+        "ingredient_id": "sugar",
+        "ratio": 0.5
+      },
+      {
+        "ingredient_id": "water",
+        "ratio": 0.5
+      }
+    ],
+    "note": "Simple Syrup: Zucker + Wasser (vereinfacht 1:1)"
+  },
+  {
+    "output_ingredient_id": "cane_sugar_syrup",
+    "inputs": [
+      {
+        "ingredient_id": "sugar",
+        "ratio": 0.5
+      },
+      {
+        "ingredient_id": "water",
+        "ratio": 0.5
+      }
+    ],
+    "note": "Rohrzuckersirup: Zucker + Wasser (vereinfacht 1:1)"
+  },
+  {
+    "output_ingredient_id": "honey_syrup",
+    "inputs": [
+      {
+        "ingredient_id": "honey",
+        "ratio": 0.6
+      },
+      {
+        "ingredient_id": "water",
+        "ratio": 0.4
+      }
+    ],
+    "note": "Honey Syrup: Honig + Wasser"
+  },
+  {
+    "output_ingredient_id": "guacamole",
+    "inputs": [
+      {
+        "ingredient_id": "avocado",
+        "ratio": 0.6
+      },
+      {
+        "ingredient_id": "lime_juice_fresh",
+        "ratio": 0.05
+      },
+      {
+        "ingredient_id": "onion",
+        "ratio": 0.1
+      },
+      {
+        "ingredient_id": "cilantro",
+        "ratio": 0.02
+      },
+      {
+        "ingredient_id": "salt",
+        "ratio": 0.01
+      }
+    ],
+    "note": "Optional: Guacamole kann auch fertig eingekauft werden"
+  },
+  {
+    "output_ingredient_id": "tzatziki",
+    "inputs": [
+      {
+        "ingredient_id": "yogurt",
+        "ratio": 0.7
+      },
+      {
+        "ingredient_id": "cucumber",
+        "ratio": 0.25
+      },
+      {
+        "ingredient_id": "garlic",
+        "ratio": 0.02
+      }
+    ],
+    "note": "Optional: Tzatziki kann auch fertig eingekauft werden"
+  },
+  {
+    "output_ingredient_id": "salsa_mild",
+    "inputs": [
+      {
+        "ingredient_id": "tomato",
+        "ratio": 0.7
+      },
+      {
+        "ingredient_id": "onion",
+        "ratio": 0.15
+      },
+      {
+        "ingredient_id": "cilantro",
+        "ratio": 0.02
+      },
+      {
+        "ingredient_id": "lime_juice_fresh",
+        "ratio": 0.03
+      }
+    ],
+    "note": "Optional: Salsa kann auch fertig eingekauft werden"
+  },
+  {
+    "output_ingredient_id": "hummus",
+    "inputs": [
+      {
+        "ingredient_id": "chickpeas",
+        "ratio": 0.6
+      },
+      {
+        "ingredient_id": "garlic",
+        "ratio": 0.02
+      },
+      {
+        "ingredient_id": "olive_oil",
+        "ratio": 0.1
+      }
+    ],
+    "note": "Optional: Hummus kann auch fertig eingekauft werden"
+  }
+]

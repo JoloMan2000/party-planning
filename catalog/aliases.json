@@ -1,0 +1,5168 @@
+[
+  {
+    "alias_text": "wodka",
+    "target_type": "direct_consumable",
+    "target_id": "vodka",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "voddi",
+    "target_type": "direct_consumable",
+    "target_id": "vodka",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "redbull",
+    "target_type": "direct_consumable",
+    "target_id": "energy_drink_generic",
+    "confidence": 0.95,
+    "brand": "Red Bull"
+  },
+  {
+    "alias_text": "red bull",
+    "target_type": "direct_consumable",
+    "target_id": "energy_drink_generic",
+    "confidence": 0.95,
+    "brand": "Red Bull"
+  },
+  {
+    "alias_text": "vodka bull",
+    "target_type": "recipe",
+    "target_id": "vodka_red_bull",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "wodka bull",
+    "target_type": "recipe",
+    "target_id": "vodka_red_bull",
+    "confidence": 0.85,
+    "brand": ""
+  },
+  {
+    "alias_text": "jacky cola",
+    "target_type": "recipe",
+    "target_id": "whiskey_cola",
+    "confidence": 0.9,
+    "brand": "Jack Daniel's"
+  },
+  {
+    "alias_text": "bacardi cola",
+    "target_type": "recipe",
+    "target_id": "rum_cola",
+    "confidence": 0.9,
+    "brand": "Bacardi"
+  },
+  {
+    "alias_text": "gin t",
+    "target_type": "recipe",
+    "target_id": "gin_tonic",
+    "confidence": 0.85,
+    "brand": ""
+  },
+  {
+    "alias_text": "g&t",
+    "target_type": "recipe",
+    "target_id": "gin_tonic",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "gt",
+    "target_type": "recipe",
+    "target_id": "gin_tonic",
+    "confidence": 0.78,
+    "brand": ""
+  },
+  {
+    "alias_text": "aperol",
+    "target_type": "recipe",
+    "target_id": "aperol_spritz",
+    "confidence": 0.6,
+    "brand": ""
+  },
+  {
+    "alias_text": "aperol spritz",
+    "target_type": "recipe",
+    "target_id": "aperol_spritz",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "hugo",
+    "target_type": "recipe",
+    "target_id": "hugo",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "caipi",
+    "target_type": "recipe",
+    "target_id": "caipirinha",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "pina colada",
+    "target_type": "recipe",
+    "target_id": "pina_colada",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pina",
+    "target_type": "recipe",
+    "target_id": "pina_colada",
+    "confidence": 0.8,
+    "brand": ""
+  },
+  {
+    "alias_text": "long island",
+    "target_type": "recipe",
+    "target_id": "long_island_iced_tea",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "long island ice tea",
+    "target_type": "recipe",
+    "target_id": "long_island_iced_tea",
+    "confidence": 0.92,
+    "brand": ""
+  },
+  {
+    "alias_text": "espresso martini",
+    "target_type": "recipe",
+    "target_id": "espresso_martini",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pornstar",
+    "target_type": "recipe",
+    "target_id": "porn_star_martini",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "pornstar martini",
+    "target_type": "recipe",
+    "target_id": "porn_star_martini",
+    "confidence": 0.95,
+    "brand": ""
+  },
+  {
+    "alias_text": "spezi",
+    "target_type": "recipe",
+    "target_id": "spezi",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "coke",
+    "target_type": "direct_consumable",
+    "target_id": "cola",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "coca cola",
+    "target_type": "direct_consumable",
+    "target_id": "cola",
+    "confidence": 0.95,
+    "brand": "Coca-Cola"
+  },
+  {
+    "alias_text": "cola light",
+    "target_type": "direct_consumable",
+    "target_id": "cola_light",
+    "confidence": 0.85,
+    "brand": ""
+  },
+  {
+    "alias_text": "würstchen",
+    "target_type": "recipe",
+    "target_id": "bratwurst",
+    "confidence": 0.65,
+    "brand": ""
+  },
+  {
+    "alias_text": "wuerstchen",
+    "target_type": "recipe",
+    "target_id": "bratwurst",
+    "confidence": 0.65,
+    "brand": ""
+  },
+  {
+    "alias_text": "grillwurst",
+    "target_type": "recipe",
+    "target_id": "bratwurst",
+    "confidence": 0.85,
+    "brand": ""
+  },
+  {
+    "alias_text": "nacken",
+    "target_type": "recipe",
+    "target_id": "nackensteak",
+    "confidence": 0.85,
+    "brand": ""
+  },
+  {
+    "alias_text": "knobibrot",
+    "target_type": "recipe",
+    "target_id": "knoblauchbrot",
+    "confidence": 0.85,
+    "brand": ""
+  },
+  {
+    "alias_text": "guac",
+    "target_type": "direct_consumable",
+    "target_id": "guacamole",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "veggie würstchen",
+    "target_type": "recipe",
+    "target_id": "veggie_bratwurst",
+    "confidence": 0.85,
+    "brand": ""
+  },
+  {
+    "alias_text": "veggie wuerstchen",
+    "target_type": "recipe",
+    "target_id": "veggie_bratwurst",
+    "confidence": 0.85,
+    "brand": ""
+  },
+  {
+    "alias_text": "vegane wurst",
+    "target_type": "recipe",
+    "target_id": "vegane_bratwurst",
+    "confidence": 0.85,
+    "brand": ""
+  },
+  {
+    "alias_text": "kartoffelsalat",
+    "target_type": "recipe",
+    "target_id": "kartoffelsalat",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "nudelsalat",
+    "target_type": "recipe",
+    "target_id": "nudelsalat",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pommes",
+    "target_type": "recipe",
+    "target_id": "pommes",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "süßkartoffelpommes",
+    "target_type": "recipe",
+    "target_id": "suesskartoffelpommes",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "suesskartoffelpommes",
+    "target_type": "recipe",
+    "target_id": "suesskartoffelpommes",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "majo",
+    "target_type": "direct_consumable",
+    "target_id": "mayonnaise",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "mayo",
+    "target_type": "direct_consumable",
+    "target_id": "mayonnaise",
+    "confidence": 0.95,
+    "brand": ""
+  },
+  {
+    "alias_text": "gin tonic",
+    "target_type": "recipe",
+    "target_id": "gin_tonic",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gin und tonic",
+    "target_type": "recipe",
+    "target_id": "gin_tonic",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "wodka lemon",
+    "target_type": "recipe",
+    "target_id": "vodka_lemon",
+    "confidence": 0.85,
+    "brand": ""
+  },
+  {
+    "alias_text": "cuba libre",
+    "target_type": "recipe",
+    "target_id": "cuba_libre",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "rum cola",
+    "target_type": "recipe",
+    "target_id": "rum_cola",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "whiskey cola",
+    "target_type": "recipe",
+    "target_id": "whiskey_cola",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "whisky cola",
+    "target_type": "recipe",
+    "target_id": "whiskey_cola",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "jack and cola",
+    "target_type": "recipe",
+    "target_id": "whiskey_cola",
+    "confidence": 0.85,
+    "brand": "Jack Daniel's"
+  },
+  {
+    "alias_text": "mule",
+    "target_type": "recipe",
+    "target_id": "moscow_mule",
+    "confidence": 0.75,
+    "brand": ""
+  },
+  {
+    "alias_text": "moscow mule",
+    "target_type": "recipe",
+    "target_id": "moscow_mule",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "cosmo",
+    "target_type": "recipe",
+    "target_id": "cosmopolitan",
+    "confidence": 0.85,
+    "brand": ""
+  },
+  {
+    "alias_text": "bloody mary",
+    "target_type": "recipe",
+    "target_id": "bloody_mary",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "caipirinha",
+    "target_type": "recipe",
+    "target_id": "caipirinha",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mojito",
+    "target_type": "recipe",
+    "target_id": "mojito",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mohito",
+    "target_type": "recipe",
+    "target_id": "mojito",
+    "confidence": 0.8,
+    "brand": ""
+  },
+  {
+    "alias_text": "daiquiri",
+    "target_type": "recipe",
+    "target_id": "daiquiri",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "old fashioned",
+    "target_type": "recipe",
+    "target_id": "old_fashioned",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "manhattan",
+    "target_type": "recipe",
+    "target_id": "manhattan",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "margarita",
+    "target_type": "recipe",
+    "target_id": "margarita",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "margherita",
+    "target_type": "recipe",
+    "target_id": "margarita",
+    "confidence": 0.75,
+    "brand": ""
+  },
+  {
+    "alias_text": "negroni",
+    "target_type": "recipe",
+    "target_id": "negroni",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "americano",
+    "target_type": "recipe",
+    "target_id": "americano",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "sidecar",
+    "target_type": "recipe",
+    "target_id": "sidecar",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "aviation",
+    "target_type": "recipe",
+    "target_id": "aviation",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "french 75",
+    "target_type": "recipe",
+    "target_id": "french_75",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "french seventy five",
+    "target_type": "recipe",
+    "target_id": "french_75",
+    "confidence": 0.8,
+    "brand": ""
+  },
+  {
+    "alias_text": "tom collins",
+    "target_type": "recipe",
+    "target_id": "tom_collins",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "whiskey sour",
+    "target_type": "recipe",
+    "target_id": "whiskey_sour",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "whisky sour",
+    "target_type": "recipe",
+    "target_id": "whiskey_sour",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "amaretto sour",
+    "target_type": "recipe",
+    "target_id": "amaretto_sour",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pisco sour",
+    "target_type": "recipe",
+    "target_id": "pisco_sour",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mai tai",
+    "target_type": "recipe",
+    "target_id": "mai_tai",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "dark and stormy",
+    "target_type": "recipe",
+    "target_id": "dark_n_stormy",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "zombie",
+    "target_type": "recipe",
+    "target_id": "zombie",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "hurricane",
+    "target_type": "recipe",
+    "target_id": "hurricane",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "painkiller",
+    "target_type": "recipe",
+    "target_id": "painkiller",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "sazerac",
+    "target_type": "recipe",
+    "target_id": "sazerac",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "boulevardier",
+    "target_type": "recipe",
+    "target_id": "boulevardier",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "penicillin",
+    "target_type": "recipe",
+    "target_id": "penicillin",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "irish coffee",
+    "target_type": "recipe",
+    "target_id": "irish_coffee",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "white russian",
+    "target_type": "recipe",
+    "target_id": "white_russian",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "black russian",
+    "target_type": "recipe",
+    "target_id": "black_russian",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "sex on the beach",
+    "target_type": "recipe",
+    "target_id": "sex_on_the_beach",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "sexonthebeach",
+    "target_type": "recipe",
+    "target_id": "sex_on_the_beach",
+    "confidence": 0.85,
+    "brand": ""
+  },
+  {
+    "alias_text": "screwdriver",
+    "target_type": "recipe",
+    "target_id": "screwdriver",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "bellini",
+    "target_type": "recipe",
+    "target_id": "bellini",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mimosa",
+    "target_type": "recipe",
+    "target_id": "mimosa",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kir royal",
+    "target_type": "recipe",
+    "target_id": "kir_royal",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "sangria",
+    "target_type": "recipe",
+    "target_id": "sangria_rot",
+    "confidence": 0.8,
+    "brand": ""
+  },
+  {
+    "alias_text": "weiße sangria",
+    "target_type": "recipe",
+    "target_id": "sangria_weiss",
+    "confidence": 0.85,
+    "brand": ""
+  },
+  {
+    "alias_text": "weisse sangria",
+    "target_type": "recipe",
+    "target_id": "sangria_weiss",
+    "confidence": 0.85,
+    "brand": ""
+  },
+  {
+    "alias_text": "tequila sunrise",
+    "target_type": "recipe",
+    "target_id": "tequila_sunrise",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "paloma",
+    "target_type": "recipe",
+    "target_id": "paloma",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "jägerbomb",
+    "target_type": "recipe",
+    "target_id": "jaegerbomb",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "jaegerbomb",
+    "target_type": "recipe",
+    "target_id": "jaegerbomb",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "jager bomb",
+    "target_type": "recipe",
+    "target_id": "jaegerbomb",
+    "confidence": 0.85,
+    "brand": ""
+  },
+  {
+    "alias_text": "jäger bomb",
+    "target_type": "recipe",
+    "target_id": "jaegerbomb",
+    "confidence": 0.85,
+    "brand": ""
+  },
+  {
+    "alias_text": "absolut",
+    "target_type": "direct_consumable",
+    "target_id": "vodka",
+    "confidence": 0.9,
+    "brand": "Absolut"
+  },
+  {
+    "alias_text": "belvedere",
+    "target_type": "direct_consumable",
+    "target_id": "vodka",
+    "confidence": 0.9,
+    "brand": "Belvedere"
+  },
+  {
+    "alias_text": "grey goose",
+    "target_type": "direct_consumable",
+    "target_id": "vodka",
+    "confidence": 0.9,
+    "brand": "Grey Goose"
+  },
+  {
+    "alias_text": "smirnoff",
+    "target_type": "direct_consumable",
+    "target_id": "vodka",
+    "confidence": 0.9,
+    "brand": "Smirnoff"
+  },
+  {
+    "alias_text": "hendricks",
+    "target_type": "direct_consumable",
+    "target_id": "gin",
+    "confidence": 0.85,
+    "brand": "Hendrick's"
+  },
+  {
+    "alias_text": "hendrick's",
+    "target_type": "direct_consumable",
+    "target_id": "gin",
+    "confidence": 0.9,
+    "brand": "Hendrick's"
+  },
+  {
+    "alias_text": "bombay sapphire",
+    "target_type": "direct_consumable",
+    "target_id": "gin",
+    "confidence": 0.9,
+    "brand": "Bombay Sapphire"
+  },
+  {
+    "alias_text": "tanqueray",
+    "target_type": "direct_consumable",
+    "target_id": "gin",
+    "confidence": 0.9,
+    "brand": "Tanqueray"
+  },
+  {
+    "alias_text": "bacardi",
+    "target_type": "direct_consumable",
+    "target_id": "rum_white",
+    "confidence": 0.85,
+    "brand": "Bacardi"
+  },
+  {
+    "alias_text": "captain morgan",
+    "target_type": "direct_consumable",
+    "target_id": "rum_spiced",
+    "confidence": 0.9,
+    "brand": "Captain Morgan"
+  },
+  {
+    "alias_text": "jim beam",
+    "target_type": "direct_consumable",
+    "target_id": "bourbon",
+    "confidence": 0.9,
+    "brand": "Jim Beam"
+  },
+  {
+    "alias_text": "jack daniels",
+    "target_type": "direct_consumable",
+    "target_id": "tennessee_whiskey",
+    "confidence": 0.9,
+    "brand": "Jack Daniel's"
+  },
+  {
+    "alias_text": "jack daniel's",
+    "target_type": "direct_consumable",
+    "target_id": "tennessee_whiskey",
+    "confidence": 0.95,
+    "brand": "Jack Daniel's"
+  },
+  {
+    "alias_text": "jameson",
+    "target_type": "direct_consumable",
+    "target_id": "irish_whiskey",
+    "confidence": 0.9,
+    "brand": "Jameson"
+  },
+  {
+    "alias_text": "chivas regal",
+    "target_type": "direct_consumable",
+    "target_id": "scotch_whisky",
+    "confidence": 0.9,
+    "brand": "Chivas Regal"
+  },
+  {
+    "alias_text": "jose cuervo",
+    "target_type": "direct_consumable",
+    "target_id": "tequila_blanco",
+    "confidence": 0.85,
+    "brand": "Jose Cuervo"
+  },
+  {
+    "alias_text": "patron",
+    "target_type": "direct_consumable",
+    "target_id": "tequila_blanco",
+    "confidence": 0.85,
+    "brand": "Patrón"
+  },
+  {
+    "alias_text": "kahlua",
+    "target_type": "direct_consumable",
+    "target_id": "coffee_liqueur",
+    "confidence": 0.9,
+    "brand": "Kahlúa"
+  },
+  {
+    "alias_text": "kahlúa",
+    "target_type": "direct_consumable",
+    "target_id": "coffee_liqueur",
+    "confidence": 0.95,
+    "brand": "Kahlúa"
+  },
+  {
+    "alias_text": "baileys irish cream",
+    "target_type": "direct_consumable",
+    "target_id": "baileys",
+    "confidence": 0.95,
+    "brand": "Baileys"
+  },
+  {
+    "alias_text": "aperol pur",
+    "target_type": "direct_consumable",
+    "target_id": "aperol",
+    "confidence": 0.9,
+    "brand": "Aperol"
+  },
+  {
+    "alias_text": "campari",
+    "target_type": "direct_consumable",
+    "target_id": "campari",
+    "confidence": 1.0,
+    "brand": "Campari"
+  },
+  {
+    "alias_text": "martini bianco",
+    "target_type": "direct_consumable",
+    "target_id": "sweet_vermouth",
+    "confidence": 0.8,
+    "brand": "Martini"
+  },
+  {
+    "alias_text": "jägermeister",
+    "target_type": "direct_consumable",
+    "target_id": "jaegermeister",
+    "confidence": 1.0,
+    "brand": "Jägermeister"
+  },
+  {
+    "alias_text": "jagermeister",
+    "target_type": "direct_consumable",
+    "target_id": "jaegermeister",
+    "confidence": 0.9,
+    "brand": "Jägermeister"
+  },
+  {
+    "alias_text": "porn star martini",
+    "target_type": "recipe",
+    "target_id": "porn_star_martini",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "vodka red bull",
+    "target_type": "recipe",
+    "target_id": "vodka_red_bull",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "vodka lemon",
+    "target_type": "recipe",
+    "target_id": "vodka_lemon",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "vodka tonic",
+    "target_type": "recipe",
+    "target_id": "vodka_tonic",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "vodka soda",
+    "target_type": "recipe",
+    "target_id": "vodka_soda",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "vodka orange / screwdriver",
+    "target_type": "recipe",
+    "target_id": "screwdriver",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "vodka cranberry",
+    "target_type": "recipe",
+    "target_id": "vodka_cranberry",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "sea breeze",
+    "target_type": "recipe",
+    "target_id": "sea_breeze",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "bay breeze",
+    "target_type": "recipe",
+    "target_id": "bay_breeze",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "cape codder",
+    "target_type": "recipe",
+    "target_id": "cape_codder",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "cosmopolitan",
+    "target_type": "recipe",
+    "target_id": "cosmopolitan",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "woo woo",
+    "target_type": "recipe",
+    "target_id": "woo_woo",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "french martini",
+    "target_type": "recipe",
+    "target_id": "french_martini",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "harvey wallbanger",
+    "target_type": "recipe",
+    "target_id": "harvey_wallbanger",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "blue lagoon",
+    "target_type": "recipe",
+    "target_id": "blue_lagoon",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "caipiroska",
+    "target_type": "recipe",
+    "target_id": "caipiroska",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "vodka martini",
+    "target_type": "recipe",
+    "target_id": "vodka_martini",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "lemon drop martini",
+    "target_type": "recipe",
+    "target_id": "lemon_drop_martini",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gin lemon",
+    "target_type": "recipe",
+    "target_id": "gin_lemon",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gin soda",
+    "target_type": "recipe",
+    "target_id": "gin_soda",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "dry martini",
+    "target_type": "recipe",
+    "target_id": "dry_martini",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "dirty martini",
+    "target_type": "recipe",
+    "target_id": "dirty_martini",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gibson",
+    "target_type": "recipe",
+    "target_id": "gibson",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "white negroni",
+    "target_type": "recipe",
+    "target_id": "white_negroni",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "john collins",
+    "target_type": "recipe",
+    "target_id": "john_collins",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gin fizz",
+    "target_type": "recipe",
+    "target_id": "gin_fizz",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "ramos gin fizz",
+    "target_type": "recipe",
+    "target_id": "ramos_gin_fizz",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "bramble",
+    "target_type": "recipe",
+    "target_id": "bramble",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gin basil smash",
+    "target_type": "recipe",
+    "target_id": "gin_basil_smash",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "bee's knees",
+    "target_type": "recipe",
+    "target_id": "bees_knees",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "clover club",
+    "target_type": "recipe",
+    "target_id": "clover_club",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "southside",
+    "target_type": "recipe",
+    "target_id": "southside",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "martinez",
+    "target_type": "recipe",
+    "target_id": "martinez",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "vesper",
+    "target_type": "recipe",
+    "target_id": "vesper",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "singapore sling",
+    "target_type": "recipe",
+    "target_id": "singapore_sling",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "last word",
+    "target_type": "recipe",
+    "target_id": "last_word",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gin rickey",
+    "target_type": "recipe",
+    "target_id": "gin_rickey",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pink lady",
+    "target_type": "recipe",
+    "target_id": "pink_lady",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "frozen daiquiri",
+    "target_type": "recipe",
+    "target_id": "frozen_daiquiri",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "strawberry daiquiri",
+    "target_type": "recipe",
+    "target_id": "strawberry_daiquiri",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "hemingway daiquiri",
+    "target_type": "recipe",
+    "target_id": "hemingway_daiquiri",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "piña colada",
+    "target_type": "recipe",
+    "target_id": "pina_colada",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "dark 'n' stormy",
+    "target_type": "recipe",
+    "target_id": "dark_n_stormy",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "planter's punch",
+    "target_type": "recipe",
+    "target_id": "planters_punch",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "jungle bird",
+    "target_type": "recipe",
+    "target_id": "jungle_bird",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mary pickford",
+    "target_type": "recipe",
+    "target_id": "mary_pickford",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "rum punch",
+    "target_type": "recipe",
+    "target_id": "rum_punch",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "bahama mama",
+    "target_type": "recipe",
+    "target_id": "bahama_mama",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "blue hawaiian",
+    "target_type": "recipe",
+    "target_id": "blue_hawaiian",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "el presidente",
+    "target_type": "recipe",
+    "target_id": "el_presidente",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "corn 'n' oil",
+    "target_type": "recipe",
+    "target_id": "corn_n_oil",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "rum old fashioned",
+    "target_type": "recipe",
+    "target_id": "rum_old_fashioned",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "frozen margarita",
+    "target_type": "recipe",
+    "target_id": "frozen_margarita",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "strawberry margarita",
+    "target_type": "recipe",
+    "target_id": "strawberry_margarita",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "tommy's margarita",
+    "target_type": "recipe",
+    "target_id": "tommys_margarita",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "spicy margarita",
+    "target_type": "recipe",
+    "target_id": "spicy_margarita",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mezcal margarita",
+    "target_type": "recipe",
+    "target_id": "mezcal_margarita",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "tequila soda",
+    "target_type": "recipe",
+    "target_id": "tequila_soda",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "tequila tonic",
+    "target_type": "recipe",
+    "target_id": "tequila_tonic",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "ranch water",
+    "target_type": "recipe",
+    "target_id": "ranch_water",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "el diablo",
+    "target_type": "recipe",
+    "target_id": "el_diablo",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "matador",
+    "target_type": "recipe",
+    "target_id": "matador",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "naked & famous",
+    "target_type": "recipe",
+    "target_id": "naked_and_famous",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "oaxaca old fashioned",
+    "target_type": "recipe",
+    "target_id": "oaxaca_old_fashioned",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mexican mule",
+    "target_type": "recipe",
+    "target_id": "mexican_mule",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "whiskey ginger",
+    "target_type": "recipe",
+    "target_id": "whiskey_ginger",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "new york sour",
+    "target_type": "recipe",
+    "target_id": "new_york_sour",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "perfect manhattan",
+    "target_type": "recipe",
+    "target_id": "perfect_manhattan",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "dry manhattan",
+    "target_type": "recipe",
+    "target_id": "dry_manhattan",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mint julep",
+    "target_type": "recipe",
+    "target_id": "mint_julep",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "lynchburg lemonade",
+    "target_type": "recipe",
+    "target_id": "lynchburg_lemonade",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "paper plane",
+    "target_type": "recipe",
+    "target_id": "paper_plane",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "godfather",
+    "target_type": "recipe",
+    "target_id": "godfather",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "rusty nail",
+    "target_type": "recipe",
+    "target_id": "rusty_nail",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "whiskey highball",
+    "target_type": "recipe",
+    "target_id": "whiskey_highball",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "john collins (whiskey-variante)",
+    "target_type": "recipe",
+    "target_id": "john_collins_whiskey",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "french connection",
+    "target_type": "recipe",
+    "target_id": "french_connection",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "brandy alexander",
+    "target_type": "recipe",
+    "target_id": "brandy_alexander",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "between the sheets",
+    "target_type": "recipe",
+    "target_id": "between_the_sheets",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "horse's neck",
+    "target_type": "recipe",
+    "target_id": "horses_neck",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "godmother",
+    "target_type": "recipe",
+    "target_id": "godmother",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "sambuca coffee",
+    "target_type": "recipe",
+    "target_id": "sambuca_coffee",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "campari spritz",
+    "target_type": "recipe",
+    "target_id": "campari_spritz",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "limoncello spritz",
+    "target_type": "recipe",
+    "target_id": "limoncello_spritz",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "lillet wild berry",
+    "target_type": "recipe",
+    "target_id": "lillet_wild_berry",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kir",
+    "target_type": "recipe",
+    "target_id": "kir",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "rossini",
+    "target_type": "recipe",
+    "target_id": "rossini",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "sgroppino",
+    "target_type": "recipe",
+    "target_id": "sgroppino",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "negroni sbagliato",
+    "target_type": "recipe",
+    "target_id": "negroni_sbagliato",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "sangria rot",
+    "target_type": "recipe",
+    "target_id": "sangria_rot",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "sangria weiß",
+    "target_type": "recipe",
+    "target_id": "sangria_weiss",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "sangria weiss",
+    "target_type": "recipe",
+    "target_id": "sangria_weiss",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "tinto de verano",
+    "target_type": "recipe",
+    "target_id": "tinto_de_verano",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gin wild berry",
+    "target_type": "recipe",
+    "target_id": "gin_wild_berry",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "malibu orange",
+    "target_type": "recipe",
+    "target_id": "malibu_orange",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "malibu ananas",
+    "target_type": "recipe",
+    "target_id": "malibu_ananas",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "jägermeister energy",
+    "target_type": "recipe",
+    "target_id": "jaegermeister_energy",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "jaegermeister energy",
+    "target_type": "recipe",
+    "target_id": "jaegermeister_energy",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "campari orange",
+    "target_type": "recipe",
+    "target_id": "campari_orange",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "aperol orange",
+    "target_type": "recipe",
+    "target_id": "aperol_orange",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "lillet tonic",
+    "target_type": "recipe",
+    "target_id": "lillet_tonic",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "tequila orange",
+    "target_type": "recipe",
+    "target_id": "tequila_orange",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "licor 43 milch",
+    "target_type": "recipe",
+    "target_id": "licor_43_milch",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "licor 43 orange",
+    "target_type": "recipe",
+    "target_id": "licor_43_orange",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "long island iced tea",
+    "target_type": "recipe",
+    "target_id": "long_island_iced_tea",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "tokyo iced tea",
+    "target_type": "recipe",
+    "target_id": "tokyo_iced_tea",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "adios motherfucker",
+    "target_type": "recipe",
+    "target_id": "adios_motherfucker",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "tiki punch",
+    "target_type": "recipe",
+    "target_id": "tiki_punch",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "bratwurst",
+    "target_type": "recipe",
+    "target_id": "bratwurst",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "rostbratwurst",
+    "target_type": "recipe",
+    "target_id": "rostbratwurst",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "nürnberger",
+    "target_type": "recipe",
+    "target_id": "nuernberger",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "nuernberger",
+    "target_type": "recipe",
+    "target_id": "nuernberger",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "thüringer",
+    "target_type": "recipe",
+    "target_id": "thueringer",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "thueringer",
+    "target_type": "recipe",
+    "target_id": "thueringer",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "rindswurst",
+    "target_type": "recipe",
+    "target_id": "rindswurst",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "krakauer",
+    "target_type": "recipe",
+    "target_id": "krakauer",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "currywurst",
+    "target_type": "recipe",
+    "target_id": "currywurst",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "bratwurst im brötchen",
+    "target_type": "recipe",
+    "target_id": "bratwurst_im_broetchen",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "bratwurst im broetchen",
+    "target_type": "recipe",
+    "target_id": "bratwurst_im_broetchen",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "hotdog",
+    "target_type": "recipe",
+    "target_id": "hotdog",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "cheese hotdog",
+    "target_type": "recipe",
+    "target_id": "cheese_hotdog",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "chili cheese hotdog",
+    "target_type": "recipe",
+    "target_id": "chili_cheese_hotdog",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "rumpsteak",
+    "target_type": "recipe",
+    "target_id": "rumpsteak",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "ribeye",
+    "target_type": "recipe",
+    "target_id": "ribeye",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "entrecôte",
+    "target_type": "recipe",
+    "target_id": "entrecote",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "nackensteak",
+    "target_type": "recipe",
+    "target_id": "nackensteak",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "schweinebauch",
+    "target_type": "recipe",
+    "target_id": "schweinebauch",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "schweinekotelett",
+    "target_type": "recipe",
+    "target_id": "schweinekotelett",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "spareribs",
+    "target_type": "recipe",
+    "target_id": "spareribs",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "bbq ribs",
+    "target_type": "recipe",
+    "target_id": "bbq_ribs",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pulled pork",
+    "target_type": "recipe",
+    "target_id": "pulled_pork",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pulled pork burger",
+    "target_type": "recipe",
+    "target_id": "pulled_pork_burger",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pulled chicken",
+    "target_type": "recipe",
+    "target_id": "pulled_chicken",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "hähnchenbrust",
+    "target_type": "recipe",
+    "target_id": "haehnchenbrust",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "haehnchenbrust",
+    "target_type": "recipe",
+    "target_id": "haehnchenbrust",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "hähnchenschenkel",
+    "target_type": "recipe",
+    "target_id": "haehnchenschenkel",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "haehnchenschenkel",
+    "target_type": "recipe",
+    "target_id": "haehnchenschenkel",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "chicken wings",
+    "target_type": "recipe",
+    "target_id": "chicken_wings",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "chicken drumsticks",
+    "target_type": "recipe",
+    "target_id": "chicken_drumsticks",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "chicken spieße",
+    "target_type": "recipe",
+    "target_id": "chicken_spiesse",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "chicken spiesse",
+    "target_type": "recipe",
+    "target_id": "chicken_spiesse",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "schaschlik",
+    "target_type": "recipe",
+    "target_id": "schaschlik",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "grillspieß",
+    "target_type": "recipe",
+    "target_id": "grillspiess",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "grillspiess",
+    "target_type": "recipe",
+    "target_id": "grillspiess",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "ćevapčići",
+    "target_type": "recipe",
+    "target_id": "cevapcici",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "köfte",
+    "target_type": "recipe",
+    "target_id": "koefte",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "koefte",
+    "target_type": "recipe",
+    "target_id": "koefte",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "frikadellen",
+    "target_type": "recipe",
+    "target_id": "frikadellen",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mini-frikadellen",
+    "target_type": "recipe",
+    "target_id": "mini_frikadellen",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "lammkotelett",
+    "target_type": "recipe",
+    "target_id": "lammkotelett",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "lammspieß",
+    "target_type": "recipe",
+    "target_id": "lammspiess",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "lammspiess",
+    "target_type": "recipe",
+    "target_id": "lammspiess",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "lachsfilet",
+    "target_type": "recipe",
+    "target_id": "lachsfilet",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "garnelenspieß",
+    "target_type": "recipe",
+    "target_id": "garnelenspiess",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "garnelenspiess",
+    "target_type": "recipe",
+    "target_id": "garnelenspiess",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "dorade",
+    "target_type": "recipe",
+    "target_id": "dorade",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "forelle",
+    "target_type": "recipe",
+    "target_id": "forelle",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "thunfischsteak",
+    "target_type": "recipe",
+    "target_id": "thunfischsteak",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "classic burger",
+    "target_type": "recipe",
+    "target_id": "classic_burger",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "cheeseburger",
+    "target_type": "recipe",
+    "target_id": "cheeseburger",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "bacon burger",
+    "target_type": "recipe",
+    "target_id": "bacon_burger",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "bacon cheeseburger",
+    "target_type": "recipe",
+    "target_id": "bacon_cheeseburger",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "double burger",
+    "target_type": "recipe",
+    "target_id": "double_burger",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "double cheeseburger",
+    "target_type": "recipe",
+    "target_id": "double_cheeseburger",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "bbq burger",
+    "target_type": "recipe",
+    "target_id": "bbq_burger",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "chili cheese burger",
+    "target_type": "recipe",
+    "target_id": "chili_cheese_burger",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "jalapeño burger",
+    "target_type": "recipe",
+    "target_id": "jalapeno_burger",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "chicken burger",
+    "target_type": "recipe",
+    "target_id": "chicken_burger",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "crispy chicken burger",
+    "target_type": "recipe",
+    "target_id": "crispy_chicken_burger",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "fish burger",
+    "target_type": "recipe",
+    "target_id": "fish_burger",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "veggie burger",
+    "target_type": "recipe",
+    "target_id": "veggie_burger",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "vegan burger",
+    "target_type": "recipe",
+    "target_id": "vegan_burger",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "halloumi burger",
+    "target_type": "recipe",
+    "target_id": "halloumi_burger",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "portobello burger",
+    "target_type": "recipe",
+    "target_id": "portobello_burger",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "veggie bratwurst",
+    "target_type": "recipe",
+    "target_id": "veggie_bratwurst",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "vegane bratwurst",
+    "target_type": "recipe",
+    "target_id": "vegane_bratwurst",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "halloumi (gegrillt)",
+    "target_type": "recipe",
+    "target_id": "halloumi_grilled",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "grillkäse",
+    "target_type": "recipe",
+    "target_id": "grillkaese",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "grillkaese",
+    "target_type": "recipe",
+    "target_id": "grillkaese",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "halloumi-spieß",
+    "target_type": "recipe",
+    "target_id": "halloumi_spiess",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "halloumi-spiess",
+    "target_type": "recipe",
+    "target_id": "halloumi_spiess",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "gemüsespieß",
+    "target_type": "recipe",
+    "target_id": "gemuesespiess",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gemuesespiess",
+    "target_type": "recipe",
+    "target_id": "gemuesespiess",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "tofu-spieß",
+    "target_type": "recipe",
+    "target_id": "tofu_spiess",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "tofu-spiess",
+    "target_type": "recipe",
+    "target_id": "tofu_spiess",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "marinierter tofu",
+    "target_type": "recipe",
+    "target_id": "marinierter_tofu",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "tempeh",
+    "target_type": "recipe",
+    "target_id": "tempeh_grill",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "seitan-steak",
+    "target_type": "recipe",
+    "target_id": "seitan_steak",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "portobello (gegrillt)",
+    "target_type": "recipe",
+    "target_id": "portobello_grill",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "maiskolben",
+    "target_type": "recipe",
+    "target_id": "maiskolben",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gegrillte aubergine",
+    "target_type": "recipe",
+    "target_id": "gegrillte_aubergine",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gegrillte zucchini",
+    "target_type": "recipe",
+    "target_id": "gegrillte_zucchini",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gegrillte paprika",
+    "target_type": "recipe",
+    "target_id": "gegrillte_paprika",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gefüllte paprika",
+    "target_type": "recipe",
+    "target_id": "gefuellte_paprika",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gefuellte paprika",
+    "target_type": "recipe",
+    "target_id": "gefuellte_paprika",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "gefüllte champignons",
+    "target_type": "recipe",
+    "target_id": "gefuellte_champignons",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gefuellte champignons",
+    "target_type": "recipe",
+    "target_id": "gefuellte_champignons",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "ofenkartoffel",
+    "target_type": "recipe",
+    "target_id": "ofenkartoffel",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "grillkartoffel",
+    "target_type": "recipe",
+    "target_id": "grillkartoffel",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "süßkartoffel (gegrillt)",
+    "target_type": "recipe",
+    "target_id": "suesskartoffel_grill",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "suesskartoffel (gegrillt)",
+    "target_type": "recipe",
+    "target_id": "suesskartoffel_grill",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "grillgemüse",
+    "target_type": "recipe",
+    "target_id": "grillgemuese",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "grillgemuese",
+    "target_type": "recipe",
+    "target_id": "grillgemuese",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "chili con carne",
+    "target_type": "recipe",
+    "target_id": "chili_con_carne",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "chili sin carne",
+    "target_type": "recipe",
+    "target_id": "chili_sin_carne",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gulasch",
+    "target_type": "recipe",
+    "target_id": "gulasch",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gulaschsuppe",
+    "target_type": "recipe",
+    "target_id": "gulaschsuppe",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kartoffelsuppe",
+    "target_type": "recipe",
+    "target_id": "kartoffelsuppe",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "käsesuppe",
+    "target_type": "recipe",
+    "target_id": "kaesesuppe",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kaesesuppe",
+    "target_type": "recipe",
+    "target_id": "kaesesuppe",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "tomatensuppe",
+    "target_type": "recipe",
+    "target_id": "tomatensuppe",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "lasagne bolognese",
+    "target_type": "recipe",
+    "target_id": "lasagne_bolognese",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gemüselasagne",
+    "target_type": "recipe",
+    "target_id": "gemueselasagne",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gemueselasagne",
+    "target_type": "recipe",
+    "target_id": "gemueselasagne",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "vegane lasagne",
+    "target_type": "recipe",
+    "target_id": "vegane_lasagne",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "spaghetti bolognese",
+    "target_type": "recipe",
+    "target_id": "spaghetti_bolognese",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pasta arrabbiata",
+    "target_type": "recipe",
+    "target_id": "pasta_arrabbiata",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pasta napoli",
+    "target_type": "recipe",
+    "target_id": "pasta_napoli",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mac and cheese",
+    "target_type": "recipe",
+    "target_id": "mac_and_cheese",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "chicken alfredo",
+    "target_type": "recipe",
+    "target_id": "chicken_alfredo",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "carbonara",
+    "target_type": "recipe",
+    "target_id": "carbonara",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pesto pasta",
+    "target_type": "recipe",
+    "target_id": "pesto_pasta",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "chicken curry",
+    "target_type": "recipe",
+    "target_id": "chicken_curry",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "thai curry",
+    "target_type": "recipe",
+    "target_id": "thai_curry",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "veganes curry",
+    "target_type": "recipe",
+    "target_id": "veganes_curry",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "butter chicken",
+    "target_type": "recipe",
+    "target_id": "butter_chicken",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "chicken tikka masala",
+    "target_type": "recipe",
+    "target_id": "chicken_tikka_masala",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "taco bar",
+    "target_type": "recipe",
+    "target_id": "taco_bar",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "beef tacos",
+    "target_type": "recipe",
+    "target_id": "beef_tacos",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "chicken tacos",
+    "target_type": "recipe",
+    "target_id": "chicken_tacos",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "veggie tacos",
+    "target_type": "recipe",
+    "target_id": "veggie_tacos",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "vegan tacos",
+    "target_type": "recipe",
+    "target_id": "vegan_tacos",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "burritos",
+    "target_type": "recipe",
+    "target_id": "burritos",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "veggie burritos",
+    "target_type": "recipe",
+    "target_id": "veggie_burritos",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "wraps",
+    "target_type": "recipe",
+    "target_id": "wraps",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "chicken wraps",
+    "target_type": "recipe",
+    "target_id": "chicken_wraps",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "veggie wraps",
+    "target_type": "recipe",
+    "target_id": "veggie_wraps",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "quesadillas",
+    "target_type": "recipe",
+    "target_id": "quesadillas",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pizza margherita",
+    "target_type": "recipe",
+    "target_id": "pizza_margherita",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pizza salami",
+    "target_type": "recipe",
+    "target_id": "pizza_salami",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pizza schinken",
+    "target_type": "recipe",
+    "target_id": "pizza_schinken",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pizza funghi",
+    "target_type": "recipe",
+    "target_id": "pizza_funghi",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pizza vegetaria",
+    "target_type": "recipe",
+    "target_id": "pizza_vegetaria",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pizza vegan",
+    "target_type": "recipe",
+    "target_id": "pizza_vegan",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "flammkuchen klassisch",
+    "target_type": "recipe",
+    "target_id": "flammkuchen_klassisch",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "flammkuchen vegetarisch",
+    "target_type": "recipe",
+    "target_id": "flammkuchen_vegetarisch",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "loaded fries",
+    "target_type": "recipe",
+    "target_id": "loaded_fries",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "loaded nachos",
+    "target_type": "recipe",
+    "target_id": "loaded_nachos",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "chicken nuggets",
+    "target_type": "recipe",
+    "target_id": "chicken_nuggets",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mini-schnitzel",
+    "target_type": "recipe",
+    "target_id": "mini_schnitzel",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mozzarella sticks",
+    "target_type": "recipe",
+    "target_id": "mozzarella_sticks",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "onion rings",
+    "target_type": "recipe",
+    "target_id": "onion_rings",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "frühlingsrollen",
+    "target_type": "recipe",
+    "target_id": "fruehlingsrollen",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "fruehlingsrollen",
+    "target_type": "recipe",
+    "target_id": "fruehlingsrollen",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "mini-frühlingsrollen",
+    "target_type": "recipe",
+    "target_id": "mini_fruehlingsrollen",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mini-fruehlingsrollen",
+    "target_type": "recipe",
+    "target_id": "mini_fruehlingsrollen",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "samosas",
+    "target_type": "recipe",
+    "target_id": "samosas",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "falafel",
+    "target_type": "recipe",
+    "target_id": "falafel",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mini-pizzen",
+    "target_type": "recipe",
+    "target_id": "mini_pizzen",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pizzaschnecken",
+    "target_type": "recipe",
+    "target_id": "pizzaschnecken",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "blätterteigschnecken",
+    "target_type": "recipe",
+    "target_id": "blaetterteigschnecken",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "blaetterteigschnecken",
+    "target_type": "recipe",
+    "target_id": "blaetterteigschnecken",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "käsegebäck",
+    "target_type": "recipe",
+    "target_id": "kaesegebaeck",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kaesegebaeck",
+    "target_type": "recipe",
+    "target_id": "kaesegebaeck",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "mini-quiche",
+    "target_type": "recipe",
+    "target_id": "mini_quiche",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mini-wraps",
+    "target_type": "recipe",
+    "target_id": "mini_wraps",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "sandwiches",
+    "target_type": "recipe",
+    "target_id": "sandwiches",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "club sandwiches",
+    "target_type": "recipe",
+    "target_id": "club_sandwiches",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "bruschetta",
+    "target_type": "recipe",
+    "target_id": "bruschetta",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "crostini",
+    "target_type": "recipe",
+    "target_id": "crostini",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "caprese-spieße",
+    "target_type": "recipe",
+    "target_id": "caprese_spiesse",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "caprese-spiesse",
+    "target_type": "recipe",
+    "target_id": "caprese_spiesse",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "käse-trauben-spieße",
+    "target_type": "recipe",
+    "target_id": "kaese_trauben_spiesse",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kaese-trauben-spiesse",
+    "target_type": "recipe",
+    "target_id": "kaese_trauben_spiesse",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "antipasti-spieße",
+    "target_type": "recipe",
+    "target_id": "antipasti_spiesse",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "antipasti-spiesse",
+    "target_type": "recipe",
+    "target_id": "antipasti_spiesse",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "gemüsesticks mit dip",
+    "target_type": "recipe",
+    "target_id": "gemuesesticks_dip",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gemuesesticks mit dip",
+    "target_type": "recipe",
+    "target_id": "gemuesesticks_dip",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "datteln im speckmantel",
+    "target_type": "recipe",
+    "target_id": "datteln_im_speckmantel",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "jalapeño poppers",
+    "target_type": "recipe",
+    "target_id": "jalapeno_poppers",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "chicken satay",
+    "target_type": "recipe",
+    "target_id": "chicken_satay",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kartoffelwedges",
+    "target_type": "recipe",
+    "target_id": "kartoffelwedges",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "country potatoes",
+    "target_type": "recipe",
+    "target_id": "country_potatoes",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "bratkartoffeln",
+    "target_type": "recipe",
+    "target_id": "bratkartoffeln",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kartoffelpüree",
+    "target_type": "recipe",
+    "target_id": "kartoffelpueree",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kartoffelpueree",
+    "target_type": "recipe",
+    "target_id": "kartoffelpueree",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "reis",
+    "target_type": "recipe",
+    "target_id": "reis",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "basmati-reis",
+    "target_type": "recipe",
+    "target_id": "basmati_reis",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "couscous",
+    "target_type": "recipe",
+    "target_id": "couscous_side",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "bulgur",
+    "target_type": "recipe",
+    "target_id": "bulgur_side",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "quinoa",
+    "target_type": "recipe",
+    "target_id": "quinoa_side",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "ratatouille",
+    "target_type": "recipe",
+    "target_id": "ratatouille",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "bohnen",
+    "target_type": "recipe",
+    "target_id": "bohnen",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "baked beans",
+    "target_type": "recipe",
+    "target_id": "baked_beans",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "knoblauchbrot",
+    "target_type": "recipe",
+    "target_id": "knoblauchbrot",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "grüner salat",
+    "target_type": "recipe",
+    "target_id": "gruener_salat",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gruener salat",
+    "target_type": "recipe",
+    "target_id": "gruener_salat",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "gemischter salat",
+    "target_type": "recipe",
+    "target_id": "gemischter_salat",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gurkensalat",
+    "target_type": "recipe",
+    "target_id": "gurkensalat",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "tomatensalat",
+    "target_type": "recipe",
+    "target_id": "tomatensalat",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "tomate mozzarella",
+    "target_type": "recipe",
+    "target_id": "tomate_mozzarella",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "caprese",
+    "target_type": "recipe",
+    "target_id": "caprese",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "coleslaw",
+    "target_type": "recipe",
+    "target_id": "coleslaw",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "krautsalat",
+    "target_type": "recipe",
+    "target_id": "krautsalat",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "couscoussalat",
+    "target_type": "recipe",
+    "target_id": "couscoussalat",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "bulgursalat",
+    "target_type": "recipe",
+    "target_id": "bulgursalat",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "taboulé",
+    "target_type": "recipe",
+    "target_id": "taboule",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "griechischer salat",
+    "target_type": "recipe",
+    "target_id": "griechischer_salat",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "caesar salad",
+    "target_type": "recipe",
+    "target_id": "caesar_salad",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "rucolasalat",
+    "target_type": "recipe",
+    "target_id": "rucolasalat",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "bohnensalat",
+    "target_type": "recipe",
+    "target_id": "bohnensalat",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "reissalat",
+    "target_type": "recipe",
+    "target_id": "reissalat",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "farmersalat",
+    "target_type": "recipe",
+    "target_id": "farmersalat",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "maissalat",
+    "target_type": "recipe",
+    "target_id": "maissalat",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "linsensalat",
+    "target_type": "recipe",
+    "target_id": "linsensalat",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kichererbsensalat",
+    "target_type": "recipe",
+    "target_id": "kichererbsensalat",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "avocadosalat",
+    "target_type": "recipe",
+    "target_id": "avocadosalat",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "brotsalat",
+    "target_type": "recipe",
+    "target_id": "brotsalat",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "tortellinisalat",
+    "target_type": "recipe",
+    "target_id": "tortellinisalat",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mediterraner nudelsalat",
+    "target_type": "recipe",
+    "target_id": "mediterraner_nudelsalat",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "brownies",
+    "target_type": "recipe",
+    "target_id": "brownies",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "blondies",
+    "target_type": "recipe",
+    "target_id": "blondies",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "muffins",
+    "target_type": "recipe",
+    "target_id": "muffins",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "schokomuffins",
+    "target_type": "recipe",
+    "target_id": "schokomuffins",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "blaubeermuffins",
+    "target_type": "recipe",
+    "target_id": "blaubeermuffins",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "cookies",
+    "target_type": "recipe",
+    "target_id": "cookies",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "chocolate chip cookies",
+    "target_type": "recipe",
+    "target_id": "chocolate_chip_cookies",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "donuts",
+    "target_type": "recipe",
+    "target_id": "donuts",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "cupcakes",
+    "target_type": "recipe",
+    "target_id": "cupcakes",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "käsekuchen",
+    "target_type": "recipe",
+    "target_id": "kaesekuchen",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kaesekuchen",
+    "target_type": "recipe",
+    "target_id": "kaesekuchen",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "schokokuchen",
+    "target_type": "recipe",
+    "target_id": "schokokuchen",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "marmorkuchen",
+    "target_type": "recipe",
+    "target_id": "marmorkuchen",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "apfelkuchen",
+    "target_type": "recipe",
+    "target_id": "apfelkuchen",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "zitronenkuchen",
+    "target_type": "recipe",
+    "target_id": "zitronenkuchen",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "blechkuchen",
+    "target_type": "recipe",
+    "target_id": "blechkuchen",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "tiramisu",
+    "target_type": "recipe",
+    "target_id": "tiramisu",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "panna cotta",
+    "target_type": "recipe",
+    "target_id": "panna_cotta",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mousse au chocolat",
+    "target_type": "recipe",
+    "target_id": "mousse_au_chocolat",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "vanillepudding",
+    "target_type": "recipe",
+    "target_id": "vanillepudding_dessert",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "schokopudding",
+    "target_type": "recipe",
+    "target_id": "schokopudding_dessert",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "obstsalat",
+    "target_type": "recipe",
+    "target_id": "obstsalat",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "obstplatte",
+    "target_type": "recipe",
+    "target_id": "obstplatte",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "cheesecake im glas",
+    "target_type": "recipe",
+    "target_id": "cheesecake_im_glas",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "dessert im glas",
+    "target_type": "recipe",
+    "target_id": "dessert_im_glas",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "vodka",
+    "target_type": "direct_consumable",
+    "target_id": "vodka",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "vanilla vodka",
+    "target_type": "direct_consumable",
+    "target_id": "vodka_vanilla",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gin",
+    "target_type": "direct_consumable",
+    "target_id": "gin",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "london dry gin",
+    "target_type": "direct_consumable",
+    "target_id": "gin_london_dry",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pink gin",
+    "target_type": "direct_consumable",
+    "target_id": "gin_pink",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "white rum",
+    "target_type": "direct_consumable",
+    "target_id": "rum_white",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "dark rum",
+    "target_type": "direct_consumable",
+    "target_id": "rum_dark",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "aged rum",
+    "target_type": "direct_consumable",
+    "target_id": "rum_aged",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "spiced rum",
+    "target_type": "direct_consumable",
+    "target_id": "rum_spiced",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "overproof rum",
+    "target_type": "direct_consumable",
+    "target_id": "rum_overproof",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "bourbon",
+    "target_type": "direct_consumable",
+    "target_id": "bourbon",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "rye whiskey",
+    "target_type": "direct_consumable",
+    "target_id": "rye_whiskey",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "scotch whisky",
+    "target_type": "direct_consumable",
+    "target_id": "scotch_whisky",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "irish whiskey",
+    "target_type": "direct_consumable",
+    "target_id": "irish_whiskey",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "tennessee whiskey",
+    "target_type": "direct_consumable",
+    "target_id": "tennessee_whiskey",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "canadian whisky",
+    "target_type": "direct_consumable",
+    "target_id": "canadian_whisky",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "tequila blanco",
+    "target_type": "direct_consumable",
+    "target_id": "tequila_blanco",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "tequila reposado",
+    "target_type": "direct_consumable",
+    "target_id": "tequila_reposado",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "tequila añejo",
+    "target_type": "direct_consumable",
+    "target_id": "tequila_anejo",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mezcal",
+    "target_type": "direct_consumable",
+    "target_id": "mezcal",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "cachaça",
+    "target_type": "direct_consumable",
+    "target_id": "cachaca",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pisco",
+    "target_type": "direct_consumable",
+    "target_id": "pisco",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "cognac",
+    "target_type": "direct_consumable",
+    "target_id": "cognac",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "brandy",
+    "target_type": "direct_consumable",
+    "target_id": "brandy",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "calvados",
+    "target_type": "direct_consumable",
+    "target_id": "calvados",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "grappa",
+    "target_type": "direct_consumable",
+    "target_id": "grappa",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "korn",
+    "target_type": "direct_consumable",
+    "target_id": "korn",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "doppelkorn",
+    "target_type": "direct_consumable",
+    "target_id": "doppelkorn",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "obstler",
+    "target_type": "direct_consumable",
+    "target_id": "obstler",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "williamsbirne",
+    "target_type": "direct_consumable",
+    "target_id": "williams_birne",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kirschwasser",
+    "target_type": "direct_consumable",
+    "target_id": "kirschwasser",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "sambuca",
+    "target_type": "direct_consumable",
+    "target_id": "sambuca",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "ouzo",
+    "target_type": "direct_consumable",
+    "target_id": "ouzo",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "raki",
+    "target_type": "direct_consumable",
+    "target_id": "raki",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "aquavit",
+    "target_type": "direct_consumable",
+    "target_id": "aquavit",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "jägermeister / kräuterlikör",
+    "target_type": "direct_consumable",
+    "target_id": "jaegermeister",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "jaegermeister / kraeuterlikoer",
+    "target_type": "direct_consumable",
+    "target_id": "jaegermeister",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "baileys / irish cream",
+    "target_type": "direct_consumable",
+    "target_id": "baileys",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "amaretto",
+    "target_type": "direct_consumable",
+    "target_id": "amaretto",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "limoncello",
+    "target_type": "direct_consumable",
+    "target_id": "limoncello",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "aperol",
+    "target_type": "direct_consumable",
+    "target_id": "aperol",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "cynar",
+    "target_type": "direct_consumable",
+    "target_id": "cynar",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "fernet",
+    "target_type": "direct_consumable",
+    "target_id": "fernet",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "ramazzotti",
+    "target_type": "direct_consumable",
+    "target_id": "ramazzotti",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "averna",
+    "target_type": "direct_consumable",
+    "target_id": "averna",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "amaro",
+    "target_type": "direct_consumable",
+    "target_id": "amaro_generic",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kaffeelikör",
+    "target_type": "direct_consumable",
+    "target_id": "coffee_liqueur",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kaffeelikoer",
+    "target_type": "direct_consumable",
+    "target_id": "coffee_liqueur",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "triple sec",
+    "target_type": "direct_consumable",
+    "target_id": "triple_sec",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "grand marnier",
+    "target_type": "direct_consumable",
+    "target_id": "grand_marnier",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pfirsichlikör",
+    "target_type": "direct_consumable",
+    "target_id": "peach_liqueur",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pfirsichlikoer",
+    "target_type": "direct_consumable",
+    "target_id": "peach_liqueur",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "maraschino",
+    "target_type": "direct_consumable",
+    "target_id": "maraschino",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "brombeerlikör",
+    "target_type": "direct_consumable",
+    "target_id": "blackberry_liqueur",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "brombeerlikoer",
+    "target_type": "direct_consumable",
+    "target_id": "blackberry_liqueur",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "himbeerlikör",
+    "target_type": "direct_consumable",
+    "target_id": "raspberry_liqueur",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "himbeerlikoer",
+    "target_type": "direct_consumable",
+    "target_id": "raspberry_liqueur",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "passionsfruchtlikör",
+    "target_type": "direct_consumable",
+    "target_id": "passionfruit_liqueur",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "passionsfruchtlikoer",
+    "target_type": "direct_consumable",
+    "target_id": "passionfruit_liqueur",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "holunderblütenlikör",
+    "target_type": "direct_consumable",
+    "target_id": "elderflower_liqueur",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "holunderbluetenlikoer",
+    "target_type": "direct_consumable",
+    "target_id": "elderflower_liqueur",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "crème de cassis",
+    "target_type": "direct_consumable",
+    "target_id": "creme_de_cassis",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "blue curaçao",
+    "target_type": "direct_consumable",
+    "target_id": "blue_curacao",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "malibu / coconut rum",
+    "target_type": "direct_consumable",
+    "target_id": "malibu",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "dry vermouth",
+    "target_type": "direct_consumable",
+    "target_id": "dry_vermouth",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "sweet vermouth",
+    "target_type": "direct_consumable",
+    "target_id": "sweet_vermouth",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "lillet blanc",
+    "target_type": "direct_consumable",
+    "target_id": "lillet_blanc",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "sherry",
+    "target_type": "direct_consumable",
+    "target_id": "sherry",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "portwein",
+    "target_type": "direct_consumable",
+    "target_id": "port_wine",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "chartreuse green",
+    "target_type": "direct_consumable",
+    "target_id": "chartreuse_green",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "chartreuse yellow",
+    "target_type": "direct_consumable",
+    "target_id": "chartreuse_yellow",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "rotwein",
+    "target_type": "direct_consumable",
+    "target_id": "red_wine",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "weißwein",
+    "target_type": "direct_consumable",
+    "target_id": "white_wine",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "weisswein",
+    "target_type": "direct_consumable",
+    "target_id": "white_wine",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "rosé",
+    "target_type": "direct_consumable",
+    "target_id": "rose_wine",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "grauburgunder",
+    "target_type": "direct_consumable",
+    "target_id": "grauburgunder",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "weißburgunder",
+    "target_type": "direct_consumable",
+    "target_id": "weissburgunder",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "weissburgunder",
+    "target_type": "direct_consumable",
+    "target_id": "weissburgunder",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "riesling",
+    "target_type": "direct_consumable",
+    "target_id": "riesling",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "chardonnay",
+    "target_type": "direct_consumable",
+    "target_id": "chardonnay",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "sauvignon blanc",
+    "target_type": "direct_consumable",
+    "target_id": "sauvignon_blanc",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "silvaner",
+    "target_type": "direct_consumable",
+    "target_id": "silvaner",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "müller-thurgau",
+    "target_type": "direct_consumable",
+    "target_id": "mueller_thurgau",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mueller-thurgau",
+    "target_type": "direct_consumable",
+    "target_id": "mueller_thurgau",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "grüner veltliner",
+    "target_type": "direct_consumable",
+    "target_id": "gruener_veltliner",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gruener veltliner",
+    "target_type": "direct_consumable",
+    "target_id": "gruener_veltliner",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "gewürztraminer",
+    "target_type": "direct_consumable",
+    "target_id": "gewuerztraminer",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gewuerztraminer",
+    "target_type": "direct_consumable",
+    "target_id": "gewuerztraminer",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "primitivo",
+    "target_type": "direct_consumable",
+    "target_id": "primitivo",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "merlot",
+    "target_type": "direct_consumable",
+    "target_id": "merlot",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "cabernet sauvignon",
+    "target_type": "direct_consumable",
+    "target_id": "cabernet_sauvignon",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pinot noir",
+    "target_type": "direct_consumable",
+    "target_id": "pinot_noir",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "spätburgunder",
+    "target_type": "direct_consumable",
+    "target_id": "spaetburgunder",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "spaetburgunder",
+    "target_type": "direct_consumable",
+    "target_id": "spaetburgunder",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "tempranillo",
+    "target_type": "direct_consumable",
+    "target_id": "tempranillo",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "syrah",
+    "target_type": "direct_consumable",
+    "target_id": "syrah",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "shiraz",
+    "target_type": "direct_consumable",
+    "target_id": "shiraz",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "rioja",
+    "target_type": "direct_consumable",
+    "target_id": "rioja",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "chianti",
+    "target_type": "direct_consumable",
+    "target_id": "chianti",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "lambrusco",
+    "target_type": "direct_consumable",
+    "target_id": "lambrusco",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "alkoholfreier wein",
+    "target_type": "direct_consumable",
+    "target_id": "wine_alcohol_free",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "prosecco",
+    "target_type": "direct_consumable",
+    "target_id": "prosecco",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "sekt",
+    "target_type": "direct_consumable",
+    "target_id": "sekt",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "champagner",
+    "target_type": "direct_consumable",
+    "target_id": "champagne",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "crémant",
+    "target_type": "direct_consumable",
+    "target_id": "cremant",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "cava",
+    "target_type": "direct_consumable",
+    "target_id": "cava",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "franciacorta",
+    "target_type": "direct_consumable",
+    "target_id": "franciacorta",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "alkoholfreier sekt",
+    "target_type": "direct_consumable",
+    "target_id": "sparkling_wine_alcohol_free",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pils",
+    "target_type": "direct_consumable",
+    "target_id": "beer_pils",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "helles",
+    "target_type": "direct_consumable",
+    "target_id": "beer_helles",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "export",
+    "target_type": "direct_consumable",
+    "target_id": "beer_export",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kellerbier",
+    "target_type": "direct_consumable",
+    "target_id": "beer_kellerbier",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "zwickel",
+    "target_type": "direct_consumable",
+    "target_id": "beer_zwickel",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "hefeweizen",
+    "target_type": "direct_consumable",
+    "target_id": "beer_hefeweizen",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kristallweizen",
+    "target_type": "direct_consumable",
+    "target_id": "beer_kristallweizen",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "dunkelweizen",
+    "target_type": "direct_consumable",
+    "target_id": "beer_dunkelweizen",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "dunkelbier",
+    "target_type": "direct_consumable",
+    "target_id": "beer_dunkel",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "schwarzbier",
+    "target_type": "direct_consumable",
+    "target_id": "beer_schwarzbier",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "bockbier",
+    "target_type": "direct_consumable",
+    "target_id": "beer_bockbier",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "doppelbock",
+    "target_type": "direct_consumable",
+    "target_id": "beer_doppelbock",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "märzen",
+    "target_type": "direct_consumable",
+    "target_id": "beer_maerzen",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "maerzen",
+    "target_type": "direct_consumable",
+    "target_id": "beer_maerzen",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "festbier",
+    "target_type": "direct_consumable",
+    "target_id": "beer_festbier",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kölsch",
+    "target_type": "direct_consumable",
+    "target_id": "beer_koelsch",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "koelsch",
+    "target_type": "direct_consumable",
+    "target_id": "beer_koelsch",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "altbier",
+    "target_type": "direct_consumable",
+    "target_id": "beer_altbier",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "lager",
+    "target_type": "direct_consumable",
+    "target_id": "beer_lager",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pale ale",
+    "target_type": "direct_consumable",
+    "target_id": "beer_pale_ale",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "ipa",
+    "target_type": "direct_consumable",
+    "target_id": "beer_ipa",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "double ipa",
+    "target_type": "direct_consumable",
+    "target_id": "beer_double_ipa",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "session ipa",
+    "target_type": "direct_consumable",
+    "target_id": "beer_session_ipa",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "stout",
+    "target_type": "direct_consumable",
+    "target_id": "beer_stout",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "porter",
+    "target_type": "direct_consumable",
+    "target_id": "beer_porter",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "sour beer",
+    "target_type": "direct_consumable",
+    "target_id": "beer_sour",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "craft beer",
+    "target_type": "direct_consumable",
+    "target_id": "beer_craft_generic",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "alkoholfreies pils",
+    "target_type": "direct_consumable",
+    "target_id": "beer_pils_alcohol_free",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "alkoholfreies helles",
+    "target_type": "direct_consumable",
+    "target_id": "beer_helles_alcohol_free",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "alkoholfreies weizen",
+    "target_type": "direct_consumable",
+    "target_id": "beer_weizen_alcohol_free",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "cola",
+    "target_type": "direct_consumable",
+    "target_id": "cola",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "cola zero",
+    "target_type": "direct_consumable",
+    "target_id": "cola_zero",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "fanta orange",
+    "target_type": "direct_consumable",
+    "target_id": "fanta_orange",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "fanta lemon",
+    "target_type": "direct_consumable",
+    "target_id": "fanta_lemon",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "sprite",
+    "target_type": "direct_consumable",
+    "target_id": "sprite",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "7up",
+    "target_type": "direct_consumable",
+    "target_id": "seven_up",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "orangenlimonade",
+    "target_type": "direct_consumable",
+    "target_id": "lemonade_orange",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "zitronenlimonade",
+    "target_type": "direct_consumable",
+    "target_id": "lemonade_lemon",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "tonic water",
+    "target_type": "direct_consumable",
+    "target_id": "tonic_water",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "bitter lemon",
+    "target_type": "direct_consumable",
+    "target_id": "bitter_lemon",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "ginger ale",
+    "target_type": "direct_consumable",
+    "target_id": "ginger_ale",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "ginger beer",
+    "target_type": "direct_consumable",
+    "target_id": "ginger_beer",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "wild berry",
+    "target_type": "direct_consumable",
+    "target_id": "wild_berry_soda",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pink grapefruit-limonade",
+    "target_type": "direct_consumable",
+    "target_id": "grapefruit_soda",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "club mate",
+    "target_type": "direct_consumable",
+    "target_id": "club_mate",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mate-limonade",
+    "target_type": "direct_consumable",
+    "target_id": "mate_lemonade",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "fassbrause",
+    "target_type": "direct_consumable",
+    "target_id": "fassbrause",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "malzbier",
+    "target_type": "direct_consumable",
+    "target_id": "malt_beer",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "root beer",
+    "target_type": "direct_consumable",
+    "target_id": "root_beer",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "cream soda",
+    "target_type": "direct_consumable",
+    "target_id": "cream_soda",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "soda water",
+    "target_type": "direct_consumable",
+    "target_id": "soda_water",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mineralwasser still",
+    "target_type": "direct_consumable",
+    "target_id": "mineral_water_still",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mineralwasser medium",
+    "target_type": "direct_consumable",
+    "target_id": "mineral_water_medium",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mineralwasser sprudel",
+    "target_type": "direct_consumable",
+    "target_id": "mineral_water_sparkling",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "wasser",
+    "target_type": "direct_consumable",
+    "target_id": "water",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "energy drink",
+    "target_type": "direct_consumable",
+    "target_id": "energy_drink_generic",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "energy drink zero",
+    "target_type": "direct_consumable",
+    "target_id": "energy_drink_sugarfree",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "energy drink edition",
+    "target_type": "direct_consumable",
+    "target_id": "energy_drink_tropical",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "orangensaft",
+    "target_type": "direct_consumable",
+    "target_id": "orange_juice",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "apfelsaft",
+    "target_type": "direct_consumable",
+    "target_id": "apple_juice",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "ananassaft",
+    "target_type": "direct_consumable",
+    "target_id": "pineapple_juice",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "cranberrysaft",
+    "target_type": "direct_consumable",
+    "target_id": "cranberry_juice",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kirschsaft",
+    "target_type": "direct_consumable",
+    "target_id": "cherry_juice",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "bananensaft",
+    "target_type": "direct_consumable",
+    "target_id": "banana_juice",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "passionsfruchtsaft / maracujasaft",
+    "target_type": "direct_consumable",
+    "target_id": "passionfruit_juice",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mangosaft",
+    "target_type": "direct_consumable",
+    "target_id": "mango_juice",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pfirsichsaft",
+    "target_type": "direct_consumable",
+    "target_id": "peach_juice",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "grapefruitsaft",
+    "target_type": "direct_consumable",
+    "target_id": "grapefruit_juice",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "tomatensaft",
+    "target_type": "direct_consumable",
+    "target_id": "tomato_juice",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "traubensaft",
+    "target_type": "direct_consumable",
+    "target_id": "grape_juice",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "johannisbeersaft",
+    "target_type": "direct_consumable",
+    "target_id": "currant_juice",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "multivitaminsaft",
+    "target_type": "direct_consumable",
+    "target_id": "multivitamin_juice",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "rhabarbersaft",
+    "target_type": "direct_consumable",
+    "target_id": "rhubarb_juice",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "absinth",
+    "target_type": "direct_consumable",
+    "target_id": "absinthe",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "drambuie",
+    "target_type": "direct_consumable",
+    "target_id": "drambuie",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "crème de cacao",
+    "target_type": "direct_consumable",
+    "target_id": "creme_de_cacao",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "melonenlikör (midori-stil)",
+    "target_type": "direct_consumable",
+    "target_id": "melon_liqueur",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "melonenlikoer (midori-stil)",
+    "target_type": "direct_consumable",
+    "target_id": "melon_liqueur",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "kirschlikör (cherry brandy)",
+    "target_type": "direct_consumable",
+    "target_id": "cherry_liqueur",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kirschlikoer (cherry brandy)",
+    "target_type": "direct_consumable",
+    "target_id": "cherry_liqueur",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "falernum",
+    "target_type": "direct_consumable",
+    "target_id": "falernum",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "licor 43",
+    "target_type": "direct_consumable",
+    "target_id": "licor_43",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kaffee",
+    "target_type": "direct_consumable",
+    "target_id": "filter_coffee",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "espresso",
+    "target_type": "direct_consumable",
+    "target_id": "espresso",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "cold brew",
+    "target_type": "direct_consumable",
+    "target_id": "cold_brew",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "tafelwasser",
+    "target_type": "direct_consumable",
+    "target_id": "tafelwasser",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kartoffelchips",
+    "target_type": "direct_consumable",
+    "target_id": "potato_chips",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "paprikachips",
+    "target_type": "direct_consumable",
+    "target_id": "paprika_chips",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "salt & vinegar chips",
+    "target_type": "direct_consumable",
+    "target_id": "salt_vinegar_chips",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "tortilla chips",
+    "target_type": "direct_consumable",
+    "target_id": "tortilla_chips",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "salzstangen",
+    "target_type": "direct_consumable",
+    "target_id": "pretzel_sticks",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "cracker",
+    "target_type": "direct_consumable",
+    "target_id": "crackers",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "käsecracker",
+    "target_type": "direct_consumable",
+    "target_id": "cheese_crackers",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kaesecracker",
+    "target_type": "direct_consumable",
+    "target_id": "cheese_crackers",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "erdnüsse",
+    "target_type": "direct_consumable",
+    "target_id": "peanuts",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "erdnuesse",
+    "target_type": "direct_consumable",
+    "target_id": "peanuts",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "cashews",
+    "target_type": "direct_consumable",
+    "target_id": "cashews",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mandeln",
+    "target_type": "direct_consumable",
+    "target_id": "almonds",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "nussmix",
+    "target_type": "direct_consumable",
+    "target_id": "nut_mix",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "popcorn salzig",
+    "target_type": "direct_consumable",
+    "target_id": "popcorn_salty",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "popcorn süß",
+    "target_type": "direct_consumable",
+    "target_id": "popcorn_sweet",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "popcorn suess",
+    "target_type": "direct_consumable",
+    "target_id": "popcorn_sweet",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "reiswaffeln",
+    "target_type": "direct_consumable",
+    "target_id": "rice_cakes",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "grissini",
+    "target_type": "direct_consumable",
+    "target_id": "grissini",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mini-salami",
+    "target_type": "direct_consumable",
+    "target_id": "mini_salami",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "beef jerky",
+    "target_type": "direct_consumable",
+    "target_id": "beef_jerky",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "snackwürstchen",
+    "target_type": "direct_consumable",
+    "target_id": "snack_sausages",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "snackwuerstchen",
+    "target_type": "direct_consumable",
+    "target_id": "snack_sausages",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "trauben (snack)",
+    "target_type": "direct_consumable",
+    "target_id": "grapes_snack",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "oliven",
+    "target_type": "direct_consumable",
+    "target_id": "olives",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "wassermelone",
+    "target_type": "direct_consumable",
+    "target_id": "watermelon",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "erdbeeren",
+    "target_type": "direct_consumable",
+    "target_id": "strawberry",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "beerenmix",
+    "target_type": "direct_consumable",
+    "target_id": "mixed_berries",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "käsewürfel",
+    "target_type": "direct_consumable",
+    "target_id": "cheese_cubes",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kaesewuerfel",
+    "target_type": "direct_consumable",
+    "target_id": "cheese_cubes",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "gemüsesticks",
+    "target_type": "direct_consumable",
+    "target_id": "gemuesesticks",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gemuesesticks",
+    "target_type": "direct_consumable",
+    "target_id": "gemuesesticks",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "ketchup",
+    "target_type": "direct_consumable",
+    "target_id": "ketchup",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mayonnaise",
+    "target_type": "direct_consumable",
+    "target_id": "mayonnaise",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "senf",
+    "target_type": "direct_consumable",
+    "target_id": "mustard",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "süßer senf",
+    "target_type": "direct_consumable",
+    "target_id": "sweet_mustard",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "suesser senf",
+    "target_type": "direct_consumable",
+    "target_id": "sweet_mustard",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "bbq sauce",
+    "target_type": "direct_consumable",
+    "target_id": "bbq_sauce",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "burger sauce",
+    "target_type": "direct_consumable",
+    "target_id": "burger_sauce",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "cocktailsauce",
+    "target_type": "direct_consumable",
+    "target_id": "cocktail_sauce",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "currysauce",
+    "target_type": "direct_consumable",
+    "target_id": "curry_sauce",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "aioli",
+    "target_type": "direct_consumable",
+    "target_id": "aioli",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "knoblauchdip",
+    "target_type": "direct_consumable",
+    "target_id": "garlic_dip",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kräuterdip",
+    "target_type": "direct_consumable",
+    "target_id": "herb_dip",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kraeuterdip",
+    "target_type": "direct_consumable",
+    "target_id": "herb_dip",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "tzatziki",
+    "target_type": "direct_consumable",
+    "target_id": "tzatziki",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "hummus",
+    "target_type": "direct_consumable",
+    "target_id": "hummus",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "salsa mild",
+    "target_type": "direct_consumable",
+    "target_id": "salsa_mild",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "salsa scharf",
+    "target_type": "direct_consumable",
+    "target_id": "salsa_hot",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "guacamole",
+    "target_type": "direct_consumable",
+    "target_id": "guacamole",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "sour cream / schmand",
+    "target_type": "direct_consumable",
+    "target_id": "sour_cream",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "sweet chili sauce",
+    "target_type": "direct_consumable",
+    "target_id": "sweet_chili_sauce",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "sriracha",
+    "target_type": "direct_consumable",
+    "target_id": "sriracha",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "hot sauce",
+    "target_type": "direct_consumable",
+    "target_id": "hot_sauce",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "tabasco",
+    "target_type": "direct_consumable",
+    "target_id": "tabasco",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "remoulade",
+    "target_type": "direct_consumable",
+    "target_id": "remoulade",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "honig-senf-sauce",
+    "target_type": "direct_consumable",
+    "target_id": "honey_mustard_sauce",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "teriyaki sauce",
+    "target_type": "direct_consumable",
+    "target_id": "teriyaki_sauce",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "käsesauce",
+    "target_type": "direct_consumable",
+    "target_id": "cheese_sauce",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kaesesauce",
+    "target_type": "direct_consumable",
+    "target_id": "cheese_sauce",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "chili cheese sauce",
+    "target_type": "direct_consumable",
+    "target_id": "chili_cheese_sauce",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kräuterbutter",
+    "target_type": "direct_consumable",
+    "target_id": "herb_butter",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "kraeuterbutter",
+    "target_type": "direct_consumable",
+    "target_id": "herb_butter",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "knoblauchbutter",
+    "target_type": "direct_consumable",
+    "target_id": "garlic_butter",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "baguette",
+    "target_type": "direct_consumable",
+    "target_id": "baguette",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "ciabatta",
+    "target_type": "direct_consumable",
+    "target_id": "ciabatta",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "fladenbrot",
+    "target_type": "direct_consumable",
+    "target_id": "flatbread",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "brötchen",
+    "target_type": "direct_consumable",
+    "target_id": "bread_roll",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "broetchen",
+    "target_type": "direct_consumable",
+    "target_id": "bread_roll",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "burger bun",
+    "target_type": "direct_consumable",
+    "target_id": "burger_bun",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "hotdog bun",
+    "target_type": "direct_consumable",
+    "target_id": "hotdog_bun",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "brezel",
+    "target_type": "direct_consumable",
+    "target_id": "pretzel",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "laugenstange",
+    "target_type": "direct_consumable",
+    "target_id": "laugenstange",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "weißbrot",
+    "target_type": "direct_consumable",
+    "target_id": "white_bread",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "weissbrot",
+    "target_type": "direct_consumable",
+    "target_id": "white_bread",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "toastbrot",
+    "target_type": "direct_consumable",
+    "target_id": "toast_bread",
+    "confidence": 1.0,
+    "brand": ""
+  }
+]

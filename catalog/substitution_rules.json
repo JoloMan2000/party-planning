@@ -1,0 +1,296 @@
+[
+  {
+    "from_id": "cola",
+    "to_id": "cola_zero",
+    "compatibility": 0.95,
+    "direction": "bidirectional",
+    "note": "Cola <-> Cola Zero: hohe Kompatibilität"
+  },
+  {
+    "from_id": "cola",
+    "to_id": "cola_light",
+    "compatibility": 0.9,
+    "direction": "bidirectional",
+    "note": "Cola <-> Cola Light: hohe Kompatibilität"
+  },
+  {
+    "from_id": "cola_zero",
+    "to_id": "cola_light",
+    "compatibility": 0.9,
+    "direction": "bidirectional",
+    "note": ""
+  },
+  {
+    "from_id": "cola",
+    "to_id": "fanta_orange",
+    "compatibility": 0.6,
+    "direction": "bidirectional",
+    "note": "Cola <-> Fanta: mittlere Kompatibilität"
+  },
+  {
+    "from_id": "fanta_orange",
+    "to_id": "fanta_lemon",
+    "compatibility": 0.7,
+    "direction": "bidirectional",
+    "note": ""
+  },
+  {
+    "from_id": "sprite",
+    "to_id": "seven_up",
+    "compatibility": 0.9,
+    "direction": "bidirectional",
+    "note": ""
+  },
+  {
+    "from_id": "lemonade_orange",
+    "to_id": "lemonade_lemon",
+    "compatibility": 0.6,
+    "direction": "bidirectional",
+    "note": ""
+  },
+  {
+    "from_id": "prosecco",
+    "to_id": "sekt",
+    "compatibility": 0.9,
+    "direction": "bidirectional",
+    "note": "Prosecco <-> Sekt: hohe Kompatibilität"
+  },
+  {
+    "from_id": "prosecco",
+    "to_id": "cava",
+    "compatibility": 0.85,
+    "direction": "bidirectional",
+    "note": ""
+  },
+  {
+    "from_id": "sekt",
+    "to_id": "cremant",
+    "compatibility": 0.8,
+    "direction": "bidirectional",
+    "note": ""
+  },
+  {
+    "from_id": "red_wine",
+    "to_id": "rose_wine",
+    "compatibility": 0.5,
+    "direction": "bidirectional",
+    "note": ""
+  },
+  {
+    "from_id": "white_wine",
+    "to_id": "rose_wine",
+    "compatibility": 0.5,
+    "direction": "bidirectional",
+    "note": ""
+  },
+  {
+    "from_id": "beer_pils",
+    "to_id": "beer_lager",
+    "compatibility": 0.85,
+    "direction": "bidirectional",
+    "note": ""
+  },
+  {
+    "from_id": "beer_helles",
+    "to_id": "beer_export",
+    "compatibility": 0.8,
+    "direction": "bidirectional",
+    "note": ""
+  },
+  {
+    "from_id": "beer_hefeweizen",
+    "to_id": "beer_kristallweizen",
+    "compatibility": 0.8,
+    "direction": "bidirectional",
+    "note": ""
+  },
+  {
+    "from_id": "beer_hefeweizen",
+    "to_id": "beer_dunkelweizen",
+    "compatibility": 0.6,
+    "direction": "bidirectional",
+    "note": ""
+  },
+  {
+    "from_id": "classic_burger",
+    "to_id": "cheeseburger",
+    "compatibility": 0.9,
+    "direction": "bidirectional",
+    "note": "Burger <-> Cheeseburger: hohe Kompatibilität"
+  },
+  {
+    "from_id": "classic_burger",
+    "to_id": "bacon_burger",
+    "compatibility": 0.85,
+    "direction": "bidirectional",
+    "note": ""
+  },
+  {
+    "from_id": "classic_burger",
+    "to_id": "hotdog",
+    "compatibility": 0.6,
+    "direction": "bidirectional",
+    "note": "Burger <-> Hotdog: mittlere Kompatibilität"
+  },
+  {
+    "from_id": "kartoffelsalat",
+    "to_id": "nudelsalat",
+    "compatibility": 0.75,
+    "direction": "bidirectional",
+    "note": "Kartoffelsalat <-> Nudelsalat"
+  },
+  {
+    "from_id": "baguette",
+    "to_id": "ciabatta",
+    "compatibility": 0.95,
+    "direction": "bidirectional",
+    "note": "Baguette <-> Ciabatta: sehr hohe Kompatibilität"
+  },
+  {
+    "from_id": "bratkartoffeln",
+    "to_id": "kartoffelwedges",
+    "compatibility": 0.7,
+    "direction": "bidirectional",
+    "note": ""
+  },
+  {
+    "from_id": "pommes",
+    "to_id": "kartoffelwedges",
+    "compatibility": 0.6,
+    "direction": "bidirectional",
+    "note": ""
+  },
+  {
+    "from_id": "reis",
+    "to_id": "basmati_reis",
+    "compatibility": 0.9,
+    "direction": "bidirectional",
+    "note": ""
+  },
+  {
+    "from_id": "couscous_side",
+    "to_id": "bulgur_side",
+    "compatibility": 0.7,
+    "direction": "bidirectional",
+    "note": ""
+  },
+  {
+    "from_id": "gruener_salat",
+    "to_id": "gemischter_salat",
+    "compatibility": 0.85,
+    "direction": "bidirectional",
+    "note": ""
+  },
+  {
+    "from_id": "caesar_salad",
+    "to_id": "gruener_salat",
+    "compatibility": 0.6,
+    "direction": "bidirectional",
+    "note": ""
+  },
+  {
+    "from_id": "brownies",
+    "to_id": "blondies",
+    "compatibility": 0.8,
+    "direction": "bidirectional",
+    "note": ""
+  },
+  {
+    "from_id": "muffins",
+    "to_id": "cupcakes",
+    "compatibility": 0.8,
+    "direction": "bidirectional",
+    "note": ""
+  },
+  {
+    "from_id": "tiramisu",
+    "to_id": "panna_cotta",
+    "compatibility": 0.5,
+    "direction": "bidirectional",
+    "note": ""
+  },
+  {
+    "from_id": "vanillepudding_dessert",
+    "to_id": "schokopudding_dessert",
+    "compatibility": 0.8,
+    "direction": "bidirectional",
+    "note": ""
+  },
+  {
+    "from_id": "vegan_burger",
+    "to_id": "veggie_burger",
+    "compatibility": 0.8,
+    "direction": "one_way",
+    "note": "Vegane Portion darf vegetarische Nachfrage substituieren, nicht umgekehrt"
+  },
+  {
+    "from_id": "vegane_bratwurst",
+    "to_id": "veggie_bratwurst",
+    "compatibility": 0.8,
+    "direction": "one_way",
+    "note": "Vegane Portion darf vegetarische Nachfrage substituieren, nicht umgekehrt"
+  },
+  {
+    "from_id": "red_wine",
+    "to_id": "wine_alcohol_free",
+    "compatibility": 0.6,
+    "direction": "one_way",
+    "note": "Overflow: Alkohol -> alkoholfrei erlaubt, niemals umgekehrt"
+  },
+  {
+    "from_id": "white_wine",
+    "to_id": "wine_alcohol_free",
+    "compatibility": 0.6,
+    "direction": "one_way",
+    "note": "Overflow: Alkohol -> alkoholfrei erlaubt, niemals umgekehrt"
+  },
+  {
+    "from_id": "prosecco",
+    "to_id": "sparkling_wine_alcohol_free",
+    "compatibility": 0.6,
+    "direction": "one_way",
+    "note": "Overflow: Alkohol -> alkoholfrei erlaubt, niemals umgekehrt"
+  },
+  {
+    "from_id": "sekt",
+    "to_id": "sparkling_wine_alcohol_free",
+    "compatibility": 0.6,
+    "direction": "one_way",
+    "note": "Overflow: Alkohol -> alkoholfrei erlaubt, niemals umgekehrt"
+  },
+  {
+    "from_id": "beer_pils",
+    "to_id": "beer_pils_alcohol_free",
+    "compatibility": 0.6,
+    "direction": "one_way",
+    "note": "Overflow: Alkohol -> alkoholfrei erlaubt, niemals umgekehrt"
+  },
+  {
+    "from_id": "beer_helles",
+    "to_id": "beer_helles_alcohol_free",
+    "compatibility": 0.6,
+    "direction": "one_way",
+    "note": "Overflow: Alkohol -> alkoholfrei erlaubt, niemals umgekehrt"
+  },
+  {
+    "from_id": "beer_hefeweizen",
+    "to_id": "beer_weizen_alcohol_free",
+    "compatibility": 0.6,
+    "direction": "one_way",
+    "note": "Overflow: Alkohol -> alkoholfrei erlaubt, niemals umgekehrt"
+  },
+  {
+    "from_id": "beer_dunkelweizen",
+    "to_id": "beer_weizen_alcohol_free",
+    "compatibility": 0.6,
+    "direction": "one_way",
+    "note": "Overflow: Alkohol -> alkoholfrei erlaubt, niemals umgekehrt"
+  },
+  {
+    "from_id": "beer_kristallweizen",
+    "to_id": "beer_weizen_alcohol_free",
+    "compatibility": 0.6,
+    "direction": "one_way",
+    "note": "Overflow: Alkohol -> alkoholfrei erlaubt, niemals umgekehrt"
+  }
+]

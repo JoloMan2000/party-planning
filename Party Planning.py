@@ -39,20 +39,23 @@ import csv
 import io
 import json
 import sqlite3
+from collections import defaultdict
 from datetime import datetime, time as dtime
 from pathlib import Path
 
 import streamlit as st
 
 import spotify_playlist
-from drink_model import compute_drink_shopping_list
+from party_engine.catalog import load_catalog
+from party_engine.domain import CatalogItem, PartyCatalog, PartyConfig
+from party_engine.engine import compute_party_demand
+from party_engine.legacy_adapter import guest_response_from_row
 from translations import (
     ALL_LANGUAGES,
     DEFAULT_LANGUAGE,
     EXTRA_LANGUAGES,
     PRIMARY_LANGUAGES,
     t,
-    translate_option,
 )
 
 # --- Konfiguration ------------------------------------------------------
@@ -69,34 +72,177 @@ SPOTIFY_CLIENT_SECRET = st.secrets.get("spotify_client_secret", "")
 SPOTIFY_REDIRECT_URI = st.secrets.get("spotify_redirect_uri", "")
 SPOTIFY_CONFIGURED = bool(SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET and SPOTIFY_REDIRECT_URI)
 
-DRINK_OPTIONS = [
-    "Bier",
-    "Rotwein",
-    "Weißwein",
-    "Cola",
-    "Cola Zero",
-    "Fanta",
-    "Sprite",
-    "Red Bull",
-    "Alkoholfreies Bier",
-    "Wasser",
-]
-FOOD_OPTIONS = [
-    "Grillfleisch",
-    "Vegetarisch/Vegan",
-    "Salate",
-    "Snacks/Chips",
-]
+@st.cache_resource
+def get_catalog() -> PartyCatalog:
+    """Lädt den vollständigen Party-Katalog genau einmal pro Streamlit-Prozess
+    (AUFGABE §44) - die eigentliche Ladelogik/das Parsing bleibt in
+    party_engine.catalog (Streamlit-frei), hier kommt nur die
+    Streamlit-Cache-Anbindung dazu (siehe party_engine/catalog.py Docstring)."""
+    return load_catalog()
 
-# Geplante Menge pro Person, die die jeweilige Option ausgewählt hat: (Menge, Einheit)
-# Hinweis: Die Getränke-Mengen werden NICHT mehr hier berechnet, sondern über
-# das Demand-Allocation-Modell in drink_model.py (siehe compute_drink_shopping_list).
-FOOD_QUANTITY_PER_PERSON = {
-    "Grillfleisch": (200, "g"),
-    "Vegetarisch/Vegan": (150, "g"),
-    "Salate": (150, "g"),
-    "Snacks/Chips": (50, "g"),
+
+# --- Katalog-getriebene Getränke-/Essens-Auswahl (AUFGABE §38-39, §45) ------
+#
+# Die frühere fest codierte DRINK_OPTIONS/FOOD_OPTIONS-Liste (10 Getränke, 4
+# grobe Essenskategorien) ist vollständig abgelöst. Auswählbare Optionen
+# kommen jetzt ausschließlich aus `PartyCatalog` (party_engine/catalog.py).
+# Die folgenden Gruppierungen sind reine UI-Anzeige-Hilfen (welcher Tab zeigt
+# welche Katalog-`category`n) - sie enthalten selbst KEINE Fach-/Mengenlogik
+# und müssen bei neuen Katalogeinträgen i.d.R. nicht angepasst werden, solange
+# neue Einträge in eine der bestehenden Katalog-`category`-Werte fallen.
+
+_DRINK_DEMAND_GROUPS = {"alcoholic_beverage", "non_alcoholic_beverage", "energy", "beverage_general"}
+_FOOD_DEMAND_GROUPS = {"main", "side", "snack", "dessert", "condiment", "salad"}
+
+# Katalog-`category` -> UI-Gruppenschlüssel (Getränke)
+_DRINK_CATEGORY_TO_GROUP = {
+    "beer": "beer",
+    "wine": "wine",
+    "sparkling_wine": "wine",
+    "fortified_wine": "wine",
+    "softdrink": "softdrinks",
+    "softdrink_mix": "softdrinks",
+    "water": "nonalcoholic",
+    "coffee": "nonalcoholic",
+    "energy": "nonalcoholic",
+    "juice": "juices",
+    "spirit": "spirits",
+    "liqueur": "spirits",
+    "cocktail_vodka": "cocktails",
+    "cocktail_gin": "cocktails",
+    "cocktail_rum": "cocktails",
+    "cocktail_tequila": "cocktails",
+    "cocktail_whiskey": "cocktails",
+    "cocktail_brandy": "cocktails",
+    "cocktail_spritz": "cocktails",
+    "cocktail_longdrink": "cocktails",
+    "cocktail_complex": "cocktails",
 }
+_DRINK_GROUP_ORDER = ["beer", "wine", "softdrinks", "nonalcoholic", "cocktails", "spirits", "juices", "other"]
+_DRINK_GROUP_LABEL_KEYS = {
+    "beer": "drink_group_beer",
+    "wine": "drink_group_wine",
+    "softdrinks": "drink_group_softdrinks",
+    "nonalcoholic": "drink_group_nonalcoholic",
+    "cocktails": "drink_group_cocktails",
+    "spirits": "drink_group_spirits",
+    "juices": "drink_group_juices",
+    "other": "drink_group_other",
+}
+
+# Katalog-`category` -> UI-Gruppenschlüssel (Essen)
+_FOOD_CATEGORY_TO_GROUP = {
+    "grill": "grill",
+    "burger": "burger",
+    "veg_grill": "veg",
+    "main_dish": "warm",
+    "bread": "sides",
+    "side": "sides",
+    "salad": "salads",
+    "fingerfood": "snacks",
+    "snack": "snacks",
+    "cheese": "snacks",
+    "fruit": "snacks",
+    "vegetable": "snacks",
+    "sauce": "dips",
+    "dessert": "desserts",
+}
+_FOOD_GROUP_ORDER = ["grill", "burger", "veg", "warm", "sides", "salads", "snacks", "dips", "desserts"]
+_FOOD_GROUP_LABEL_KEYS = {
+    "grill": "food_group_grill",
+    "burger": "food_group_burger",
+    "veg": "food_group_veg",
+    "warm": "food_group_warm",
+    "sides": "food_group_sides",
+    "salads": "food_group_salads",
+    "snacks": "food_group_snacks",
+    "dips": "food_group_dips",
+    "desserts": "food_group_desserts",
+}
+
+
+def _drink_items(catalog: PartyCatalog) -> list[CatalogItem]:
+    items = list(catalog.direct_consumables.values()) + list(catalog.recipes.values())
+    return [i for i in items if i.demand_group in _DRINK_DEMAND_GROUPS]
+
+
+def _food_items(catalog: PartyCatalog) -> list[CatalogItem]:
+    items = list(catalog.direct_consumables.values()) + list(catalog.recipes.values())
+    return [i for i in items if i.demand_group in _FOOD_DEMAND_GROUPS]
+
+
+def _drink_group_key(item: CatalogItem) -> str:
+    return _DRINK_CATEGORY_TO_GROUP.get(item.category, "other")
+
+
+def _food_group_key(item: CatalogItem) -> str:
+    # Designentscheidung: Hotdog-Varianten liegen katalogseitig in der
+    # `grill`-Kategorie (gemeinsam mit z.B. Bratwurst/Steak), gehören UX-seitig
+    # aber klar zu "Burger & Hotdogs" (AUFGABE §38) - daher hier ein gezielter
+    # ID-basierter Override statt einer neuen Katalog-Kategorie.
+    if "hotdog" in item.id:
+        return "burger"
+    return _FOOD_CATEGORY_TO_GROUP.get(item.category, "snacks")
+
+
+def render_catalog_picker(
+    lang: str,
+    items: list[CatalogItem],
+    group_key_fn,
+    group_order: list[str],
+    group_label_keys: dict[str, str],
+    state_key_prefix: str,
+) -> list[str]:
+    """Rendert eine kompakte, katalog-getriebene Auswahl: "Beliebt"-Sektion +
+    globale Suche + Kategorie-Tabs (AUFGABE §38-39, §45) - bewusst KEINE
+    hunderte Checkboxen untereinander. Jedes Sub-Widget hat einen eigenen,
+    eindeutigen Streamlit-Key (persistiert automatisch beim Vor-/Zurück-
+    Navigieren im Wizard); die Rückgabe ist die deduplizierte Vereinigung
+    aller Sub-Auswahlen als flache Liste von Katalog-IDs."""
+    by_id = {i.id: i for i in items}
+    popular_items = sorted((i for i in items if i.popular), key=lambda i: i.name)
+    grouped: dict[str, list[CatalogItem]] = defaultdict(list)
+    for item in items:
+        grouped[group_key_fn(item)].append(item)
+
+    selected_ids: list[str] = []
+
+    if popular_items:
+        st.markdown(f"**{t(lang, 'popular_label')}**")
+        selected_ids += st.multiselect(
+            t(lang, "popular_label"),
+            options=[i.id for i in popular_items],
+            format_func=lambda iid: by_id[iid].name,
+            key=f"{state_key_prefix}_popular",
+            label_visibility="collapsed",
+        )
+
+    st.markdown(f"**{t(lang, 'catalog_search_label')}**")
+    all_sorted = sorted(items, key=lambda i: i.name)
+    selected_ids += st.multiselect(
+        t(lang, "catalog_search_label"),
+        options=[i.id for i in all_sorted],
+        format_func=lambda iid: by_id[iid].name,
+        key=f"{state_key_prefix}_search",
+        label_visibility="collapsed",
+        placeholder=t(lang, "catalog_search_placeholder"),
+    )
+
+    available_groups = [g for g in group_order if grouped.get(g)]
+    if available_groups:
+        tabs = st.tabs([t(lang, group_label_keys[g]) for g in available_groups])
+        for tab, group_key in zip(tabs, available_groups):
+            with tab:
+                group_items = sorted(grouped[group_key], key=lambda i: i.name)
+                selected_ids += st.multiselect(
+                    t(lang, group_label_keys[group_key]),
+                    options=[i.id for i in group_items],
+                    format_func=lambda iid: by_id[iid].name,
+                    key=f"{state_key_prefix}_cat_{group_key}",
+                    label_visibility="collapsed",
+                )
+
+    return list(dict.fromkeys(selected_ids))
 
 st.set_page_config(page_title="Bauwagen Gartenparty", page_icon="🌿", layout="centered")
 
@@ -292,54 +438,14 @@ init_db()
 # --- Hilfsfunktionen --------------------------------------------------------
 
 
-def parse_freetext_items(text: str | None) -> list[str]:
-    """Zerlegt ein Freitextfeld (kommagetrennt) in einzelne Einträge."""
-    if not text:
-        return []
-    return [item.strip() for item in text.split(",") if item.strip()]
-
-
-def format_total(count: int, amount: float, unit: str) -> str:
-    total = count * amount
-    if unit == "g" and total >= 1000:
-        return f"{total / 1000:.2f} kg"
-    if isinstance(total, float) and total.is_integer():
-        total = int(total)
-    return f"{total} {unit}"
-
-
-def build_food_list(responses: list[dict]) -> dict:
-    food_counts = {opt: 0 for opt in FOOD_OPTIONS}
-    food_freetext_counts: dict[str, int] = {}
-    times = []
-
-    for r in responses:
-        times.append(r["start_time"])
-        for item in json.loads(r["food"]):
-            if item in food_counts:
-                food_counts[item] += 1
-        for item in parse_freetext_items(r["food_freetext"]):
-            food_freetext_counts[item] = food_freetext_counts.get(item, 0) + 1
-
-    return {
-        "guest_count": len(responses),
-        "times": times,
-        "food_counts": food_counts,
-        "food_freetext_counts": food_freetext_counts,
-    }
-
-
-def responses_to_guests(responses: list[dict]) -> list[dict]:
-    """Wandelt SQLite-Antworten in das von drink_model.compute_drink_shopping_list
-    erwartete Gast-Dict-Format um."""
-    return [
-        {
-            "name": r["name"],
-            "drinks": json.loads(r["drinks"]),
-            "drinks_freetext": r["drinks_freetext"] or "",
-        }
-        for r in responses
-    ]
+def display_name_for_selection(value: str, catalog: PartyCatalog) -> str:
+    """Zeigt für eine gespeicherte Auswahl den Katalog-Anzeigenamen an, falls
+    ``value`` eine bekannte Katalog-ID ist (neues Format). Für Legacy-Zeilen
+    (alte, bereits menschenlesbare Options-Strings wie "Bier") oder unbekannte
+    IDs wird der Rohwert unverändert zurückgegeben - nice-to-have Anzeige,
+    keine Fach-/Mengenlogik (siehe AUFGABE-Task Punkt 3)."""
+    item = catalog.get_item(value)
+    return item.name if item is not None else value
 
 
 def format_songs(songs_json: str | None) -> str:
@@ -347,7 +453,7 @@ def format_songs(songs_json: str | None) -> str:
     return "; ".join(f"{s['artist']} – {s['title']}" for s in songs)
 
 
-def responses_to_csv(responses: list[dict]) -> str:
+def responses_to_csv(responses: list[dict], catalog: PartyCatalog) -> str:
     buffer = io.StringIO()
     writer = csv.writer(buffer)
     writer.writerow(
@@ -363,13 +469,15 @@ def responses_to_csv(responses: list[dict]) -> str:
         ]
     )
     for r in responses:
+        drinks = [display_name_for_selection(v, catalog) for v in json.loads(r["drinks"])]
+        food = [display_name_for_selection(v, catalog) for v in json.loads(r["food"])]
         writer.writerow(
             [
                 r["name"],
                 r["start_time"],
-                ", ".join(json.loads(r["drinks"])),
+                ", ".join(drinks),
                 r["drinks_freetext"] or "",
-                ", ".join(json.loads(r["food"])),
+                ", ".join(food),
                 r["food_freetext"] or "",
                 format_songs(r["songs"]),
                 r["submitted_at"],
@@ -451,11 +559,15 @@ def render_guest_form() -> None:
 
         elif st.session_state.step == 2:
             st.subheader(t(lang, "step2_header", n=TOTAL_STEPS))
-            st.session_state.drinks = st.multiselect(
-                t(lang, "drinks_label"),
-                DRINK_OPTIONS,
-                default=st.session_state.drinks,
-                format_func=lambda opt: translate_option(lang, "drinks", opt),
+            st.caption(t(lang, "drinks_label"))
+            catalog = get_catalog()
+            st.session_state.drinks = render_catalog_picker(
+                lang,
+                _drink_items(catalog),
+                _drink_group_key,
+                _DRINK_GROUP_ORDER,
+                _DRINK_GROUP_LABEL_KEYS,
+                state_key_prefix="drinks",
             )
             st.session_state.drinks_freetext = st.text_input(
                 t(lang, "drinks_freetext_label"), value=st.session_state.drinks_freetext
@@ -470,11 +582,15 @@ def render_guest_form() -> None:
 
         elif st.session_state.step == 3:
             st.subheader(t(lang, "step3_header", n=TOTAL_STEPS))
-            st.session_state.food = st.multiselect(
-                t(lang, "food_label"),
-                FOOD_OPTIONS,
-                default=st.session_state.food,
-                format_func=lambda opt: translate_option(lang, "food", opt),
+            st.caption(t(lang, "food_label"))
+            catalog = get_catalog()
+            st.session_state.food = render_catalog_picker(
+                lang,
+                _food_items(catalog),
+                _food_group_key,
+                _FOOD_GROUP_ORDER,
+                _FOOD_GROUP_LABEL_KEYS,
+                state_key_prefix="food",
             )
             st.session_state.food_freetext = st.text_input(
                 t(lang, "food_freetext_label"), value=st.session_state.food_freetext
@@ -552,6 +668,7 @@ def render_admin_view() -> None:
 
     render_hero(t(lang, "admin_title"), t(lang, "admin_subtitle"))
     responses = load_responses()
+    catalog = get_catalog()
 
     if not responses:
         st.info(t(lang, "no_responses_yet"))
@@ -562,7 +679,7 @@ def render_admin_view() -> None:
 
     st.download_button(
         t(lang, "btn_csv"),
-        data=responses_to_csv(responses),
+        data=responses_to_csv(responses, catalog),
         file_name="party_antworten.csv",
         mime="text/csv",
         help=t(lang, "csv_help"),
@@ -570,8 +687,8 @@ def render_admin_view() -> None:
 
     with st.expander(t(lang, "raw_responses_expander")):
         for r in responses:
-            drinks = ", ".join(json.loads(r["drinks"])) or "–"
-            food = ", ".join(json.loads(r["food"])) or "–"
+            drinks = ", ".join(display_name_for_selection(v, catalog) for v in json.loads(r["drinks"])) or "–"
+            food = ", ".join(display_name_for_selection(v, catalog) for v in json.loads(r["food"])) or "–"
             extra_drinks = f" + {r['drinks_freetext']}" if r["drinks_freetext"] else ""
             extra_food = f" + {r['food_freetext']}" if r["food_freetext"] else ""
             songs = format_songs(r["songs"]) or "–"
@@ -581,63 +698,75 @@ def render_admin_view() -> None:
             )
 
     if st.button(t(lang, "btn_create_shopping_list")):
-        food_data = build_food_list(responses)
-
-        st.subheader(t(lang, "times_header", n=food_data["guest_count"]))
-        st.write(", ".join(sorted(food_data["times"])))
-
-        st.subheader(t(lang, "drinks_shopping_header"))
-        shopping = compute_drink_shopping_list(responses_to_guests(responses))
-
-        def render_drink_row(result) -> None:
-            review_flag = " ⚠️" if result.needs_review else ""
-            st.markdown(f"**{result.canonical_name}**{review_flag}")
-            st.write(
-                f"→ {result.purchase_count} × {result.purchase_unit} "
-                f"({result.actual_purchase_quantity_l:.2f} l gesamt)"
-            )
-            st.caption(result.explanation)
-            with st.expander(t(lang, "details_expander")):
-                st.write(f"{t(lang, 'family_label')}: {result.family}")
-                st.write(f"{t(lang, 'supporting_guests_label')}: {result.number_of_supporting_guests}")
-                st.write(f"{t(lang, 'weighted_score_label')}: {result.weighted_preference_score}")
-                st.write(f"{t(lang, 'calc_qty_label')}: {result.calculated_quantity_l} l")
-                st.write(f"{t(lang, 'reserve_label')}: {result.reserve_percentage * 100:.0f}%")
-                st.write(f"{t(lang, 'qty_after_reserve_label')}: {result.quantity_after_reserve_l} l")
-                st.write(f"{t(lang, 'source_label')}: {result.source}")
-                st.write(f"{t(lang, 'confidence_label')}: {result.confidence}")
-
-        render_drink_row(shopping.water)
-        if not shopping.drinks:
-            st.caption(t(lang, "no_more_drinks"))
-        for result in shopping.drinks:
-            render_drink_row(result)
-
-        if shopping.admin_hints:
-            with st.expander(t(lang, "review_hints_expander", n=len(shopping.admin_hints))):
-                for hint in shopping.admin_hints:
-                    st.write(f"- {hint}")
-
-        if shopping.unresolved_freetext:
-            with st.expander(t(lang, "unresolved_expander", n=len(shopping.unresolved_freetext))):
-                for item in shopping.unresolved_freetext:
-                    st.write(f"- „{item.raw_text}“ ({t(lang, 'from_guest', name=item.guest_name)})")
-
-        st.subheader(t(lang, "food_shopping_header"))
-        any_food = False
-        for item, count in food_data["food_counts"].items():
-            if count > 0:
-                any_food = True
-                amount, unit = FOOD_QUANTITY_PER_PERSON.get(item, (1, "Portion(en)"))
-                label = translate_option(lang, "food", item)
-                st.write(f"- **{label}**: {count}x → {format_total(count, amount, unit)}")
-        for item, count in food_data["food_freetext_counts"].items():
-            any_food = True
-            st.write(f"- **{item}**: {count}x")
-        if not any_food:
-            st.caption(t(lang, "no_food"))
+        render_shopping_list(responses, catalog, lang)
 
     render_spotify_section(responses, lang)
+
+
+def render_shopping_list(responses: list[dict], catalog: PartyCatalog, lang: str) -> None:
+    """Unified Shopping-List-Ansicht (AUFGABE §40-41): ersetzt die früheren
+    getrennten Getränke-/Essen-Sektionen durch EINE Ansicht, die auf der
+    vollständigen Demand-Pipeline (``compute_party_demand``) basiert - egal
+    ob ein Getränk oder ein Gericht die Zutat letztlich benötigt."""
+    guest_responses = [guest_response_from_row(r, catalog) for r in responses]
+    result = compute_party_demand(catalog, guest_responses, PartyConfig())
+
+    st.subheader(t(lang, "times_header", n=len(responses)))
+    st.write(", ".join(sorted(r["start_time"] for r in responses)))
+
+    # --- Präferenzübersicht (§40: "Espresso Martini - 14 Unterstützer, 8,3 erwartete Portionen") ---
+    st.subheader(t(lang, "item_overview_header"))
+    if not result.item_demand:
+        st.caption(t(lang, "no_item_demand"))
+    for summary in result.item_demand:
+        st.write(
+            f"- **{summary.item_name}** — {summary.supporters} {t(lang, 'supporting_guests_label')}, "
+            f"{summary.expected_servings:.1f} {t(lang, 'expected_servings_label')}"
+        )
+
+    # --- Ingredient Demand mit Erklärbarkeit (§41) ---
+    st.subheader(t(lang, "ingredient_demand_header"))
+    if not result.ingredient_demand:
+        st.caption(t(lang, "no_ingredient_demand"))
+    for ingredient_id, demand in sorted(result.ingredient_demand.items(), key=lambda kv: kv[1].name):
+        st.markdown(f"**{demand.name}** — {demand.quantity_after_reserve:.2f} {demand.unit}")
+        with st.expander(t(lang, "details_expander")):
+            ingredient = catalog.ingredients.get(ingredient_id)
+            if ingredient is not None:
+                st.write(f"{t(lang, 'family_label')}: {ingredient.family}")
+            st.write(f"{t(lang, 'contributions_label')}:")
+            for contribution in demand.contributions:
+                st.write(f"　　{contribution.source_item_name}: {contribution.amount:.3f} {contribution.unit}")
+            st.write(f"{t(lang, 'raw_quantity_label')}: {demand.raw_quantity:.3f} {demand.unit}")
+            st.write(f"{t(lang, 'reserve_label')}: {demand.reserve_pct * 100:.0f}%")
+            st.write(f"{t(lang, 'qty_after_reserve_label')}: {demand.quantity_after_reserve:.3f} {demand.unit}")
+
+    # --- Purchase Plan (§35, §40-41) ---
+    st.subheader(t(lang, "purchase_plan_header"))
+    if not result.purchase_plan:
+        st.caption(t(lang, "no_purchase_plan"))
+    for plan_item in result.purchase_plan:
+        breakdown_text = ", ".join(
+            f"{b.count} × {b.size:g} {b.unit}" + (f" ({b.pack_label})" if b.pack_label else "")
+            for b in plan_item.sku_breakdown
+        ) or "–"
+        st.write(
+            f"- **{plan_item.name}**: {breakdown_text} "
+            f"({t(lang, 'total_purchased_label')}: {plan_item.total_purchased_quantity:.2f} {plan_item.unit})"
+        )
+
+    # --- Eisbedarf ---
+    st.subheader(t(lang, "ice_demand_label"))
+    st.write(f"{result.ice_demand_kg:.2f} kg")
+
+    # --- Review Issues (unbekannte Freitexte, niedrige Confidence, Allergien, ...) ---
+    if result.review_issues:
+        with st.expander(t(lang, "review_issues_header", n=len(result.review_issues))):
+            for issue in result.review_issues:
+                guest_part = f" ({t(lang, 'from_guest', name=issue.guest_name)})" if issue.guest_name else ""
+                st.write(f"- [{issue.issue_type}] {issue.message}{guest_part}")
+    else:
+        st.caption(t(lang, "no_review_issues"))
 
 
 def render_spotify_section(responses: list[dict], lang: str = DEFAULT_LANGUAGE) -> None:
