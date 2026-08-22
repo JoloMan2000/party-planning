@@ -40,11 +40,12 @@ import io
 import json
 import sqlite3
 from collections import defaultdict
-from datetime import datetime, time as dtime
+from datetime import date as ddate, datetime, time as dtime
 from pathlib import Path
 
 import streamlit as st
 
+import calendar_export
 import event_theme
 import spotify_playlist
 from party_engine.catalog import load_catalog
@@ -390,6 +391,12 @@ def inject_theme(
             margin: 0.55rem 0 0 0;
             font-size: 1.05rem;
         }
+        .party-hero p.party-hero-meta {
+            margin-top: 0.85rem;
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: #FBF3E3;
+        }
 
         h2, h3 {
             font-family: 'Fraunces', serif;
@@ -443,12 +450,17 @@ def inject_theme(
     st.markdown(css, unsafe_allow_html=True)
 
 
-def render_hero(title: str, subtitle: str) -> None:
+def render_hero(title: str, subtitle: str, meta: str | None = None) -> None:
+    """``meta`` ist eine optionale, sprachneutrale Zusatzzeile (aktuell:
+    Datum/Uhrzeit/Ort der Party, siehe calendar_export.format_party_datetime())
+    - wird nur gerendert, falls der Admin bereits ein Datum konfiguriert hat."""
+    meta_html = f'<p class="party-hero-meta">{meta}</p>' if meta else ""
     st.markdown(
         f"""
         <div class="party-hero">
             <h1>{title}</h1>
             <p>{subtitle}</p>
+            {meta_html}
         </div>
         """,
         unsafe_allow_html=True,
@@ -588,7 +600,11 @@ def render_event_intro(settings: dict) -> None:
     theme = event_theme.EVENT_TYPES.get(
         settings["event_type"], event_theme.EVENT_TYPES[event_theme.DEFAULT_EVENT_TYPE]
     )
-    render_hero(f"{theme['emoji']} {event_theme.resolve_party_title(settings)}", theme["intro_subtitle"])
+    render_hero(
+        f"{theme['emoji']} {event_theme.resolve_party_title(settings)}",
+        theme["intro_subtitle"],
+        meta=calendar_export.format_party_datetime(settings),
+    )
 
     if st.button("Weiter / Continue ➡️", key="btn_enter_intro", use_container_width=True):
         st.session_state.entered_intro = True
@@ -648,6 +664,30 @@ def _guest_recommended_ids(catalog: PartyCatalog, top_n: int = 16) -> list[str]:
     return [item.id for item, _score in recommended]
 
 
+def render_calendar_export_section(lang: str, theme: dict) -> None:
+    """Zeigt Gästen nach dem Absenden des Fragebogens eine 'Zum Kalender
+    hinzufügen'-Sektion (Google Calendar + .ics-Download für Apple
+    Calendar/Outlook/Android) an - siehe calendar_export.py. Blendet sich
+    komplett aus, solange der Admin noch kein Party-Datum in den
+    Party-Einstellungen (render_party_settings_section) konfiguriert hat."""
+    if not calendar_export.has_scheduled_date(_PARTY_SETTINGS):
+        return
+    title = f"{theme['emoji']} {event_theme.resolve_party_title(_PARTY_SETTINGS)}"
+    st.divider()
+    st.subheader(t(lang, "calendar_section_header"))
+    google_url = calendar_export.google_calendar_url(_PARTY_SETTINGS, title)
+    if google_url:
+        st.link_button(t(lang, "calendar_google_button"), google_url)
+    ics = calendar_export.ics_content(_PARTY_SETTINGS, title)
+    if ics:
+        st.download_button(
+            t(lang, "calendar_ics_button"),
+            data=ics,
+            file_name="party.ics",
+            mime="text/calendar",
+        )
+
+
 def render_guest_form() -> None:
     if "entered_intro" not in st.session_state:
         st.session_state.entered_intro = False
@@ -680,10 +720,15 @@ def render_guest_form() -> None:
     theme = event_theme.EVENT_TYPES.get(
         _PARTY_SETTINGS["event_type"], event_theme.EVENT_TYPES[event_theme.DEFAULT_EVENT_TYPE]
     )
-    render_hero(f"{theme['emoji']} {event_theme.resolve_party_title(_PARTY_SETTINGS)}", t(lang, "hero_subtitle"))
+    render_hero(
+        f"{theme['emoji']} {event_theme.resolve_party_title(_PARTY_SETTINGS)}",
+        t(lang, "hero_subtitle"),
+        meta=calendar_export.format_party_datetime(_PARTY_SETTINGS),
+    )
 
     if st.session_state.submitted:
         st.success(t(lang, "submitted_msg"))
+        render_calendar_export_section(lang, theme)
         return
 
     st.progress(st.session_state.step / TOTAL_STEPS)
@@ -828,8 +873,46 @@ def render_party_settings_section(lang: str) -> None:
             placeholder=t(lang, "party_name_placeholder", default_title=default_title),
             key="party_settings_party_name",
         )
+
+        existing_date = ddate.fromisoformat(settings["party_date"]) if settings["party_date"] else None
+        party_date = st.date_input(
+            t(lang, "party_date_label"),
+            value=existing_date,
+            key="party_settings_date",
+        )
+        existing_start_time = (
+            dtime.fromisoformat(settings["party_start_time"]) if settings["party_start_time"] else dtime(19, 0)
+        )
+        party_start_time = st.time_input(
+            t(lang, "party_start_time_label"),
+            value=existing_start_time,
+            key="party_settings_start_time",
+        )
+        party_duration_hours = st.number_input(
+            t(lang, "party_duration_label"),
+            min_value=0.5,
+            max_value=48.0,
+            step=0.5,
+            value=float(settings["party_duration_hours"]),
+            key="party_settings_duration",
+        )
+        party_location = st.text_input(
+            t(lang, "party_location_label"),
+            value=settings["party_location"],
+            placeholder=t(lang, "party_location_placeholder"),
+            key="party_settings_location",
+        )
+
         if st.button(t(lang, "btn_save_party_settings"), key="party_settings_save_btn"):
-            event_theme.save_party_settings(DB_PATH, chosen_type, party_name)
+            event_theme.save_party_settings(
+                DB_PATH,
+                chosen_type,
+                party_name,
+                party_date=party_date.isoformat() if party_date else "",
+                party_start_time=party_start_time.strftime("%H:%M"),
+                party_duration_hours=party_duration_hours,
+                party_location=party_location,
+            )
             st.success(t(lang, "party_settings_saved"))
             st.rerun()
 
