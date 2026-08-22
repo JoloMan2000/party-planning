@@ -64,6 +64,7 @@ from translations import (
     DEFAULT_LANGUAGE,
     EXTRA_LANGUAGES,
     PRIMARY_LANGUAGES,
+    catalog_item_name,
     t,
 )
 
@@ -244,11 +245,14 @@ def render_catalog_picker(
     by_id = {i.id: i for i in items}
     recommended_set = set(recommended_ids)
 
+    def _display_name(iid: str) -> str:
+        return catalog_item_name(iid, by_id[iid].name, lang)
+
     def _format_name(iid: str) -> str:
         prefix = t(lang, "recommended_item_prefix") if iid in recommended_set else ""
-        return f"{prefix}{by_id[iid].name}"
+        return f"{prefix}{_display_name(iid)}"
 
-    popular_items = sorted((i for i in items if i.popular), key=lambda i: i.name)
+    popular_items = sorted((i for i in items if i.popular), key=lambda i: _display_name(i.id))
     grouped: dict[str, list[CatalogItem]] = defaultdict(list)
     for item in items:
         grouped[group_key_fn(item)].append(item)
@@ -261,7 +265,7 @@ def render_catalog_picker(
         selected_ids += st.multiselect(
             t(lang, "recommended_for_label", occasion=recommended_label),
             options=recommended_in_items,
-            format_func=lambda iid: by_id[iid].name,
+            format_func=_display_name,
             key=f"{state_key_prefix}_recommended",
             label_visibility="collapsed",
         )
@@ -277,7 +281,7 @@ def render_catalog_picker(
         )
 
     st.markdown(f"**{t(lang, 'catalog_search_label')}**")
-    all_sorted = sorted(items, key=lambda i: i.name)
+    all_sorted = sorted(items, key=lambda i: _display_name(i.id))
     selected_ids += st.multiselect(
         t(lang, "catalog_search_label"),
         options=[i.id for i in all_sorted],
@@ -292,7 +296,7 @@ def render_catalog_picker(
         tabs = st.tabs([t(lang, group_label_keys[g]) for g in available_groups])
         for tab, group_key in zip(tabs, available_groups):
             with tab:
-                group_items = sorted(grouped[group_key], key=lambda i: i.name)
+                group_items = sorted(grouped[group_key], key=lambda i: _display_name(i.id))
                 selected_ids += st.multiselect(
                     t(lang, group_label_keys[group_key]),
                     options=[i.id for i in group_items],
@@ -519,14 +523,19 @@ init_db()
 # --- Hilfsfunktionen --------------------------------------------------------
 
 
-def display_name_for_selection(value: str, catalog: PartyCatalog) -> str:
+def display_name_for_selection(value: str, catalog: PartyCatalog, lang: str = DEFAULT_LANGUAGE) -> str:
     """Zeigt für eine gespeicherte Auswahl den Katalog-Anzeigenamen an, falls
     ``value`` eine bekannte Katalog-ID ist (neues Format). Für Legacy-Zeilen
     (alte, bereits menschenlesbare Options-Strings wie "Bier") oder unbekannte
     IDs wird der Rohwert unverändert zurückgegeben - nice-to-have Anzeige,
-    keine Fach-/Mengenlogik (siehe AUFGABE-Task Punkt 3)."""
+    keine Fach-/Mengenlogik (siehe AUFGABE-Task Punkt 3). ``lang`` (Default:
+    Deutsch) übersetzt den Katalog-Anzeigenamen optional via
+    catalog_item_name() - z.B. für die admin-seitige Rohantworten-Ansicht,
+    die eine eigene Sprachauswahl hat (siehe render_admin_view())."""
     item = catalog.get_item(value)
-    return item.name if item is not None else value
+    if item is None:
+        return value
+    return catalog_item_name(item.id, item.name, lang)
 
 
 def format_songs(songs_json: str | None) -> str:
@@ -668,7 +677,10 @@ def render_guest_form() -> None:
         st.session_state.song_input_generation = 0
         st.session_state.submitted = False
 
-    render_hero(t(lang, "landing_title"), t(lang, "hero_subtitle"))
+    theme = event_theme.EVENT_TYPES.get(
+        _PARTY_SETTINGS["event_type"], event_theme.EVENT_TYPES[event_theme.DEFAULT_EVENT_TYPE]
+    )
+    render_hero(f"{theme['emoji']} {event_theme.resolve_party_title(_PARTY_SETTINGS)}", t(lang, "hero_subtitle"))
 
     if st.session_state.submitted:
         st.success(t(lang, "submitted_msg"))
@@ -847,7 +859,7 @@ def render_recommendations_section(lang: str, responses: list[dict], catalog: Pa
     with st.expander(t(lang, "admin_recommendations_header", occasion=occasion_label), expanded=False):
         st.caption(t(lang, "admin_recommendations_caption"))
         for item, score in recommended:
-            st.markdown(f"- **{item.name}** — {score.total_score:.2f}")
+            st.markdown(f"- **{catalog_item_name(item.id, item.name, lang)}** — {score.total_score:.2f}")
             with st.expander(t(lang, "admin_recommendations_score_expander"), expanded=False):
                 st.text(format_score_explanation(score, lang=lang if lang in ("de", "en") else "en"))
 
@@ -894,8 +906,8 @@ def render_admin_view() -> None:
 
     with st.expander(t(lang, "raw_responses_expander")):
         for r in responses:
-            drinks = ", ".join(display_name_for_selection(v, catalog) for v in json.loads(r["drinks"])) or "–"
-            food = ", ".join(display_name_for_selection(v, catalog) for v in json.loads(r["food"])) or "–"
+            drinks = ", ".join(display_name_for_selection(v, catalog, lang) for v in json.loads(r["drinks"])) or "–"
+            food = ", ".join(display_name_for_selection(v, catalog, lang) for v in json.loads(r["food"])) or "–"
             extra_drinks = f" + {r['drinks_freetext']}" if r["drinks_freetext"] else ""
             extra_food = f" + {r['food_freetext']}" if r["food_freetext"] else ""
             songs = format_songs(r["songs"]) or "–"

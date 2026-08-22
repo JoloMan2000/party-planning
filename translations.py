@@ -14,6 +14,10 @@ Verwendung:
 
 from __future__ import annotations
 
+import json
+from functools import lru_cache
+from pathlib import Path
+
 PRIMARY_LANGUAGES = [
     ("de", "Deutsch", "🇩🇪"),
     ("en", "English", "🇬🇧"),
@@ -52,7 +56,7 @@ LANG_DATA["de"] = {
         "landing_more": "🌐 Weitere Sprachen",
         "landing_more_select_label": "Sprache wählen",
         "landing_more_placeholder": "Bitte wählen…",
-        "hero_subtitle": "Sag uns, was du dir für unsere Gartenparty wünschst!",
+        "hero_subtitle": "Sag uns, was du dir für unsere Party wünschst!",
         "step1_header": "🌙 Schritt 1 von {n}: Wer bist du & wann soll's losgehen?",
         "name_label": "Dein Name",
         "time_label": "Um wie viel Uhr soll die Party starten?",
@@ -191,7 +195,7 @@ LANG_DATA["en"] = {
         "landing_more": "🌐 More languages",
         "landing_more_select_label": "Select language",
         "landing_more_placeholder": "Please choose…",
-        "hero_subtitle": "Tell us what you'd like for our garden party!",
+        "hero_subtitle": "Tell us what you'd like for our party!",
         "step1_header": "🌙 Step 1 of {n}: Who are you & when should it start?",
         "name_label": "Your name",
         "time_label": "What time should the party start?",
@@ -331,7 +335,7 @@ LANG_DATA["es"] = {
         "landing_more": "🌐 Más idiomas",
         "landing_more_select_label": "Selecciona idioma",
         "landing_more_placeholder": "Por favor elige…",
-        "hero_subtitle": "¡Cuéntanos qué te gustaría para nuestra fiesta en el jardín!",
+        "hero_subtitle": "¡Cuéntanos qué te gustaría para nuestra fiesta!",
         "step1_header": "🌙 Paso 1 de {n}: ¿Quién eres y a qué hora empezamos?",
         "name_label": "Tu nombre",
         "time_label": "¿A qué hora debería empezar la fiesta?",
@@ -426,7 +430,7 @@ LANG_DATA["fr"] = {
         "landing_more": "🌐 Plus de langues",
         "landing_more_select_label": "Choisir la langue",
         "landing_more_placeholder": "Veuillez choisir…",
-        "hero_subtitle": "Dis-nous ce que tu souhaites pour notre fête au jardin !",
+        "hero_subtitle": "Dis-nous ce que tu souhaites pour notre fête !",
         "step1_header": "🌙 Étape 1 sur {n} : Qui es-tu et à quelle heure ça commence ?",
         "name_label": "Ton nom",
         "time_label": "À quelle heure la fête doit-elle commencer ?",
@@ -521,7 +525,7 @@ LANG_DATA["it"] = {
         "landing_more": "🌐 Altre lingue",
         "landing_more_select_label": "Seleziona lingua",
         "landing_more_placeholder": "Seleziona…",
-        "hero_subtitle": "Dicci cosa desideri per la nostra festa in giardino!",
+        "hero_subtitle": "Dicci cosa desideri per la nostra festa!",
         "step1_header": "🌙 Passo 1 di {n}: Chi sei e a che ora si comincia?",
         "name_label": "Il tuo nome",
         "time_label": "A che ora dovrebbe iniziare la festa?",
@@ -616,7 +620,7 @@ LANG_DATA["zh"] = {
         "landing_more": "🌐 更多语言",
         "landing_more_select_label": "选择语言",
         "landing_more_placeholder": "请选择…",
-        "hero_subtitle": "告诉我们你对花园派对的期望!",
+        "hero_subtitle": "告诉我们你对这场派对的期望!",
         "step1_header": "🌙 第 1 步（共 {n} 步）：你是谁，几点开始?",
         "name_label": "你的名字",
         "time_label": "派对应该几点开始?",
@@ -710,7 +714,7 @@ LANG_DATA["ja"] = {
         "landing_more": "🌐 その他の言語",
         "landing_more_select_label": "言語を選択",
         "landing_more_placeholder": "選択してください…",
-        "hero_subtitle": "ガーデンパーティーへのご希望を教えてください！",
+        "hero_subtitle": "パーティーへのご希望を教えてください！",
         "step1_header": "🌙 ステップ 1/{n}：あなたのお名前と開始時間",
         "name_label": "お名前",
         "time_label": "パーティーは何時に始めますか？",
@@ -804,7 +808,7 @@ LANG_DATA["pt"] = {
         "landing_more": "🌐 Mais idiomas",
         "landing_more_select_label": "Selecionar idioma",
         "landing_more_placeholder": "Por favor escolhe…",
-        "hero_subtitle": "Diz-nos o que desejas para a nossa festa no jardim!",
+        "hero_subtitle": "Diz-nos o que desejas para a nossa festa!",
         "step1_header": "🌙 Passo 1 de {n}: Quem és tu e a que horas começamos?",
         "name_label": "O teu nome",
         "time_label": "A que horas deve começar a festa?",
@@ -900,7 +904,7 @@ LANG_DATA["nl"] = {
         "landing_more": "🌐 Meer talen",
         "landing_more_select_label": "Taal selecteren",
         "landing_more_placeholder": "Kies alsjeblieft…",
-        "hero_subtitle": "Vertel ons wat je wilt voor ons tuinfeest!",
+        "hero_subtitle": "Vertel ons wat je wilt voor ons feest!",
         "step1_header": "🌙 Stap 1 van {n}: Wie ben jij & hoe laat begint het?",
         "name_label": "Je naam",
         "time_label": "Hoe laat moet het feest beginnen?",
@@ -986,7 +990,7 @@ LANG_DATA["pl"] = {
         "landing_more": "🌐 Więcej języków",
         "landing_more_select_label": "Wybierz język",
         "landing_more_placeholder": "Proszę wybrać…",
-        "hero_subtitle": "Powiedz nam, czego oczekujesz od naszej imprezy w ogrodzie!",
+        "hero_subtitle": "Powiedz nam, czego oczekujesz od naszej imprezy!",
         "step1_header": "🌙 Krok 1 z {n}: Kim jesteś i o której zaczynamy?",
         "name_label": "Twoje imię",
         "time_label": "O której godzinie ma się zacząć impreza?",
@@ -1072,7 +1076,7 @@ LANG_DATA["tr"] = {
         "landing_more": "🌐 Diğer diller",
         "landing_more_select_label": "Dil seç",
         "landing_more_placeholder": "Lütfen seçin…",
-        "hero_subtitle": "Bahçe partimiz için ne istediğini bize söyle!",
+        "hero_subtitle": "Partimiz için ne istediğini bize söyle!",
         "step1_header": "🌙 Adım 1/{n}: Sen kimsin & saat kaçta başlasın?",
         "name_label": "Adın",
         "time_label": "Parti saat kaçta başlamalı?",
@@ -1157,7 +1161,7 @@ LANG_DATA["ru"] = {
         "landing_more": "🌐 Другие языки",
         "landing_more_select_label": "Выбрать язык",
         "landing_more_placeholder": "Пожалуйста, выберите…",
-        "hero_subtitle": "Расскажи нам, что ты хочешь на нашей садовой вечеринке!",
+        "hero_subtitle": "Расскажи нам, что ты хочешь на нашей вечеринке!",
         "step1_header": "🌙 Шаг 1 из {n}: Кто ты и во сколько начнём?",
         "name_label": "Твоё имя",
         "time_label": "Во сколько должна начаться вечеринка?",
@@ -1243,7 +1247,7 @@ LANG_DATA["ar"] = {
         "landing_more": "🌐 لغات أخرى",
         "landing_more_select_label": "اختر اللغة",
         "landing_more_placeholder": "الرجاء الاختيار…",
-        "hero_subtitle": "أخبرنا بما تتمناه لحفلتنا في الحديقة!",
+        "hero_subtitle": "أخبرنا بما تتمناه لحفلتنا!",
         "step1_header": "🌙 الخطوة 1 من {n}: من أنت ومتى نبدأ؟",
         "name_label": "اسمك",
         "time_label": "في أي وقت يجب أن تبدأ الحفلة؟",
@@ -1329,7 +1333,7 @@ LANG_DATA["ko"] = {
         "landing_more": "🌐 더 많은 언어",
         "landing_more_select_label": "언어 선택",
         "landing_more_placeholder": "선택해 주세요…",
-        "hero_subtitle": "우리 가든 파티에서 원하는 것을 알려주세요!",
+        "hero_subtitle": "우리 파티에서 원하는 것을 알려주세요!",
         "step1_header": "🌙 {n}단계 중 1단계: 당신은 누구이며 몇 시에 시작할까요?",
         "name_label": "이름",
         "time_label": "파티는 몇 시에 시작해야 하나요?",
@@ -1414,7 +1418,7 @@ LANG_DATA["sv"] = {
         "landing_more": "🌐 Fler språk",
         "landing_more_select_label": "Välj språk",
         "landing_more_placeholder": "Vänligen välj…",
-        "hero_subtitle": "Berätta vad du önskar för vår trädgårdsfest!",
+        "hero_subtitle": "Berätta vad du önskar för vår fest!",
         "step1_header": "🌙 Steg 1 av {n}: Vem är du & när ska det börja?",
         "name_label": "Ditt namn",
         "time_label": "Vilken tid ska festen börja?",
@@ -1500,7 +1504,7 @@ LANG_DATA["el"] = {
         "landing_more": "🌐 Περισσότερες γλώσσες",
         "landing_more_select_label": "Επιλογή γλώσσας",
         "landing_more_placeholder": "Παρακαλώ επίλεξε…",
-        "hero_subtitle": "Πες μας τι θα ήθελες για το πάρτι στον κήπο μας!",
+        "hero_subtitle": "Πες μας τι θα ήθελες για το πάρτι μας!",
         "step1_header": "🌙 Βήμα 1 από {n}: Ποιος είσαι & τι ώρα να ξεκινήσουμε;",
         "name_label": "Το όνομά σου",
         "time_label": "Τι ώρα να ξεκινήσει το πάρτι;",
@@ -1598,4 +1602,41 @@ def translate_option(lang: str, category: str, german_name: str) -> str:
         entry = LANG_DATA.get(candidate, {}).get(category, {})
         if german_name in entry:
             return entry[german_name]
+    return german_name
+
+
+# --- Katalog-Item-Übersetzungen (Getränke-/Essenskatalog, ~600 Items) --------
+#
+# Deckt (im Gegensatz zu translate_option(), das nur ~10-15 legacy Namen kennt)
+# den vollständigen gastseitigen Katalog (DirectConsumables + Recipes) ab.
+# Datenquelle: catalog/item_translations.json ({item_id: {lang: name}}),
+# erzeugt in einem separaten Daten-Authoring-Schritt (siehe Memory
+# party_engine_project.md). Deckt aktuell die 7 nicht-deutschen
+# PRIMARY_LANGUAGES ab (en/es/fr/it/zh/ja/pt); Deutsch bleibt die kanonische
+# Quelle (item.name) und wird nicht dupliziert. Für die 8 EXTRA_LANGUAGES
+# (nl/pl/tr/ru/ar/ko/sv/el) existieren noch keine Katalog-Übersetzungen -
+# dort greift der deutsche Name als Fallback (siehe catalog_item_name()).
+_ITEM_TRANSLATIONS_PATH = Path(__file__).resolve().parent / "catalog" / "item_translations.json"
+
+
+@lru_cache(maxsize=1)
+def _load_item_translations() -> dict[str, dict[str, str]]:
+    try:
+        with _ITEM_TRANSLATIONS_PATH.open("r", encoding="utf-8") as fh:
+            return json.load(fh)
+    except FileNotFoundError:
+        return {}
+
+
+def catalog_item_name(item_id: str, german_name: str, lang: str) -> str:
+    """Übersetzt den Anzeigenamen eines Katalog-Items (Getränk/Essen) in die
+    Anzeige-Sprache 'lang'. Fällt auf den deutschen Namen zurück, falls für
+    diese item_id/Sprache keine Übersetzung vorliegt (z.B. EXTRA_LANGUAGES)
+    - übersetzt niemals eine Katalog-ID selbst, nur den Anzeigetext."""
+    if lang == DEFAULT_LANGUAGE:
+        return german_name
+    translations = _load_item_translations()
+    entry = translations.get(item_id)
+    if entry and lang in entry and entry[lang]:
+        return entry[lang]
     return german_name
