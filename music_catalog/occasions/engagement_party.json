@@ -1,0 +1,43 @@
+{
+  "occasion_id": "engagement_party",
+  "preferred_genres": {
+    "pop": 0.7,
+    "disco": 0.5,
+    "soul": 0.6,
+    "nu_disco": 0.5
+  },
+  "discouraged_genres": {},
+  "preferred_eras": {
+    "90s": 0.5,
+    "2000s": 0.6,
+    "2010s": 0.6,
+    "current": 0.5
+  },
+  "preferred_moods": {
+    "happy": 0.7,
+    "romantic": 0.6
+  },
+  "preferred_tags": {
+    "celebratory": 0.8,
+    "crowd_pleaser": 0.7,
+    "social": 0.7
+  },
+  "discouraged_tags": {},
+  "familiarity_target": 0.8,
+  "danceability_target": 0.55,
+  "mainstream_target": 0.75,
+  "energy_curve": {
+    "arrival": 0.35,
+    "social": 0.45,
+    "build": 0.55,
+    "peak": 0.75,
+    "late": 0.65,
+    "closing": 0.55
+  },
+  "diversity_rules": {},
+  "default_explicit_policy": "allow",
+  "inherits_from": [
+    "wedding"
+  ],
+  "profile_version": "1.0"
+}

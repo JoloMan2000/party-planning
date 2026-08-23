@@ -1,0 +1,46 @@
+{
+  "occasion_id": "christmas_party",
+  "preferred_genres": {
+    "pop": 0.7,
+    "soul": 0.6,
+    "disco": 0.6,
+    "throwback_party": 0.8
+  },
+  "discouraged_genres": {},
+  "preferred_eras": {
+    "70s": 0.4,
+    "80s": 0.5,
+    "90s": 0.6,
+    "2000s": 0.6
+  },
+  "preferred_moods": {
+    "warm": 0.7,
+    "happy": 0.7,
+    "nostalgic": 0.5
+  },
+  "preferred_tags": {
+    "party_classic": 0.7,
+    "crowd_pleaser": 0.7,
+    "celebratory": 0.6
+  },
+  "discouraged_tags": {},
+  "familiarity_target": 0.75,
+  "danceability_target": 0.55,
+  "mainstream_target": 0.7,
+  "energy_curve": {
+    "arrival": 0.35,
+    "social": 0.5,
+    "build": 0.6,
+    "peak": 0.8,
+    "late": 0.65,
+    "closing": 0.55
+  },
+  "diversity_rules": {
+    "christmas_music_share_default": 0.15,
+    "christmas_music_share_min": 0.1,
+    "christmas_music_share_max": 0.2
+  },
+  "default_explicit_policy": "allow",
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

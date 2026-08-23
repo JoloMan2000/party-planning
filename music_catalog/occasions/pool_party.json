@@ -1,0 +1,43 @@
+{
+  "occasion_id": "pool_party",
+  "preferred_genres": {
+    "house": 0.7,
+    "dance_pop": 0.7,
+    "latin": 0.6,
+    "reggaeton": 0.6,
+    "afrobeats": 0.6,
+    "pop": 0.6,
+    "nu_disco": 0.6
+  },
+  "discouraged_genres": {},
+  "preferred_eras": {
+    "2010s": 0.6,
+    "2020s": 0.6,
+    "current": 0.6
+  },
+  "preferred_moods": {
+    "happy": 0.7,
+    "playful": 0.5
+  },
+  "preferred_tags": {
+    "summer": 0.9,
+    "danceable": 0.8,
+    "cool": 0.6
+  },
+  "discouraged_tags": {},
+  "familiarity_target": 0.65,
+  "danceability_target": 0.7,
+  "mainstream_target": 0.65,
+  "energy_curve": {
+    "arrival": 0.4,
+    "social": 0.5,
+    "build": 0.6,
+    "peak": 0.8,
+    "late": 0.7,
+    "closing": 0.55
+  },
+  "diversity_rules": {},
+  "default_explicit_policy": "allow",
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

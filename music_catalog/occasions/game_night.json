@@ -1,0 +1,40 @@
+{
+  "occasion_id": "game_night",
+  "preferred_genres": {
+    "pop": 0.7,
+    "indie_rock": 0.7,
+    "funk": 0.6,
+    "throwback_party": 0.6,
+    "house": 0.4
+  },
+  "discouraged_genres": {},
+  "preferred_eras": {
+    "90s": 0.5,
+    "2000s": 0.5,
+    "2010s": 0.5
+  },
+  "preferred_moods": {
+    "playful": 0.6,
+    "chill": 0.5
+  },
+  "preferred_tags": {
+    "background": 0.8,
+    "conversation_friendly": 0.8
+  },
+  "discouraged_tags": {},
+  "familiarity_target": 0.6,
+  "danceability_target": 0.4,
+  "mainstream_target": 0.6,
+  "energy_curve": {
+    "arrival": 0.3,
+    "social": 0.35,
+    "build": 0.45,
+    "peak": 0.55,
+    "late": 0.45,
+    "closing": 0.35
+  },
+  "diversity_rules": {},
+  "default_explicit_policy": "allow",
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

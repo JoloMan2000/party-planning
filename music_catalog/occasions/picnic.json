@@ -1,0 +1,44 @@
+{
+  "occasion_id": "picnic",
+  "preferred_genres": {
+    "indie_rock": 0.8,
+    "pop": 0.6,
+    "acoustic": 0.7,
+    "soul": 0.6,
+    "funk": 0.5
+  },
+  "discouraged_genres": {},
+  "preferred_eras": {
+    "90s": 0.3,
+    "2000s": 0.4,
+    "2010s": 0.4
+  },
+  "preferred_moods": {
+    "chill": 0.7,
+    "relaxed": 0.6,
+    "happy": 0.5
+  },
+  "preferred_tags": {
+    "conversation_friendly": 0.7,
+    "uplifting": 0.5
+  },
+  "discouraged_tags": {
+    "dancefloor": 0.5,
+    "club": 0.5
+  },
+  "familiarity_target": 0.55,
+  "danceability_target": 0.3,
+  "mainstream_target": 0.5,
+  "energy_curve": {
+    "arrival": 0.25,
+    "social": 0.3,
+    "build": 0.4,
+    "peak": 0.5,
+    "late": 0.4,
+    "closing": 0.3
+  },
+  "diversity_rules": {},
+  "default_explicit_policy": "allow",
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

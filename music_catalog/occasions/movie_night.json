@@ -1,0 +1,46 @@
+{
+  "occasion_id": "movie_night",
+  "preferred_genres": {
+    "indie_rock": 0.6,
+    "acoustic": 0.6,
+    "soul": 0.5,
+    "jazz": 0.5,
+    "lounge": 0.6,
+    "pop": 0.4
+  },
+  "discouraged_genres": {},
+  "preferred_eras": {
+    "90s": 0.4,
+    "2000s": 0.4
+  },
+  "preferred_moods": {
+    "chill": 0.8,
+    "nostalgic": 0.6,
+    "relaxed": 0.6
+  },
+  "preferred_tags": {
+    "background": 0.9,
+    "chill": 0.8,
+    "nostalgic": 0.6,
+    "conversation_friendly": 0.8
+  },
+  "discouraged_tags": {
+    "dancefloor": 0.6,
+    "high_energy": 0.5
+  },
+  "familiarity_target": 0.55,
+  "danceability_target": 0.25,
+  "mainstream_target": 0.5,
+  "energy_curve": {
+    "arrival": 0.3,
+    "social": 0.3,
+    "build": 0.3,
+    "peak": 0.35,
+    "late": 0.4,
+    "closing": 0.3
+  },
+  "diversity_rules": {},
+  "default_explicit_policy": "allow",
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

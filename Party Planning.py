@@ -48,6 +48,13 @@ import streamlit as st
 import calendar_export
 import event_theme
 import spotify_playlist
+import music_engine.admin_settings as music_admin_settings
+from music_engine.catalog import load_music_catalog
+from music_engine.domain import MusicCatalog, MusicOccasionProfile, MusicPlanningResult
+from music_engine.engine import plan_party_music
+from music_engine.legacy_adapter import raw_song_requests_from_responses
+from music_engine.occasions import get_music_occasion, load_all_music_occasions
+from music_engine.spotify_adapter import songs_from_planning_result
 from party_engine.catalog import load_catalog
 from party_engine.domain import CatalogItem, DietaryProfile, GuestResponse, PartyCatalog, PartyConfig
 from party_engine.engine import compute_party_demand
@@ -88,6 +95,7 @@ SPOTIFY_CONFIGURED = bool(SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET and SPOTIF
 # vor st.set_page_config() laufen, um den dynamischen page_title zu setzen.
 event_theme.init_party_settings(DB_PATH)
 _PARTY_SETTINGS = event_theme.get_party_settings(DB_PATH)
+music_admin_settings.init_music_admin_settings(DB_PATH)
 
 @st.cache_resource
 def get_catalog() -> PartyCatalog:
@@ -114,6 +122,31 @@ def get_active_occasion() -> OccasionProfile:
     oder die Demand-Pipeline, nur was als "✨ empfohlen" hervorgehoben wird."""
     occasion_id = event_theme.resolve_occasion_id(_PARTY_SETTINGS["event_type"])
     return resolve_occasion_for_scoring([occasion_id], get_occasions())
+
+
+@st.cache_resource
+def get_music_catalog() -> MusicCatalog:
+    """Lädt den Musik-Track-Katalog der Music Recommendation & Party Playlist
+    Engine genau einmal pro Streamlit-Prozess (analog zu get_catalog(), siehe
+    music_engine/catalog.py Docstring)."""
+    return load_music_catalog()
+
+
+@st.cache_resource
+def get_music_occasions() -> dict[str, MusicOccasionProfile]:
+    """Lädt alle musikalischen Occasion-Profile genau einmal pro
+    Streamlit-Prozess (analog zu get_occasions(), siehe
+    music_engine/occasions.py Docstring)."""
+    return load_all_music_occasions()
+
+
+def get_active_music_occasion() -> MusicOccasionProfile:
+    """Löst den aktuell vom Admin konfigurierten Event-Typ auf das zugehörige
+    ``MusicOccasionProfile`` der Music Engine auf (analog zu
+    get_active_occasion(), aber für den separaten Musik-Occasion-Katalog unter
+    music_catalog/occasions/)."""
+    occasion_id = event_theme.resolve_occasion_id(_PARTY_SETTINGS["event_type"])
+    return get_music_occasion(occasion_id, get_music_occasions())
 
 
 # --- Katalog-getriebene Getränke-/Essens-Auswahl (AUFGABE §38-39, §45) ------
@@ -947,6 +980,147 @@ def render_recommendations_section(lang: str, responses: list[dict], catalog: Pa
                 st.text(format_score_explanation(score, lang=lang if lang in ("de", "en") else "en"))
 
 
+def render_music_playlist_section(lang: str, responses: list[dict]) -> None:
+    """Admin-Sektion für die Music Recommendation & Party Playlist Engine
+    (music_engine/, AUFGABE-Musik-Spec §60-92): Admin-Steuerparameter
+    (Sliders/Checkbox), Playlist-Generierung via
+    ``music_engine.engine.plan_party_music()`` und Anzeige der generierten,
+    nach Party-Phase gruppierten Playlist inkl. Erklärbarkeit, Review-Hinweisen
+    und Gäste-Abdeckung. Rein additiv - beeinflusst weder den bestehenden
+    Spotify-Export (render_spotify_section) noch die Getränke-/Essens-Pipeline;
+    kein Songwunsch wird dabei aus der Datenbank gelöscht (Spec §8)."""
+    settings = music_admin_settings.get_admin_music_settings(DB_PATH)
+
+    with st.expander(t(lang, "music_settings_header"), expanded=False):
+        party_intensity = st.slider(
+            t(lang, "music_party_intensity_label"), 0.0, 1.0, settings.party_intensity, 0.05,
+            key="music_settings_intensity",
+        )
+        mainstream_discovery = st.slider(
+            t(lang, "music_mainstream_discovery_label"), 0.0, 1.0, settings.mainstream_discovery, 0.05,
+            key="music_settings_mainstream",
+        )
+        guest_request_priority = st.slider(
+            t(lang, "music_guest_request_priority_label"), 0.0, 1.0, settings.guest_request_priority, 0.05,
+            key="music_settings_guest_priority",
+        )
+        explicit_allowed = st.checkbox(
+            t(lang, "music_explicit_allowed_label"), value=settings.explicit_allowed, key="music_settings_explicit",
+        )
+        max_tracks_per_artist = st.number_input(
+            t(lang, "music_max_tracks_per_artist_label"), min_value=1, max_value=10,
+            value=settings.max_tracks_per_artist, key="music_settings_max_artist",
+        )
+
+        if st.button(t(lang, "btn_save_music_settings"), key="music_settings_save_btn"):
+            settings.party_intensity = party_intensity
+            settings.mainstream_discovery = mainstream_discovery
+            settings.guest_request_priority = guest_request_priority
+            settings.explicit_allowed = explicit_allowed
+            settings.max_tracks_per_artist = int(max_tracks_per_artist)
+            music_admin_settings.save_admin_music_settings(DB_PATH, settings)
+            st.success(t(lang, "music_settings_saved"))
+            st.rerun()
+
+    st.subheader(t(lang, "music_playlist_header"))
+
+    if st.button(t(lang, "btn_generate_playlist"), key="music_generate_btn"):
+        catalog = get_music_catalog()
+        occasion_profile = get_active_music_occasion()
+        raw_requests = raw_song_requests_from_responses(responses)
+        track_overrides = music_admin_settings.get_track_overrides(DB_PATH)
+        artist_overrides = music_admin_settings.get_artist_overrides(DB_PATH)
+        result = plan_party_music(
+            raw_song_requests=raw_requests,
+            party_duration_minutes=_PARTY_SETTINGS["party_duration_hours"] * 60.0,
+            occasion_profile=occasion_profile,
+            admin_settings=settings,
+            catalog=catalog,
+            admin_track_overrides=track_overrides,
+            admin_artist_overrides=artist_overrides,
+        )
+        st.session_state["music_planning_result"] = result
+
+    result: MusicPlanningResult | None = st.session_state.get("music_planning_result")
+    if result is None:
+        st.caption(t(lang, "music_no_playlist_yet"))
+        return
+
+    catalog = get_music_catalog()
+
+    col1, col2, col3 = st.columns(3)
+    col1.metric(t(lang, "music_metric_tracks"), result.total_tracks)
+    col2.metric(t(lang, "music_metric_duration"), f"{result.actual_duration_ms / 60_000:.0f} min")
+    col3.metric(
+        t(lang, "music_metric_guest_coverage"),
+        f"{result.guest_coverage * 100:.0f}%",
+    )
+    st.caption(
+        t(
+            lang, "music_requested_coverage_caption",
+            selected=result.requested_tracks_selected, total=result.requested_tracks_total,
+        )
+    )
+
+    if result.review_issues:
+        with st.expander(t(lang, "music_review_issues_header"), expanded=True):
+            for issue in result.review_issues:
+                st.warning(issue)
+
+    with st.expander(t(lang, "music_explanations_header"), expanded=False):
+        for explanation in result.explanations:
+            st.write(f"- {explanation}")
+
+    phase_labels = {phase.id: (phase.label_de if lang == "de" else phase.label_en) or phase.id for phase in result.phases}
+    phase_groups: dict[str, list] = defaultdict(list)
+    for slot in result.playlist:
+        phase_groups[slot.phase_id].append(slot)
+
+    for phase in result.phases:
+        slots = phase_groups.get(phase.id, [])
+        if not slots:
+            continue
+        with st.expander(f"{phase_labels.get(phase.id, phase.id)} ({len(slots)})", expanded=False):
+            for slot in slots:
+                track = catalog.get_track(slot.track_id)
+                title = f"{track.artist} – {track.title}" if track else slot.track_id
+                guests = f" ({', '.join(slot.supporting_guests)})" if slot.supporting_guests else ""
+                st.write(f"{slot.position + 1}. **{title}**{guests}")
+                if slot.reasons:
+                    st.caption(" · ".join(slot.reasons))
+
+    if not SPOTIFY_CONFIGURED:
+        return
+    if not spotify_playlist.is_connected():
+        st.caption(t(lang, "spotify_connect_caption"))
+        return
+
+    if st.button(t(lang, "btn_export_music_playlist_spotify"), key="music_spotify_export_btn"):
+        songs = songs_from_planning_result(result, catalog)
+        if not songs:
+            st.caption(t(lang, "no_songs"))
+        else:
+            with st.spinner(t(lang, "playlist_creating")):
+                try:
+                    export_result = spotify_playlist.build_playlist_from_songs(
+                        SPOTIFY_CLIENT_ID,
+                        SPOTIFY_CLIENT_SECRET,
+                        songs,
+                        playlist_name=event_theme.resolve_party_title(_PARTY_SETTINGS),
+                        playlist_description="Automatisch erstellt aus der Music Recommendation Engine.",
+                    )
+                except Exception as e:
+                    st.error(t(lang, "playlist_error", e=e))
+                else:
+                    st.success(t(lang, "playlist_success", n=export_result["track_count"]))
+                    st.markdown(f"[{t(lang, 'playlist_open_link')}]({export_result['playlist_url']})")
+                    if export_result["not_found"]:
+                        with st.expander(t(lang, "not_found_expander", n=len(export_result["not_found"]))):
+                            for s in export_result["not_found"]:
+                                guest_part = f" ({t(lang, 'from_guest', name=s['guest_name'])})" if s["guest_name"] else ""
+                                st.write(f"- {s['artist']} – {s['title']}{guest_part}")
+
+
 def render_admin_view() -> None:
     if "admin_language" not in st.session_state:
         st.session_state.admin_language = DEFAULT_LANGUAGE
@@ -971,6 +1145,8 @@ def render_admin_view() -> None:
     catalog = get_catalog()
 
     render_recommendations_section(lang, responses, catalog)
+
+    render_music_playlist_section(lang, responses)
 
     if not responses:
         st.info(t(lang, "no_responses_yet"))

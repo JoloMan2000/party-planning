@@ -1,0 +1,43 @@
+{
+  "occasion_id": "dinner_party",
+  "preferred_genres": {
+    "soul": 0.7,
+    "jazz": 0.7,
+    "lounge": 0.7,
+    "indie_rock": 0.6,
+    "funk": 0.5,
+    "pop": 0.4
+  },
+  "discouraged_genres": {},
+  "preferred_eras": {
+    "70s": 0.4,
+    "2010s": 0.3
+  },
+  "preferred_moods": {
+    "chill": 0.7,
+    "relaxed": 0.7,
+    "romantic": 0.4
+  },
+  "preferred_tags": {
+    "conversation_friendly": 0.8,
+    "premium": 0.5
+  },
+  "discouraged_tags": {
+    "dancefloor": 0.5
+  },
+  "familiarity_target": 0.55,
+  "danceability_target": 0.3,
+  "mainstream_target": 0.5,
+  "energy_curve": {
+    "arrival": 0.2,
+    "social": 0.25,
+    "build": 0.4,
+    "peak": 0.45,
+    "late": 0.55,
+    "closing": 0.4
+  },
+  "diversity_rules": {},
+  "default_explicit_policy": "allow",
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

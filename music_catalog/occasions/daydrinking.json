@@ -1,0 +1,44 @@
+{
+  "occasion_id": "daydrinking",
+  "preferred_genres": {
+    "pop": 0.8,
+    "dance_pop": 0.8,
+    "indie_rock": 0.6,
+    "house": 0.6,
+    "nu_disco": 0.6,
+    "throwback_party": 0.7
+  },
+  "discouraged_genres": {},
+  "preferred_eras": {
+    "2000s": 0.6,
+    "2010s": 0.7,
+    "current": 0.6
+  },
+  "preferred_moods": {
+    "happy": 0.7,
+    "uplifting": 0.8
+  },
+  "preferred_tags": {
+    "daytime": 0.9,
+    "summer": 0.8,
+    "uplifting": 0.8,
+    "social": 0.8,
+    "danceable": 0.7
+  },
+  "discouraged_tags": {},
+  "familiarity_target": 0.75,
+  "danceability_target": 0.6,
+  "mainstream_target": 0.75,
+  "energy_curve": {
+    "arrival": 0.35,
+    "social": 0.45,
+    "build": 0.5,
+    "peak": 0.7,
+    "late": 0.65,
+    "closing": 0.55
+  },
+  "diversity_rules": {},
+  "default_explicit_policy": "allow",
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

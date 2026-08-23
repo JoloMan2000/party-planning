@@ -1,0 +1,44 @@
+{
+  "occasion_id": "house_party",
+  "preferred_genres": {
+    "dance_pop": 0.9,
+    "pop": 0.8,
+    "hip_hop": 0.8,
+    "house": 0.8,
+    "edm": 0.7,
+    "throwback_party": 0.7
+  },
+  "discouraged_genres": {},
+  "preferred_eras": {
+    "2000s": 0.7,
+    "2010s": 0.8,
+    "current": 0.7
+  },
+  "preferred_moods": {
+    "energetic": 0.8,
+    "euphoric": 0.6
+  },
+  "preferred_tags": {
+    "dancefloor": 0.9,
+    "high_energy": 0.9,
+    "party_classic": 0.8,
+    "singalong": 0.7,
+    "late_night": 0.8
+  },
+  "discouraged_tags": {},
+  "familiarity_target": 0.7,
+  "danceability_target": 0.8,
+  "mainstream_target": 0.7,
+  "energy_curve": {
+    "arrival": 0.45,
+    "social": 0.55,
+    "build": 0.65,
+    "peak": 0.95,
+    "late": 0.87,
+    "closing": 0.75
+  },
+  "diversity_rules": {},
+  "default_explicit_policy": "allow",
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

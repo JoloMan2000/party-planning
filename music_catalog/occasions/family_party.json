@@ -1,0 +1,46 @@
+{
+  "occasion_id": "family_party",
+  "preferred_genres": {
+    "pop": 0.7,
+    "throwback_party": 0.7,
+    "disco": 0.5,
+    "soul": 0.5,
+    "rock": 0.5
+  },
+  "discouraged_genres": {},
+  "preferred_eras": {
+    "70s": 0.4,
+    "80s": 0.5,
+    "90s": 0.6,
+    "2000s": 0.6,
+    "2010s": 0.5
+  },
+  "preferred_moods": {
+    "happy": 0.7,
+    "warm": 0.5
+  },
+  "preferred_tags": {
+    "crowd_pleaser": 0.7,
+    "social": 0.7,
+    "party_classic": 0.6
+  },
+  "discouraged_tags": {},
+  "familiarity_target": 0.85,
+  "danceability_target": 0.5,
+  "mainstream_target": 0.8,
+  "energy_curve": {
+    "arrival": 0.35,
+    "social": 0.45,
+    "build": 0.55,
+    "peak": 0.65,
+    "late": 0.5,
+    "closing": 0.4
+  },
+  "diversity_rules": {
+    "genre_diversity": "high",
+    "era_diversity": "high"
+  },
+  "default_explicit_policy": "avoid",
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

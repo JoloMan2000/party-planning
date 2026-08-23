@@ -1,0 +1,46 @@
+{
+  "occasion_id": "wedding",
+  "preferred_genres": {
+    "pop": 0.7,
+    "disco": 0.6,
+    "soul": 0.6,
+    "classic_rock": 0.6
+  },
+  "discouraged_genres": {},
+  "preferred_eras": {
+    "80s": 0.6,
+    "90s": 0.7,
+    "2000s": 0.7,
+    "2010s": 0.6,
+    "current": 0.5
+  },
+  "preferred_moods": {
+    "happy": 0.7,
+    "romantic": 0.5,
+    "nostalgic": 0.5
+  },
+  "preferred_tags": {
+    "celebratory": 0.8,
+    "singalong": 0.8,
+    "crowd_pleaser": 0.9,
+    "timeless": 0.8
+  },
+  "discouraged_tags": {},
+  "familiarity_target": 0.9,
+  "danceability_target": 0.6,
+  "mainstream_target": 0.85,
+  "energy_curve": {
+    "arrival": 0.35,
+    "social": 0.45,
+    "build": 0.6,
+    "peak": 0.85,
+    "late": 0.7,
+    "closing": 0.6
+  },
+  "diversity_rules": {
+    "era_diversity": "high"
+  },
+  "default_explicit_policy": "allow",
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

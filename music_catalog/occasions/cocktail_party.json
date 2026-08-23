@@ -1,0 +1,47 @@
+{
+  "occasion_id": "cocktail_party",
+  "preferred_genres": {
+    "nu_disco": 0.8,
+    "funk": 0.7,
+    "soul": 0.7,
+    "indie_rock": 0.6,
+    "lounge": 0.8,
+    "house": 0.6,
+    "pop": 0.5,
+    "disco": 0.6
+  },
+  "discouraged_genres": {},
+  "preferred_eras": {
+    "70s": 0.4,
+    "80s": 0.4,
+    "2010s": 0.5,
+    "current": 0.5
+  },
+  "preferred_moods": {
+    "cool": 0.8,
+    "playful": 0.4
+  },
+  "preferred_tags": {
+    "cool": 0.8,
+    "bar": 0.8,
+    "groovy": 0.8,
+    "premium": 0.7,
+    "social": 0.7
+  },
+  "discouraged_tags": {},
+  "familiarity_target": 0.55,
+  "danceability_target": 0.5,
+  "mainstream_target": 0.5,
+  "energy_curve": {
+    "arrival": 0.3,
+    "social": 0.4,
+    "build": 0.55,
+    "peak": 0.7,
+    "late": 0.62,
+    "closing": 0.5
+  },
+  "diversity_rules": {},
+  "default_explicit_policy": "allow",
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

@@ -1,0 +1,46 @@
+{
+  "occasion_id": "birthday",
+  "preferred_genres": {
+    "pop": 0.8,
+    "dance_pop": 0.8,
+    "throwback_party": 0.8,
+    "rock": 0.6,
+    "house": 0.6,
+    "hip_hop": 0.6
+  },
+  "discouraged_genres": {},
+  "preferred_eras": {
+    "90s": 0.6,
+    "2000s": 0.7,
+    "2010s": 0.7,
+    "current": 0.6
+  },
+  "preferred_moods": {
+    "happy": 0.8,
+    "uplifting": 0.7,
+    "euphoric": 0.5
+  },
+  "preferred_tags": {
+    "crowd_pleaser": 0.9,
+    "party_classic": 0.8,
+    "singalong": 0.8,
+    "celebratory": 0.8,
+    "social": 0.7
+  },
+  "discouraged_tags": {},
+  "familiarity_target": 0.85,
+  "danceability_target": 0.65,
+  "mainstream_target": 0.75,
+  "energy_curve": {
+    "arrival": 0.4,
+    "social": 0.55,
+    "build": 0.65,
+    "peak": 0.85,
+    "late": 0.7,
+    "closing": 0.6
+  },
+  "diversity_rules": {},
+  "default_explicit_policy": "allow",
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

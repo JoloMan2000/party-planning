@@ -1,0 +1,43 @@
+{
+  "occasion_id": "bachelor_party",
+  "preferred_genres": {
+    "throwback_party": 0.8,
+    "dance_pop": 0.8,
+    "house": 0.7,
+    "edm": 0.7,
+    "hip_hop": 0.7
+  },
+  "discouraged_genres": {},
+  "preferred_eras": {
+    "2000s": 0.6,
+    "2010s": 0.7,
+    "current": 0.6
+  },
+  "preferred_moods": {
+    "euphoric": 0.7,
+    "energetic": 0.8
+  },
+  "preferred_tags": {
+    "party_classic": 0.8,
+    "dancefloor": 0.8,
+    "crowd_pleaser": 0.7
+  },
+  "discouraged_tags": {},
+  "familiarity_target": 0.7,
+  "danceability_target": 0.75,
+  "mainstream_target": 0.7,
+  "energy_curve": {
+    "arrival": 0.5,
+    "social": 0.55,
+    "build": 0.7,
+    "peak": 0.95,
+    "late": 0.85,
+    "closing": 0.7
+  },
+  "diversity_rules": {
+    "guest_request_emphasis": "high"
+  },
+  "default_explicit_policy": "allow",
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

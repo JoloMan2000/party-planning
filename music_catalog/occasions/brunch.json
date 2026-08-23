@@ -1,0 +1,45 @@
+{
+  "occasion_id": "brunch",
+  "preferred_genres": {
+    "soul": 0.7,
+    "funk": 0.7,
+    "indie_rock": 0.7,
+    "pop": 0.6,
+    "lounge": 0.6,
+    "jazz": 0.5,
+    "nu_disco": 0.4
+  },
+  "discouraged_genres": {},
+  "preferred_eras": {
+    "70s": 0.4,
+    "2000s": 0.4,
+    "2010s": 0.4
+  },
+  "preferred_moods": {
+    "uplifting": 0.7,
+    "relaxed": 0.7,
+    "happy": 0.6
+  },
+  "preferred_tags": {
+    "daytime": 0.9,
+    "conversation_friendly": 0.8,
+    "uplifting": 0.7,
+    "relaxed": 0.7
+  },
+  "discouraged_tags": {},
+  "familiarity_target": 0.6,
+  "danceability_target": 0.35,
+  "mainstream_target": 0.55,
+  "energy_curve": {
+    "arrival": 0.25,
+    "social": 0.3,
+    "build": 0.4,
+    "peak": 0.5,
+    "late": 0.4,
+    "closing": 0.3
+  },
+  "diversity_rules": {},
+  "default_explicit_policy": "allow",
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

@@ -1,0 +1,42 @@
+{
+  "occasion_id": "winter_party",
+  "preferred_genres": {
+    "pop": 0.7,
+    "rock": 0.6,
+    "soul": 0.6,
+    "throwback_party": 0.7,
+    "house": 0.5
+  },
+  "discouraged_genres": {},
+  "preferred_eras": {
+    "80s": 0.5,
+    "90s": 0.6,
+    "2000s": 0.6
+  },
+  "preferred_moods": {
+    "warm": 0.7,
+    "nostalgic": 0.6
+  },
+  "preferred_tags": {
+    "social": 0.7,
+    "crowd_pleaser": 0.6
+  },
+  "discouraged_tags": {
+    "summer": 0.4
+  },
+  "familiarity_target": 0.7,
+  "danceability_target": 0.5,
+  "mainstream_target": 0.65,
+  "energy_curve": {
+    "arrival": 0.35,
+    "social": 0.45,
+    "build": 0.55,
+    "peak": 0.75,
+    "late": 0.65,
+    "closing": 0.5
+  },
+  "diversity_rules": {},
+  "default_explicit_policy": "allow",
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

@@ -1,0 +1,41 @@
+{
+  "occasion_id": "sports_night",
+  "preferred_genres": {
+    "rock": 0.8,
+    "pop": 0.7,
+    "throwback_party": 0.7,
+    "hip_hop": 0.6
+  },
+  "discouraged_genres": {},
+  "preferred_eras": {
+    "80s": 0.5,
+    "90s": 0.6,
+    "2000s": 0.6,
+    "2010s": 0.5
+  },
+  "preferred_moods": {
+    "energetic": 0.8
+  },
+  "preferred_tags": {
+    "anthem": 0.9,
+    "singalong": 0.8,
+    "crowd_pleaser": 0.8,
+    "energetic": 0.8
+  },
+  "discouraged_tags": {},
+  "familiarity_target": 0.75,
+  "danceability_target": 0.5,
+  "mainstream_target": 0.75,
+  "energy_curve": {
+    "arrival": 0.5,
+    "social": 0.55,
+    "build": 0.65,
+    "peak": 0.8,
+    "late": 0.65,
+    "closing": 0.5
+  },
+  "diversity_rules": {},
+  "default_explicit_policy": "allow",
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

@@ -1,0 +1,46 @@
+{
+  "occasion_id": "garden_party",
+  "preferred_genres": {
+    "pop": 0.8,
+    "indie_rock": 0.7,
+    "nu_disco": 0.7,
+    "funk": 0.7,
+    "soul": 0.7,
+    "dance_pop": 0.6,
+    "house": 0.5
+  },
+  "discouraged_genres": {},
+  "preferred_eras": {
+    "90s": 0.5,
+    "2000s": 0.6,
+    "2010s": 0.6,
+    "current": 0.6
+  },
+  "preferred_moods": {
+    "uplifting": 0.8,
+    "chill": 0.5
+  },
+  "preferred_tags": {
+    "summer": 0.8,
+    "uplifting": 0.8,
+    "social": 0.8,
+    "cool": 0.6,
+    "conversation_friendly": 0.7
+  },
+  "discouraged_tags": {},
+  "familiarity_target": 0.65,
+  "danceability_target": 0.55,
+  "mainstream_target": 0.6,
+  "energy_curve": {
+    "arrival": 0.35,
+    "social": 0.5,
+    "build": 0.65,
+    "peak": 0.78,
+    "late": 0.7,
+    "closing": 0.55
+  },
+  "diversity_rules": {},
+  "default_explicit_policy": "allow",
+  "inherits_from": [],
+  "profile_version": "1.0"
+}

@@ -1,0 +1,42 @@
+{
+  "occasion_id": "casual_get_together",
+  "preferred_genres": {
+    "pop": 0.7,
+    "indie_rock": 0.6,
+    "funk": 0.5,
+    "soul": 0.5,
+    "throwback_party": 0.6
+  },
+  "discouraged_genres": {},
+  "preferred_eras": {
+    "90s": 0.4,
+    "2000s": 0.5,
+    "2010s": 0.5,
+    "current": 0.5
+  },
+  "preferred_moods": {
+    "happy": 0.6,
+    "relaxed": 0.5
+  },
+  "preferred_tags": {
+    "crowd_pleaser": 0.6,
+    "conversation_friendly": 0.7,
+    "social": 0.6
+  },
+  "discouraged_tags": {},
+  "familiarity_target": 0.65,
+  "danceability_target": 0.5,
+  "mainstream_target": 0.6,
+  "energy_curve": {
+    "arrival": 0.35,
+    "social": 0.4,
+    "build": 0.5,
+    "peak": 0.65,
+    "late": 0.55,
+    "closing": 0.45
+  },
+  "diversity_rules": {},
+  "default_explicit_policy": "allow",
+  "inherits_from": [],
+  "profile_version": "1.0"
+}
