@@ -172,6 +172,14 @@ class RecommendationScore:
     # (Rückwärtskompatibilität).
     context_fit_score: float = 0.0
 
+    # Geo-Kultur-Spec §7: gelernte Cross-Party-Präferenz (Bayesian Shrinkage
+    # über vergangene ``party_runs``/``selection_events``). Neutral 0.5,
+    # solange keine ``learning_history`` an ``score_item_for_occasion``
+    # übergeben wird ODER noch keine ähnliche vergangene Party existiert
+    # (Kaltstart-Pflichtverhalten) - Rückwärtskompatibilität wie bei
+    # ``context_fit_score``.
+    learned_score: float = 0.5
+
     penalties: dict[str, float] = field(default_factory=dict)
     reasons: list[str] = field(default_factory=list)
 

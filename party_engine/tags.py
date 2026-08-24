@@ -51,7 +51,7 @@ DRINK_CHARACTER_TAGS: frozenset[str] = frozenset({
     "beer", "wine", "sparkling", "spirit", "longdrink", "cocktail", "shot",
     "energy", "caffeinated", "softdrink", "juice", "water", "hot_drink",
     "refreshing", "fruity", "citrus", "sweet", "dry", "bitter", "herbal",
-    "creamy", "coffee", "tropical", "spicy", "smoky", "light_drink",
+    "creamy", "coffee", "tea", "tropical", "spicy", "smoky", "light_drink",
     "heavy_drink", "mixer",
 })
 

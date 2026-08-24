@@ -11248,5 +11248,1836 @@
     ],
     "spotify_uri": "",
     "provider_ids": {}
+  },
+  {
+    "id": "daler_mehndi_tunak_tunak_tun",
+    "title": "Tunak Tunak Tun",
+    "artist": "Daler Mehndi",
+    "duration_ms": 300000,
+    "genres": [
+      "bhangra"
+    ],
+    "eras": [
+      "90s"
+    ],
+    "moods": [
+      "happy",
+      "energetic",
+      "playful"
+    ],
+    "language": "pa",
+    "energy_score": 0.9,
+    "danceability_score": 0.85,
+    "familiarity_prior": 0.6,
+    "party_score": 0.85,
+    "singalong_score": 0.7,
+    "explicit": false,
+    "tags": [
+      "party_classic",
+      "danceable",
+      "high_energy",
+      "vocal_driven"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "panjabi_mc_mundian_to_bach_ke",
+    "title": "Mundian To Bach Ke",
+    "artist": "Panjabi MC",
+    "duration_ms": 226000,
+    "genres": [
+      "bhangra"
+    ],
+    "eras": [
+      "2000s"
+    ],
+    "moods": [
+      "energetic",
+      "cool"
+    ],
+    "language": "pa",
+    "energy_score": 0.85,
+    "danceability_score": 0.85,
+    "familiarity_prior": 0.65,
+    "party_score": 0.85,
+    "singalong_score": 0.55,
+    "explicit": false,
+    "tags": [
+      "party_classic",
+      "danceable",
+      "bass_heavy",
+      "high_energy"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "yo_yo_honey_singh_lungi_dance",
+    "title": "Lungi Dance",
+    "artist": "Yo Yo Honey Singh",
+    "duration_ms": 194000,
+    "genres": [
+      "bollywood",
+      "indian_pop"
+    ],
+    "eras": [
+      "2010s"
+    ],
+    "moods": [
+      "happy",
+      "playful",
+      "energetic"
+    ],
+    "language": "hi",
+    "energy_score": 0.85,
+    "danceability_score": 0.85,
+    "familiarity_prior": 0.6,
+    "party_score": 0.85,
+    "singalong_score": 0.75,
+    "explicit": false,
+    "tags": [
+      "party_classic",
+      "danceable",
+      "singalong",
+      "high_energy"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "yo_yo_honey_singh_brown_rang",
+    "title": "Brown Rang",
+    "artist": "Yo Yo Honey Singh",
+    "duration_ms": 227000,
+    "genres": [
+      "indian_pop"
+    ],
+    "eras": [
+      "2010s"
+    ],
+    "moods": [
+      "energetic",
+      "cool"
+    ],
+    "language": "hi",
+    "energy_score": 0.8,
+    "danceability_score": 0.8,
+    "familiarity_prior": 0.55,
+    "party_score": 0.75,
+    "singalong_score": 0.6,
+    "explicit": false,
+    "tags": [
+      "danceable",
+      "bass_heavy",
+      "club"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "badshah_dj_waley_babu",
+    "title": "DJ Waley Babu",
+    "artist": "Badshah",
+    "duration_ms": 239000,
+    "genres": [
+      "indian_pop"
+    ],
+    "eras": [
+      "2010s"
+    ],
+    "moods": [
+      "energetic",
+      "playful"
+    ],
+    "language": "hi",
+    "energy_score": 0.8,
+    "danceability_score": 0.8,
+    "familiarity_prior": 0.55,
+    "party_score": 0.8,
+    "singalong_score": 0.65,
+    "explicit": false,
+    "tags": [
+      "danceable",
+      "club",
+      "dancefloor"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "badshah_neha_kakkar_kala_chashma",
+    "title": "Kala Chashma",
+    "artist": "Badshah, Neha Kakkar",
+    "duration_ms": 239000,
+    "genres": [
+      "bollywood",
+      "indian_pop"
+    ],
+    "eras": [
+      "2010s"
+    ],
+    "moods": [
+      "happy",
+      "energetic",
+      "playful"
+    ],
+    "language": "hi",
+    "energy_score": 0.85,
+    "danceability_score": 0.85,
+    "familiarity_prior": 0.65,
+    "party_score": 0.85,
+    "singalong_score": 0.75,
+    "explicit": false,
+    "tags": [
+      "party_classic",
+      "danceable",
+      "singalong",
+      "wedding"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "diljit_dosanjh_lover",
+    "title": "Lover",
+    "artist": "Diljit Dosanjh",
+    "duration_ms": 154000,
+    "genres": [
+      "bhangra",
+      "indian_pop"
+    ],
+    "eras": [
+      "2020s"
+    ],
+    "moods": [
+      "happy",
+      "romantic",
+      "playful"
+    ],
+    "language": "pa",
+    "energy_score": 0.75,
+    "danceability_score": 0.8,
+    "familiarity_prior": 0.5,
+    "party_score": 0.75,
+    "singalong_score": 0.55,
+    "explicit": false,
+    "tags": [
+      "danceable",
+      "club"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "diljit_dosanjh_do_you_know",
+    "title": "Do You Know",
+    "artist": "Diljit Dosanjh",
+    "duration_ms": 187000,
+    "genres": [
+      "bhangra"
+    ],
+    "eras": [
+      "2010s"
+    ],
+    "moods": [
+      "energetic",
+      "cool"
+    ],
+    "language": "pa",
+    "energy_score": 0.8,
+    "danceability_score": 0.8,
+    "familiarity_prior": 0.5,
+    "party_score": 0.75,
+    "singalong_score": 0.5,
+    "explicit": false,
+    "tags": [
+      "danceable",
+      "club",
+      "bass_heavy"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "guru_randhawa_lahore",
+    "title": "Lahore",
+    "artist": "Guru Randhawa",
+    "duration_ms": 180000,
+    "genres": [
+      "bhangra",
+      "indian_pop"
+    ],
+    "eras": [
+      "2010s"
+    ],
+    "moods": [
+      "energetic",
+      "cool",
+      "romantic"
+    ],
+    "language": "pa",
+    "energy_score": 0.8,
+    "danceability_score": 0.8,
+    "familiarity_prior": 0.55,
+    "party_score": 0.8,
+    "singalong_score": 0.6,
+    "explicit": false,
+    "tags": [
+      "danceable",
+      "club"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "guru_randhawa_high_rated_gabru",
+    "title": "High Rated Gabru",
+    "artist": "Guru Randhawa",
+    "duration_ms": 204000,
+    "genres": [
+      "bhangra",
+      "indian_pop"
+    ],
+    "eras": [
+      "2010s"
+    ],
+    "moods": [
+      "energetic",
+      "cool",
+      "playful"
+    ],
+    "language": "pa",
+    "energy_score": 0.85,
+    "danceability_score": 0.85,
+    "familiarity_prior": 0.55,
+    "party_score": 0.8,
+    "singalong_score": 0.6,
+    "explicit": false,
+    "tags": [
+      "danceable",
+      "high_energy",
+      "club"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "ar_rahman_jai_ho",
+    "title": "Jai Ho",
+    "artist": "A.R. Rahman",
+    "duration_ms": 220000,
+    "genres": [
+      "bollywood"
+    ],
+    "eras": [
+      "2000s"
+    ],
+    "moods": [
+      "happy",
+      "euphoric",
+      "uplifting"
+    ],
+    "language": "hi",
+    "energy_score": 0.85,
+    "danceability_score": 0.8,
+    "familiarity_prior": 0.75,
+    "party_score": 0.85,
+    "singalong_score": 0.8,
+    "explicit": false,
+    "tags": [
+      "party_classic",
+      "singalong",
+      "anthem",
+      "wedding",
+      "danceable"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "ar_rahman_chaiyya_chaiyya",
+    "title": "Chaiyya Chaiyya",
+    "artist": "A.R. Rahman",
+    "duration_ms": 300000,
+    "genres": [
+      "bollywood"
+    ],
+    "eras": [
+      "90s"
+    ],
+    "moods": [
+      "energetic",
+      "uplifting",
+      "cool"
+    ],
+    "language": "hi",
+    "energy_score": 0.75,
+    "danceability_score": 0.75,
+    "familiarity_prior": 0.65,
+    "party_score": 0.7,
+    "singalong_score": 0.65,
+    "explicit": false,
+    "tags": [
+      "party_classic",
+      "danceable",
+      "vocal_driven"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "sonu_nigam_neha_kakkar_london_thumakda",
+    "title": "London Thumakda",
+    "artist": "Sonu Nigam, Neha Kakkar",
+    "duration_ms": 218000,
+    "genres": [
+      "bollywood",
+      "indian_pop"
+    ],
+    "eras": [
+      "2010s"
+    ],
+    "moods": [
+      "happy",
+      "energetic",
+      "playful"
+    ],
+    "language": "hi",
+    "energy_score": 0.85,
+    "danceability_score": 0.85,
+    "familiarity_prior": 0.6,
+    "party_score": 0.9,
+    "singalong_score": 0.75,
+    "explicit": false,
+    "tags": [
+      "party_classic",
+      "wedding",
+      "danceable",
+      "singalong"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "badshah_kar_gayi_chull",
+    "title": "Kar Gayi Chull",
+    "artist": "Badshah, Fazilpuria",
+    "duration_ms": 204000,
+    "genres": [
+      "bollywood",
+      "indian_pop"
+    ],
+    "eras": [
+      "2010s"
+    ],
+    "moods": [
+      "happy",
+      "energetic",
+      "playful"
+    ],
+    "language": "hi",
+    "energy_score": 0.8,
+    "danceability_score": 0.8,
+    "familiarity_prior": 0.55,
+    "party_score": 0.8,
+    "singalong_score": 0.6,
+    "explicit": false,
+    "tags": [
+      "danceable",
+      "wedding",
+      "club"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "mariya_takeuchi_plastic_love",
+    "title": "Plastic Love",
+    "artist": "Mariya Takeuchi",
+    "duration_ms": 291000,
+    "genres": [
+      "city_pop"
+    ],
+    "eras": [
+      "80s"
+    ],
+    "moods": [
+      "romantic",
+      "nostalgic",
+      "cool"
+    ],
+    "language": "ja",
+    "energy_score": 0.55,
+    "danceability_score": 0.6,
+    "familiarity_prior": 0.6,
+    "party_score": 0.55,
+    "singalong_score": 0.3,
+    "explicit": false,
+    "tags": [
+      "throwback",
+      "groovy",
+      "medium_energy",
+      "vocal_driven"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "tatsuro_yamashita_ride_on_time",
+    "title": "Ride on Time",
+    "artist": "Tatsuro Yamashita",
+    "duration_ms": 236000,
+    "genres": [
+      "city_pop"
+    ],
+    "eras": [
+      "80s"
+    ],
+    "moods": [
+      "cool",
+      "uplifting",
+      "energetic"
+    ],
+    "language": "ja",
+    "energy_score": 0.65,
+    "danceability_score": 0.65,
+    "familiarity_prior": 0.45,
+    "party_score": 0.6,
+    "singalong_score": 0.35,
+    "explicit": false,
+    "tags": [
+      "groovy",
+      "danceable",
+      "throwback",
+      "funky"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "anri_remember_summer_days",
+    "title": "Remember Summer Days",
+    "artist": "Anri",
+    "duration_ms": 227000,
+    "genres": [
+      "city_pop"
+    ],
+    "eras": [
+      "80s"
+    ],
+    "moods": [
+      "chill",
+      "nostalgic",
+      "warm"
+    ],
+    "language": "ja",
+    "energy_score": 0.6,
+    "danceability_score": 0.6,
+    "familiarity_prior": 0.35,
+    "party_score": 0.55,
+    "singalong_score": 0.3,
+    "explicit": false,
+    "tags": [
+      "throwback",
+      "groovy",
+      "vocal_driven"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "miki_matsubara_mayonaka_no_door_stay_with_me",
+    "title": "Mayonaka no Door / Stay with Me",
+    "artist": "Miki Matsubara",
+    "duration_ms": 240000,
+    "genres": [
+      "city_pop"
+    ],
+    "eras": [
+      "70s"
+    ],
+    "moods": [
+      "melancholic",
+      "romantic",
+      "nostalgic"
+    ],
+    "language": "ja",
+    "energy_score": 0.5,
+    "danceability_score": 0.5,
+    "familiarity_prior": 0.4,
+    "party_score": 0.5,
+    "singalong_score": 0.3,
+    "explicit": false,
+    "tags": [
+      "throwback",
+      "vocal_driven",
+      "medium_energy"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "kenshi_yonezu_lemon",
+    "title": "Lemon",
+    "artist": "Kenshi Yonezu",
+    "duration_ms": 255000,
+    "genres": [
+      "jpop"
+    ],
+    "eras": [
+      "2010s"
+    ],
+    "moods": [
+      "melancholic",
+      "emotional",
+      "nostalgic"
+    ],
+    "language": "ja",
+    "energy_score": 0.5,
+    "danceability_score": 0.45,
+    "familiarity_prior": 0.55,
+    "party_score": 0.45,
+    "singalong_score": 0.55,
+    "explicit": false,
+    "tags": [
+      "vocal_driven",
+      "medium_energy",
+      "singalong"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "kenshi_yonezu_peace_sign",
+    "title": "Peace Sign",
+    "artist": "Kenshi Yonezu",
+    "duration_ms": 251000,
+    "genres": [
+      "jpop"
+    ],
+    "eras": [
+      "2010s"
+    ],
+    "moods": [
+      "uplifting",
+      "energetic",
+      "happy"
+    ],
+    "language": "ja",
+    "energy_score": 0.75,
+    "danceability_score": 0.65,
+    "familiarity_prior": 0.45,
+    "party_score": 0.7,
+    "singalong_score": 0.55,
+    "explicit": false,
+    "tags": [
+      "danceable",
+      "high_energy",
+      "singalong"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "perfume_polyrhythm",
+    "title": "Polyrhythm",
+    "artist": "Perfume",
+    "duration_ms": 247000,
+    "genres": [
+      "jpop"
+    ],
+    "eras": [
+      "2000s"
+    ],
+    "moods": [
+      "energetic",
+      "playful",
+      "cool"
+    ],
+    "language": "ja",
+    "energy_score": 0.8,
+    "danceability_score": 0.85,
+    "familiarity_prior": 0.45,
+    "party_score": 0.8,
+    "singalong_score": 0.4,
+    "explicit": false,
+    "tags": [
+      "danceable",
+      "electronic",
+      "high_energy",
+      "club"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "yoasobi_yoru_ni_kakeru",
+    "title": "Yoru ni Kakeru",
+    "artist": "YOASOBI",
+    "duration_ms": 260000,
+    "genres": [
+      "jpop"
+    ],
+    "eras": [
+      "2010s"
+    ],
+    "moods": [
+      "energetic",
+      "emotional",
+      "uplifting"
+    ],
+    "language": "ja",
+    "energy_score": 0.75,
+    "danceability_score": 0.65,
+    "familiarity_prior": 0.55,
+    "party_score": 0.65,
+    "singalong_score": 0.5,
+    "explicit": false,
+    "tags": [
+      "vocal_driven",
+      "danceable",
+      "medium_energy"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "yoasobi_idol",
+    "title": "Idol",
+    "artist": "YOASOBI",
+    "duration_ms": 212000,
+    "genres": [
+      "jpop"
+    ],
+    "eras": [
+      "current"
+    ],
+    "moods": [
+      "energetic",
+      "euphoric",
+      "playful"
+    ],
+    "language": "ja",
+    "energy_score": 0.85,
+    "danceability_score": 0.8,
+    "familiarity_prior": 0.55,
+    "party_score": 0.8,
+    "singalong_score": 0.6,
+    "explicit": false,
+    "tags": [
+      "danceable",
+      "high_energy",
+      "trendy",
+      "singalong"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "utada_hikaru_first_love",
+    "title": "First Love",
+    "artist": "Utada Hikaru",
+    "duration_ms": 281000,
+    "genres": [
+      "jpop"
+    ],
+    "eras": [
+      "90s"
+    ],
+    "moods": [
+      "romantic",
+      "melancholic",
+      "emotional"
+    ],
+    "language": "ja",
+    "energy_score": 0.35,
+    "danceability_score": 0.3,
+    "familiarity_prior": 0.55,
+    "party_score": 0.3,
+    "singalong_score": 0.5,
+    "explicit": false,
+    "tags": [
+      "vocal_driven",
+      "low_energy",
+      "timeless"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "utada_hikaru_automatic",
+    "title": "Automatic",
+    "artist": "Utada Hikaru",
+    "duration_ms": 255000,
+    "genres": [
+      "jpop"
+    ],
+    "eras": [
+      "90s"
+    ],
+    "moods": [
+      "romantic",
+      "cool",
+      "chill"
+    ],
+    "language": "ja",
+    "energy_score": 0.55,
+    "danceability_score": 0.55,
+    "familiarity_prior": 0.45,
+    "party_score": 0.5,
+    "singalong_score": 0.35,
+    "explicit": false,
+    "tags": [
+      "vocal_driven",
+      "medium_energy",
+      "groovy"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "babymetal_gimme_chocolate",
+    "title": "Gimme Chocolate!!",
+    "artist": "Babymetal",
+    "duration_ms": 210000,
+    "genres": [
+      "jpop"
+    ],
+    "eras": [
+      "2010s"
+    ],
+    "moods": [
+      "aggressive",
+      "energetic",
+      "playful"
+    ],
+    "language": "ja",
+    "energy_score": 0.95,
+    "danceability_score": 0.6,
+    "familiarity_prior": 0.4,
+    "party_score": 0.6,
+    "singalong_score": 0.4,
+    "explicit": false,
+    "tags": [
+      "high_energy",
+      "niche",
+      "guitar_driven",
+      "vocal_driven"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "akb48_heavy_rotation",
+    "title": "Heavy Rotation",
+    "artist": "AKB48",
+    "duration_ms": 239000,
+    "genres": [
+      "jpop"
+    ],
+    "eras": [
+      "2010s"
+    ],
+    "moods": [
+      "happy",
+      "energetic",
+      "playful"
+    ],
+    "language": "ja",
+    "energy_score": 0.85,
+    "danceability_score": 0.85,
+    "familiarity_prior": 0.4,
+    "party_score": 0.8,
+    "singalong_score": 0.55,
+    "explicit": false,
+    "tags": [
+      "danceable",
+      "high_energy",
+      "singalong"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "kyary_pamyu_pamyu_ponponpon",
+    "title": "PonPonPon",
+    "artist": "Kyary Pamyu Pamyu",
+    "duration_ms": 232000,
+    "genres": [
+      "jpop"
+    ],
+    "eras": [
+      "2010s"
+    ],
+    "moods": [
+      "playful",
+      "energetic",
+      "euphoric"
+    ],
+    "language": "ja",
+    "energy_score": 0.85,
+    "danceability_score": 0.8,
+    "familiarity_prior": 0.45,
+    "party_score": 0.75,
+    "singalong_score": 0.5,
+    "explicit": false,
+    "tags": [
+      "danceable",
+      "electronic",
+      "high_energy",
+      "trendy"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "los_mirlos_sonido_amazonico",
+    "title": "Sonido Amazónico",
+    "artist": "Los Mirlos",
+    "duration_ms": 180000,
+    "genres": [
+      "cumbia"
+    ],
+    "eras": [
+      "70s"
+    ],
+    "moods": [
+      "happy",
+      "energetic",
+      "warm"
+    ],
+    "language": "instrumental",
+    "energy_score": 0.7,
+    "danceability_score": 0.75,
+    "familiarity_prior": 0.4,
+    "party_score": 0.7,
+    "singalong_score": 0.2,
+    "explicit": false,
+    "tags": [
+      "danceable",
+      "instrumental",
+      "groovy",
+      "throwback"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "grupo5_casamiento",
+    "title": "Casamiento",
+    "artist": "Grupo5",
+    "duration_ms": 240000,
+    "genres": [
+      "cumbia"
+    ],
+    "eras": [
+      "2000s"
+    ],
+    "moods": [
+      "happy",
+      "energetic",
+      "romantic"
+    ],
+    "language": "es",
+    "energy_score": 0.75,
+    "danceability_score": 0.8,
+    "familiarity_prior": 0.35,
+    "party_score": 0.75,
+    "singalong_score": 0.45,
+    "explicit": false,
+    "tags": [
+      "danceable",
+      "party_classic",
+      "wedding"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "bareto_ya_se_ha_muerto_mi_abuelo",
+    "title": "Ya Se Ha Muerto Mi Abuelo",
+    "artist": "Bareto",
+    "duration_ms": 210000,
+    "genres": [
+      "cumbia"
+    ],
+    "eras": [
+      "2000s"
+    ],
+    "moods": [
+      "happy",
+      "playful",
+      "energetic"
+    ],
+    "language": "es",
+    "energy_score": 0.75,
+    "danceability_score": 0.75,
+    "familiarity_prior": 0.3,
+    "party_score": 0.7,
+    "singalong_score": 0.4,
+    "explicit": false,
+    "tags": [
+      "danceable",
+      "groovy",
+      "guitar_driven"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "selena_bidi_bidi_bom_bom",
+    "title": "Bidi Bidi Bom Bom",
+    "artist": "Selena",
+    "duration_ms": 194000,
+    "genres": [
+      "cumbia",
+      "latin"
+    ],
+    "eras": [
+      "90s"
+    ],
+    "moods": [
+      "happy",
+      "energetic",
+      "playful"
+    ],
+    "language": "es",
+    "energy_score": 0.85,
+    "danceability_score": 0.85,
+    "familiarity_prior": 0.55,
+    "party_score": 0.85,
+    "singalong_score": 0.6,
+    "explicit": false,
+    "tags": [
+      "party_classic",
+      "danceable",
+      "singalong",
+      "high_energy"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "celia_cruz_la_vida_es_un_carnaval",
+    "title": "La Vida Es un Carnaval",
+    "artist": "Celia Cruz",
+    "duration_ms": 240000,
+    "genres": [
+      "latin"
+    ],
+    "eras": [
+      "90s"
+    ],
+    "moods": [
+      "happy",
+      "euphoric",
+      "uplifting"
+    ],
+    "language": "es",
+    "energy_score": 0.8,
+    "danceability_score": 0.8,
+    "familiarity_prior": 0.55,
+    "party_score": 0.85,
+    "singalong_score": 0.6,
+    "explicit": false,
+    "tags": [
+      "party_classic",
+      "danceable",
+      "anthem",
+      "celebratory"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "juan_luis_guerra_la_bilirrubina",
+    "title": "La Bilirrubina",
+    "artist": "Juan Luis Guerra",
+    "duration_ms": 275000,
+    "genres": [
+      "latin"
+    ],
+    "eras": [
+      "90s"
+    ],
+    "moods": [
+      "happy",
+      "playful",
+      "energetic"
+    ],
+    "language": "es",
+    "energy_score": 0.75,
+    "danceability_score": 0.8,
+    "familiarity_prior": 0.4,
+    "party_score": 0.75,
+    "singalong_score": 0.55,
+    "explicit": false,
+    "tags": [
+      "danceable",
+      "party_classic",
+      "groovy"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "carlos_vives_la_gota_fria",
+    "title": "La Gota Fría",
+    "artist": "Carlos Vives",
+    "duration_ms": 270000,
+    "genres": [
+      "latin",
+      "cumbia"
+    ],
+    "eras": [
+      "90s"
+    ],
+    "moods": [
+      "happy",
+      "energetic",
+      "nostalgic"
+    ],
+    "language": "es",
+    "energy_score": 0.75,
+    "danceability_score": 0.8,
+    "familiarity_prior": 0.4,
+    "party_score": 0.75,
+    "singalong_score": 0.5,
+    "explicit": false,
+    "tags": [
+      "danceable",
+      "party_classic",
+      "guitar_driven"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "wisin_and_yandel_rakata",
+    "title": "Rakata",
+    "artist": "Wisin & Yandel",
+    "duration_ms": 247000,
+    "genres": [
+      "reggaeton",
+      "latin"
+    ],
+    "eras": [
+      "2000s"
+    ],
+    "moods": [
+      "energetic",
+      "sexy",
+      "cool"
+    ],
+    "language": "es",
+    "energy_score": 0.8,
+    "danceability_score": 0.85,
+    "familiarity_prior": 0.4,
+    "party_score": 0.8,
+    "singalong_score": 0.35,
+    "explicit": false,
+    "tags": [
+      "danceable",
+      "bass_heavy",
+      "club"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "nicky_jam_el_amante",
+    "title": "El Amante",
+    "artist": "Nicky Jam",
+    "duration_ms": 224000,
+    "genres": [
+      "reggaeton",
+      "latin"
+    ],
+    "eras": [
+      "2010s"
+    ],
+    "moods": [
+      "romantic",
+      "energetic",
+      "sexy"
+    ],
+    "language": "es",
+    "energy_score": 0.7,
+    "danceability_score": 0.75,
+    "familiarity_prior": 0.35,
+    "party_score": 0.7,
+    "singalong_score": 0.4,
+    "explicit": false,
+    "tags": [
+      "danceable",
+      "club",
+      "bass_heavy"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "mo_final_song",
+    "title": "Final Song",
+    "artist": "MØ",
+    "duration_ms": 203000,
+    "genres": [
+      "pop",
+      "electropop"
+    ],
+    "eras": [
+      "2010s"
+    ],
+    "moods": [
+      "energetic",
+      "euphoric",
+      "uplifting"
+    ],
+    "language": "en",
+    "energy_score": 0.75,
+    "danceability_score": 0.7,
+    "familiarity_prior": 0.4,
+    "party_score": 0.7,
+    "singalong_score": 0.5,
+    "explicit": false,
+    "tags": [
+      "danceable",
+      "high_energy",
+      "electronic"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "mo_kamikaze",
+    "title": "Kamikaze",
+    "artist": "MØ",
+    "duration_ms": 183000,
+    "genres": [
+      "pop",
+      "electropop"
+    ],
+    "eras": [
+      "2010s"
+    ],
+    "moods": [
+      "energetic",
+      "cool",
+      "sexy"
+    ],
+    "language": "en",
+    "energy_score": 0.7,
+    "danceability_score": 0.65,
+    "familiarity_prior": 0.3,
+    "party_score": 0.65,
+    "singalong_score": 0.4,
+    "explicit": false,
+    "tags": [
+      "danceable",
+      "electronic",
+      "club"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "lukas_graham_7_years",
+    "title": "7 Years",
+    "artist": "Lukas Graham",
+    "duration_ms": 238000,
+    "genres": [
+      "pop"
+    ],
+    "eras": [
+      "2010s"
+    ],
+    "moods": [
+      "nostalgic",
+      "uplifting",
+      "emotional"
+    ],
+    "language": "en",
+    "energy_score": 0.55,
+    "danceability_score": 0.5,
+    "familiarity_prior": 0.55,
+    "party_score": 0.5,
+    "singalong_score": 0.6,
+    "explicit": false,
+    "tags": [
+      "vocal_driven",
+      "singalong",
+      "timeless"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "lukas_graham_love_someone",
+    "title": "Love Someone",
+    "artist": "Lukas Graham",
+    "duration_ms": 210000,
+    "genres": [
+      "pop"
+    ],
+    "eras": [
+      "2010s"
+    ],
+    "moods": [
+      "warm",
+      "emotional",
+      "uplifting"
+    ],
+    "language": "en",
+    "energy_score": 0.5,
+    "danceability_score": 0.45,
+    "familiarity_prior": 0.35,
+    "party_score": 0.45,
+    "singalong_score": 0.5,
+    "explicit": false,
+    "tags": [
+      "vocal_driven",
+      "singalong"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "christopher_told_you_so",
+    "title": "Told You So",
+    "artist": "Christopher",
+    "duration_ms": 180000,
+    "genres": [
+      "pop"
+    ],
+    "eras": [
+      "2010s"
+    ],
+    "moods": [
+      "cool",
+      "energetic",
+      "sexy"
+    ],
+    "language": "en",
+    "energy_score": 0.65,
+    "danceability_score": 0.6,
+    "familiarity_prior": 0.3,
+    "party_score": 0.6,
+    "singalong_score": 0.4,
+    "explicit": false,
+    "tags": [
+      "danceable",
+      "vocal_driven"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "medina_kun_for_mig",
+    "title": "Kun for Mig",
+    "artist": "Medina",
+    "duration_ms": 195000,
+    "genres": [
+      "pop",
+      "dance_pop"
+    ],
+    "eras": [
+      "2000s"
+    ],
+    "moods": [
+      "energetic",
+      "euphoric",
+      "happy"
+    ],
+    "language": "da",
+    "energy_score": 0.75,
+    "danceability_score": 0.75,
+    "familiarity_prior": 0.35,
+    "party_score": 0.75,
+    "singalong_score": 0.5,
+    "explicit": false,
+    "tags": [
+      "danceable",
+      "dancefloor",
+      "club"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "alphabeat_fascination",
+    "title": "Fascination",
+    "artist": "Alphabeat",
+    "duration_ms": 217000,
+    "genres": [
+      "indie_rock",
+      "pop"
+    ],
+    "eras": [
+      "2000s"
+    ],
+    "moods": [
+      "happy",
+      "playful",
+      "energetic"
+    ],
+    "language": "en",
+    "energy_score": 0.8,
+    "danceability_score": 0.75,
+    "familiarity_prior": 0.3,
+    "party_score": 0.75,
+    "singalong_score": 0.5,
+    "explicit": false,
+    "tags": [
+      "danceable",
+      "party_classic",
+      "guitar_driven"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "aqua_doctor_jones",
+    "title": "Doctor Jones",
+    "artist": "Aqua",
+    "duration_ms": 200000,
+    "genres": [
+      "dance_pop",
+      "pop"
+    ],
+    "eras": [
+      "90s"
+    ],
+    "moods": [
+      "playful",
+      "energetic",
+      "happy"
+    ],
+    "language": "en",
+    "energy_score": 0.85,
+    "danceability_score": 0.85,
+    "familiarity_prior": 0.4,
+    "party_score": 0.8,
+    "singalong_score": 0.5,
+    "explicit": false,
+    "tags": [
+      "danceable",
+      "throwback",
+      "high_energy"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "lmfao_party_rock_anthem",
+    "title": "Party Rock Anthem",
+    "artist": "LMFAO",
+    "duration_ms": 259000,
+    "genres": [
+      "hip_hop",
+      "dance_pop"
+    ],
+    "eras": [
+      "2010s"
+    ],
+    "moods": [
+      "energetic",
+      "euphoric",
+      "playful"
+    ],
+    "language": "en",
+    "energy_score": 0.9,
+    "danceability_score": 0.9,
+    "familiarity_prior": 0.7,
+    "party_score": 0.9,
+    "singalong_score": 0.6,
+    "explicit": false,
+    "tags": [
+      "party_classic",
+      "danceable",
+      "high_energy",
+      "club",
+      "dancefloor"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "dj_khaled_all_i_do_is_win",
+    "title": "All I Do Is Win",
+    "artist": "DJ Khaled",
+    "duration_ms": 271000,
+    "genres": [
+      "hip_hop"
+    ],
+    "eras": [
+      "2010s"
+    ],
+    "moods": [
+      "energetic",
+      "happy",
+      "euphoric"
+    ],
+    "language": "en",
+    "energy_score": 0.85,
+    "danceability_score": 0.8,
+    "familiarity_prior": 0.5,
+    "party_score": 0.85,
+    "singalong_score": 0.55,
+    "explicit": false,
+    "tags": [
+      "party_classic",
+      "anthem",
+      "singalong",
+      "bass_heavy"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "kendrick_lamar_humble",
+    "title": "HUMBLE.",
+    "artist": "Kendrick Lamar",
+    "duration_ms": 177000,
+    "genres": [
+      "hip_hop",
+      "rap"
+    ],
+    "eras": [
+      "2010s"
+    ],
+    "moods": [
+      "cool",
+      "aggressive",
+      "energetic"
+    ],
+    "language": "en",
+    "energy_score": 0.75,
+    "danceability_score": 0.65,
+    "familiarity_prior": 0.65,
+    "party_score": 0.65,
+    "singalong_score": 0.4,
+    "explicit": true,
+    "tags": [
+      "bass_heavy",
+      "club",
+      "trendy"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "darius_rucker_wagon_wheel",
+    "title": "Wagon Wheel",
+    "artist": "Darius Rucker",
+    "duration_ms": 204000,
+    "genres": [
+      "country"
+    ],
+    "eras": [
+      "2010s"
+    ],
+    "moods": [
+      "happy",
+      "uplifting",
+      "nostalgic"
+    ],
+    "language": "en",
+    "energy_score": 0.65,
+    "danceability_score": 0.55,
+    "familiarity_prior": 0.55,
+    "party_score": 0.6,
+    "singalong_score": 0.75,
+    "explicit": false,
+    "tags": [
+      "singalong",
+      "party_classic",
+      "guitar_driven",
+      "acoustic"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "zac_brown_band_chicken_fried",
+    "title": "Chicken Fried",
+    "artist": "Zac Brown Band",
+    "duration_ms": 227000,
+    "genres": [
+      "country"
+    ],
+    "eras": [
+      "2000s"
+    ],
+    "moods": [
+      "happy",
+      "warm",
+      "uplifting"
+    ],
+    "language": "en",
+    "energy_score": 0.6,
+    "danceability_score": 0.5,
+    "familiarity_prior": 0.45,
+    "party_score": 0.6,
+    "singalong_score": 0.6,
+    "explicit": false,
+    "tags": [
+      "singalong",
+      "guitar_driven",
+      "acoustic"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "big_and_rich_save_a_horse_ride_a_cowboy",
+    "title": "Save a Horse (Ride a Cowboy)",
+    "artist": "Big & Rich",
+    "duration_ms": 238000,
+    "genres": [
+      "country"
+    ],
+    "eras": [
+      "2000s"
+    ],
+    "moods": [
+      "playful",
+      "energetic",
+      "aggressive"
+    ],
+    "language": "en",
+    "energy_score": 0.8,
+    "danceability_score": 0.7,
+    "familiarity_prior": 0.4,
+    "party_score": 0.75,
+    "singalong_score": 0.55,
+    "explicit": false,
+    "tags": [
+      "party_classic",
+      "danceable",
+      "guitar_driven"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "neil_diamond_sweet_caroline",
+    "title": "Sweet Caroline",
+    "artist": "Neil Diamond",
+    "duration_ms": 202000,
+    "genres": [
+      "rock",
+      "pop"
+    ],
+    "eras": [
+      "60s"
+    ],
+    "moods": [
+      "happy",
+      "uplifting",
+      "euphoric"
+    ],
+    "language": "en",
+    "energy_score": 0.7,
+    "danceability_score": 0.55,
+    "familiarity_prior": 0.85,
+    "party_score": 0.85,
+    "singalong_score": 0.9,
+    "explicit": false,
+    "tags": [
+      "party_classic",
+      "singalong",
+      "anthem",
+      "timeless"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "don_mclean_american_pie",
+    "title": "American Pie",
+    "artist": "Don McLean",
+    "duration_ms": 271000,
+    "genres": [
+      "rock",
+      "acoustic"
+    ],
+    "eras": [
+      "70s"
+    ],
+    "moods": [
+      "nostalgic",
+      "uplifting",
+      "emotional"
+    ],
+    "language": "en",
+    "energy_score": 0.55,
+    "danceability_score": 0.4,
+    "familiarity_prior": 0.65,
+    "party_score": 0.65,
+    "singalong_score": 0.85,
+    "explicit": false,
+    "tags": [
+      "singalong",
+      "timeless",
+      "vocal_driven",
+      "closing"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "roland_kaiser_santa_maria",
+    "title": "Santa Maria",
+    "artist": "Roland Kaiser",
+    "duration_ms": 230000,
+    "genres": [
+      "schlager"
+    ],
+    "eras": [
+      "80s"
+    ],
+    "moods": [
+      "happy",
+      "energetic",
+      "uplifting"
+    ],
+    "language": "de",
+    "energy_score": 0.75,
+    "danceability_score": 0.7,
+    "familiarity_prior": 0.55,
+    "party_score": 0.8,
+    "singalong_score": 0.65,
+    "explicit": false,
+    "tags": [
+      "party_classic",
+      "singalong",
+      "anthem"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "andrea_berg_du_hast_mich_tausendmal_belogen",
+    "title": "Du hast mich tausendmal belogen",
+    "artist": "Andrea Berg",
+    "duration_ms": 210000,
+    "genres": [
+      "schlager"
+    ],
+    "eras": [
+      "90s"
+    ],
+    "moods": [
+      "emotional",
+      "romantic",
+      "melancholic"
+    ],
+    "language": "de",
+    "energy_score": 0.6,
+    "danceability_score": 0.55,
+    "familiarity_prior": 0.45,
+    "party_score": 0.6,
+    "singalong_score": 0.6,
+    "explicit": false,
+    "tags": [
+      "singalong",
+      "vocal_driven"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "die_amigos_cordoba",
+    "title": "Cordoba",
+    "artist": "Die Amigos",
+    "duration_ms": 200000,
+    "genres": [
+      "schlager"
+    ],
+    "eras": [
+      "90s"
+    ],
+    "moods": [
+      "happy",
+      "energetic",
+      "playful"
+    ],
+    "language": "de",
+    "energy_score": 0.75,
+    "danceability_score": 0.7,
+    "familiarity_prior": 0.4,
+    "party_score": 0.75,
+    "singalong_score": 0.55,
+    "explicit": false,
+    "tags": [
+      "party_classic",
+      "danceable",
+      "wedding"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "helene_fischer_herzbeben",
+    "title": "Herzbeben",
+    "artist": "Helene Fischer",
+    "duration_ms": 199000,
+    "genres": [
+      "schlager"
+    ],
+    "eras": [
+      "2010s"
+    ],
+    "moods": [
+      "euphoric",
+      "happy",
+      "uplifting"
+    ],
+    "language": "de",
+    "energy_score": 0.75,
+    "danceability_score": 0.65,
+    "familiarity_prior": 0.55,
+    "party_score": 0.75,
+    "singalong_score": 0.6,
+    "explicit": false,
+    "tags": [
+      "party_classic",
+      "singalong",
+      "anthem"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
+  },
+  {
+    "id": "nino_de_angelo_jenseits_von_eden",
+    "title": "Jenseits von Eden",
+    "artist": "Nino de Angelo",
+    "duration_ms": 220000,
+    "genres": [
+      "schlager"
+    ],
+    "eras": [
+      "80s"
+    ],
+    "moods": [
+      "nostalgic",
+      "emotional",
+      "uplifting"
+    ],
+    "language": "de",
+    "energy_score": 0.55,
+    "danceability_score": 0.4,
+    "familiarity_prior": 0.5,
+    "party_score": 0.5,
+    "singalong_score": 0.6,
+    "explicit": false,
+    "tags": [
+      "singalong",
+      "timeless",
+      "vocal_driven"
+    ],
+    "spotify_uri": "",
+    "provider_ids": {}
   }
 ]

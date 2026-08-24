@@ -609,6 +609,66 @@ INGREDIENTS_RAW.extend([
 ])
 
 
+# --- GEO-KULTUR-INGREDIENTS (Geo-/Kultur-Kontext-Spec §4/§6) --------------------
+# Neue Zutaten für authentische, länderspezifische Rezepte (Indien, Peru,
+# Dänemark, Japan, USA), die von party_context/culture.py bereits als
+# Tag-Re-Weighting-Ziele referenziert werden (siehe dortiger Modul-Docstring).
+# "sake" ist eine neue Ingredient-Familie (kein bestehendes Family-Pattern
+# passt: kein Spirituose/Wein im engeren Sinne, eigene ABV/Reifecharakteristik).
+
+FAMILY_DEFAULTS.update({
+    "sake": dict(unit="l", category="sake", demand_group="alcoholic_beverage",
+                 contains_alcohol=True, abv=15.0, is_vegan=True),
+})
+
+GEO_CULTURE_INGREDIENTS_RAW: list[tuple] = [
+    # --- Indien -------------------------------------------------------------
+    ("paneer", "Paneer", "veg_protein", {}),
+    ("naan_bread", "Naan-Brot", "bread", {}),
+    ("cardamom", "Kardamom", "spice", {}),
+    ("chickpea_flour", "Kichererbsenmehl", "spice", {}),
+    ("cauliflower", "Blumenkohl", "vegetable", {}),
+    ("black_tea", "Schwarzer Tee", "spice", {"contains_caffeine": True}),
+    ("spinach", "Spinat", "vegetable", {}),
+    # --- Peru -----------------------------------------------------------------
+    ("aji_amarillo", "Aji Amarillo Paste", "sauce", {}),
+    ("queso_fresco", "Queso Fresco", "cheese", {}),
+    ("purple_corn", "Lila Mais", "vegetable", {}),
+    ("vinegar", "Essig", "sauce", {}),
+    ("inca_kola", "Inca Kola", "softdrink", {}),
+    # --- Dänemark -------------------------------------------------------------
+    ("rye_bread", "Roggenbrot (Rugbrød)", "bread", {}),
+    ("liver_pate", "Leberpastete", "meat_pork", {}),
+    ("red_cabbage", "Rotkohl", "vegetable", {}),
+    ("herring", "Hering", "fish", {"allergens": ["fish"]}),
+    ("raisins", "Rosinen", "fruit", {}),
+    ("beer_dk_pilsner", "Dänisches Pilsner", "beer", {"abv": 4.6}),
+    ("cherry_wine", "Kirschwein", "wine", {}),
+    # --- Japan ------------------------------------------------------------------
+    ("mirin", "Mirin", "sauce", {}),
+    ("soy_sauce", "Sojasauce", "sauce", {}),
+    ("nori", "Nori (Algenblätter)", "spice", {}),
+    ("edamame", "Edamame", "vegetable", {}),
+    ("miso_paste", "Miso-Paste", "sauce", {}),
+    ("scallion", "Frühlingszwiebel", "vegetable", {}),
+    ("okonomiyaki_sauce", "Okonomiyaki-Sauce", "sauce", {}),
+    ("matcha", "Matcha-Pulver", "spice", {"contains_caffeine": True}),
+    ("sake", "Sake", "sake", {}),
+    ("umeshu", "Umeshu (Pflaumenwein)", "liqueur", {"abv": 10.0}),
+    ("ramune", "Ramune", "softdrink", {}),
+    ("green_tea_bottled", "Grüner Tee (Flasche)", "softdrink", {"contains_caffeine": True}),
+    # --- USA --------------------------------------------------------------------
+    ("cornmeal", "Maismehl", "grain", {}),
+    ("beef_brisket", "Beef Brisket", "meat_beef", {}),
+    ("clams", "Venusmuscheln", "fish", {"allergens": ["shellfish"]}),
+    ("celery", "Staudensellerie", "vegetable", {}),
+    ("pecans", "Pekannüsse", "snack", {}),
+    ("graham_crackers", "Graham Cracker", "snack", {}),
+    ("marshmallow", "Marshmallow", "dessert_ing", {}),
+]
+INGREDIENTS_RAW.extend(GEO_CULTURE_INGREDIENTS_RAW)
+
+
 # --- DIRECT CONSUMABLES ---------------------------------------------------------
 # Direkt konsumierbare Getränke ohne Rezept. Die meisten werden programmatisch
 # aus INGREDIENTS_RAW erzeugt (1 Ingredient == 1 DirectConsumable in typischer
@@ -649,7 +709,13 @@ _DIRECT_SERVING_SIZE_L: dict[str, float] = {
 
 # Ingredients, die zwar zu einer der obigen Familien gehören, aber NICHT
 # direkt (unverändert) trinkbar sind (nur Rezeptzutat).
-_DIRECT_CONSUMABLE_EXCLUDE_IDS: set[str] = {"lime_juice_fresh", "lemon_juice_fresh"}
+_DIRECT_CONSUMABLE_EXCLUDE_IDS: set[str] = {
+    "lime_juice_fresh", "lemon_juice_fresh",
+    # Grüner Tee (Flasche) braucht explizite "tea"-Tags (§4 Geo-Kultur-Spec) und
+    # wird deshalb weiter unten manuell via mk_direct() gebaut statt generisch
+    # aus der Softdrink-Familie erzeugt zu werden.
+    "green_tea_bottled",
+}
 
 DIRECT_CONSUMABLES_RAW: list[dict] = []
 for _iid, _name, _family, _overrides in INGREDIENTS_RAW:
@@ -1320,6 +1386,35 @@ COCKTAILS_RAW: list[dict] = [
     ], ice_profile="crushed", serving_unit="glass"),
 ]
 
+# --- Geo-Kultur-Cocktails (Geo-/Kultur-Kontext-Spec §4/§6) ----------------------
+# Alkoholische Länder-Signature-Drinks für Peru, Dänemark und USA. Pisco Sour
+# existiert bereits im Katalog (siehe COCKTAILS_RAW "cocktail_brandy" oben) und
+# wird bewusst NICHT erneut angelegt - stattdessen zwei eigenständige weitere
+# Pisco-Drinks (Chilcano, Maracuyá Sour).
+COCKTAILS_RAW.extend([
+    mk_recipe("chilcano", "Chilcano", "cocktail_brandy", "alcoholic_beverage", [
+        comp("pisco", 0.05), comp("ginger_ale", 0.12), comp("lime_juice_fresh", 0.015),
+        comp("angostura_bitters", 0.001, optional=True),
+    ], ice_profile="highball", garnish=["lime wheel"], serving_unit="glass",
+       tags=["cocktail", "spirit", "longdrink", "citrus", "traditional"]),
+    mk_recipe("maracuya_sour", "Maracuyá Sour", "cocktail_brandy", "alcoholic_beverage", [
+        comp("pisco", 0.05), comp("passionfruit_juice", 0.03), comp("lime_juice_fresh", 0.015),
+        comp("simple_syrup", 0.015), comp("egg_white", 1, "pcs", optional=True),
+    ], ice_profile="shaken", serving_unit="glass",
+       tags=["cocktail", "spirit", "fruity", "tropical", "traditional"]),
+    mk_recipe("gloegg", "Glögg", "cocktail_wine", "alcoholic_beverage", [
+        comp("red_wine", 0.15), comp("cinnamon", 0.001, "kg"), comp("orange", 0.02, "kg"),
+        comp("raisins", 0.01, "kg", optional=True), comp("sugar", 0.015, "kg"),
+        comp("cardamom", 0.001, "kg", optional=True),
+    ], ice_profile="no_ice", serving_unit="glass",
+       tags=["hot_drink", "wine", "alcoholic", "festive", "traditional", "winter"]),
+    mk_recipe("peach_bourbon_smash", "Peach Bourbon Smash", "cocktail_whiskey", "alcoholic_beverage", [
+        comp("bourbon", 0.05), comp("peach", 0.04, "kg"), comp("mint", 0.003, "kg"),
+        comp("lemon_juice_fresh", 0.015), comp("simple_syrup", 0.01),
+    ], ice_profile="crushed", garnish=["mint", "peach slice"], serving_unit="glass",
+       tags=["cocktail", "spirit", "fruity", "summer"]),
+])
+
 
 # --- Dips & Saucen sowie Brot als Direktkonsum (Spec §19/22) --------------------
 # Diese Ingredients existieren bereits (Sauce-/Brot-Familie) und werden direkt
@@ -1347,6 +1442,22 @@ for _bid in _BREAD_DIRECT_IDS:
     DIRECT_CONSUMABLES_RAW.append(
         mk_direct(_bid, _bname, "bread", "side", _bid, 1, popular=(_bid in ("baguette", "burger_bun")))
     )
+
+
+# --- Geo-Kultur-Direktkonsum (manuell, da explizite Tags nötig) -----------------
+# "sake" gehört zu keiner der automatisch verarbeiteten Familien (§4 Geo-Kultur-
+# Spec), "green_tea_bottled" ist bewusst aus dem generischen Softdrink-Auto-Loop
+# ausgeschlossen (siehe _DIRECT_CONSUMABLE_EXCLUDE_IDS oben) - beide brauchen
+# handkuratierte Tags statt der generischen Kategorie-Defaults.
+
+GEO_CULTURE_DIRECT_CONSUMABLES_RAW: list[dict] = [
+    mk_direct("sake", "Sake", "sake", "alcoholic_beverage", "sake", 0.06,
+              abv=15.0, tags=["alcoholic", "traditional", "premium", "wine"]),
+    mk_direct("green_tea_bottled", "Grüner Tee (Flasche)", "softdrink", "non_alcoholic_beverage",
+              "green_tea_bottled", 0.33, contains_caffeine=True,
+              tags=["tea", "non_alcoholic", "refreshing", "caffeinated"]),
+]
+DIRECT_CONSUMABLES_RAW.extend(GEO_CULTURE_DIRECT_CONSUMABLES_RAW)
 
 
 # --- FOOD-REZEPTE (Spec §14-23) -------------------------------------------------
@@ -2119,6 +2230,193 @@ FOOD_RAW: list[dict] = [
     ], satiety_factor=0.3),
 ]
 
+# --- Geo-Kultur-Speisen (Geo-/Kultur-Kontext-Spec §4/§6) ------------------------
+# Authentische, gut belegte Gerichte für Indien, Peru, Dänemark, Japan und USA.
+# Butter Chicken, Chicken Curry, Chicken Tikka Masala und Samosas existieren
+# bereits im Katalog oben (main_dish-Sektion) und werden NICHT erneut angelegt.
+FOOD_RAW.extend([
+    # --- Indien ---------------------------------------------------------------
+    mk_recipe("chicken_biryani", "Chicken Biryani", "main_dish", "main", [
+        comp("chicken_thigh", 0.15, "kg"), comp("basmati_rice", 0.08, "kg"), comp("onion", 0.03, "kg"),
+        comp("garam_masala", 0.003, "kg"), comp("yogurt", 0.03), comp("cardamom", 0.001, "kg", optional=True),
+        comp("cilantro", 0.003, "kg", optional=True),
+    ], tags=["main", "rice", "spicy_food", "poultry", "traditional", "festive", "sharing"]),
+    mk_recipe("palak_paneer", "Palak Paneer", "main_dish", "main", [
+        comp("spinach", 0.15, "kg"), comp("paneer", 0.1, "kg"), comp("cream", 0.02),
+        comp("garam_masala", 0.002, "kg"), comp("garlic", 0.003, "kg"), comp("cooking_oil", 0.01),
+    ], tags=["main", "vegetarian", "vegetable", "spicy_food", "traditional"]),
+    mk_recipe("chana_masala", "Chana Masala", "main_dish", "main", [
+        comp("chickpeas", 0.15, "kg"), comp("tomato", 0.06, "kg"), comp("onion", 0.03, "kg"),
+        comp("garam_masala", 0.002, "kg"), comp("cumin", 0.002, "kg"), comp("ginger", 0.002, "kg"),
+        comp("garlic", 0.002, "kg"), comp("cooking_oil", 0.01),
+    ], tags=["main", "vegan", "vegetarian", "spicy_food", "comfort_food"]),
+    mk_recipe("naan", "Naan", "side", "side", [
+        comp("naan_bread", 1, "pcs"), comp("butter", 0.005, "kg"),
+    ], tags=["side", "bread", "vegetarian", "traditional"]),
+    mk_recipe("raita", "Raita", "side", "side", [
+        comp("yogurt", 0.08), comp("cucumber", 0.04, "kg"), comp("cumin", 0.001, "kg"),
+        comp("mint", 0.002, "kg", optional=True),
+    ], satiety_factor=0.3, tags=["side", "vegetarian", "dip", "fresh", "traditional"]),
+    mk_recipe("vegetable_pakora", "Gemüse-Pakora", "fingerfood", "snack", [
+        comp("chickpea_flour", 0.05, "kg"), comp("cauliflower", 0.06, "kg"), comp("onion", 0.03, "kg"),
+        comp("cooking_oil", 0.03), comp("chili_flakes", 0.001, "kg"), comp("cumin", 0.001, "kg"),
+    ], satiety_factor=0.4, tags=["fingerfood_food", "vegan", "vegetarian", "spicy_food", "fried_food", "shareable"]),
+    mk_recipe("gulab_jamun", "Gulab Jamun", "dessert", "dessert", [
+        comp("milk", 0.04), comp("flour", 0.02, "kg"), comp("cane_sugar_syrup", 0.04),
+        comp("cardamom", 0.001, "kg"), comp("cooking_oil", 0.02),
+    ], satiety_factor=0.3, tags=["dessert", "vegetarian", "sweet_food", "traditional", "festive"]),
+    mk_recipe("aloo_gobi", "Aloo Gobi", "main_dish", "side", [
+        comp("potato", 0.12, "kg"), comp("cauliflower", 0.12, "kg"), comp("cumin", 0.002, "kg"),
+        comp("garam_masala", 0.002, "kg"), comp("cooking_oil", 0.015), comp("cilantro", 0.003, "kg", optional=True),
+    ], tags=["side", "vegan", "vegetarian", "spicy_food", "vegetable"]),
+    mk_recipe("dal_tadka", "Dal Tadka", "main_dish", "side", [
+        comp("lentils", 0.12, "kg"), comp("cumin", 0.002, "kg"), comp("garlic", 0.003, "kg"),
+        comp("onion", 0.02, "kg"), comp("tomato", 0.03, "kg"), comp("cooking_oil", 0.01),
+        comp("garam_masala", 0.001, "kg"),
+    ], tags=["side", "vegan", "vegetarian", "spicy_food", "comfort_food"]),
+
+    # --- Peru -------------------------------------------------------------------
+    mk_recipe("ceviche", "Ceviche", "main_dish", "main", [
+        comp("cod", 0.15, "kg"), comp("lime_juice_fresh", 0.05), comp("red_onion", 0.03, "kg"),
+        comp("cilantro", 0.003, "kg"), comp("aji_amarillo", 0.01), comp("sweet_potato", 0.05, "kg", optional=True),
+    ], satiety_factor=0.8, tags=["main", "fish", "seafood", "fresh", "spicy_food"]),
+    mk_recipe("lomo_saltado", "Lomo Saltado", "main_dish", "main", [
+        comp("beef_steak_rump", 0.18, "kg"), comp("red_onion", 0.04, "kg"), comp("tomato", 0.05, "kg"),
+        comp("soy_sauce", 0.01), comp("potato", 0.1, "kg"), comp("rice", 0.06, "kg"), comp("cooking_oil", 0.015),
+    ], tags=["main", "beef", "meat", "spicy_food", "comfort_food"]),
+    mk_recipe("causa_limena", "Causa Limeña", "main_dish", "side", [
+        comp("potato", 0.2, "kg"), comp("aji_amarillo", 0.015), comp("lime_juice_fresh", 0.02),
+        comp("avocado", 0.06, "kg"), comp("mayonnaise", 0.02),
+    ], satiety_factor=0.7, tags=["side", "vegetarian", "fresh", "spicy_food", "traditional"]),
+    mk_recipe("anticuchos", "Anticuchos", "grill", "main", [
+        comp("beef_steak_rump", 0.15, "kg"), comp("aji_amarillo", 0.015), comp("cumin", 0.002, "kg"),
+        comp("garlic", 0.003, "kg"), comp("vinegar", 0.01), comp("cooking_oil", 0.01),
+    ], tags=["main", "beef", "meat", "grilled_food", "spicy_food"]),
+    mk_recipe("papa_a_la_huancaina", "Papa a la Huancaína", "side", "side", [
+        comp("potato", 0.2, "kg"), comp("queso_fresco", 0.06, "kg"), comp("aji_amarillo", 0.015),
+        comp("milk", 0.03), comp("olives", 0.01, "kg", optional=True),
+    ], satiety_factor=0.5, tags=["side", "vegetarian", "spicy_food", "traditional"]),
+    mk_recipe("arroz_con_pollo", "Arroz con Pollo", "main_dish", "main", [
+        comp("chicken_thigh", 0.15, "kg"), comp("rice", 0.08, "kg"), comp("cilantro", 0.005, "kg"),
+        comp("peas", 0.03, "kg"), comp("bell_pepper", 0.03, "kg"), comp("vegetable_stock", 0.05),
+    ], tags=["main", "poultry", "rice", "comfort_food", "traditional"]),
+    mk_recipe("picarones", "Picarones", "dessert", "dessert", [
+        comp("sweet_potato", 0.08, "kg"), comp("flour", 0.05, "kg"), comp("baking_powder", 0.002, "kg"),
+        comp("cooking_oil", 0.03), comp("cane_sugar_syrup", 0.04),
+    ], satiety_factor=0.35, tags=["dessert", "vegan", "vegetarian", "sweet_food", "fried_food", "traditional"]),
+    mk_recipe("aji_de_gallina", "Ají de Gallina", "main_dish", "main", [
+        comp("chicken_breast", 0.15, "kg"), comp("aji_amarillo", 0.02), comp("breadcrumbs", 0.02, "kg"),
+        comp("milk", 0.05), comp("queso_fresco", 0.03, "kg"), comp("cashews", 0.01, "kg", optional=True),
+    ], tags=["main", "poultry", "spicy_food", "comfort_food", "traditional"]),
+
+    # --- Dänemark ---------------------------------------------------------------
+    mk_recipe("smorrebrod_reje", "Smørrebrød mit Krabben", "fingerfood", "snack", [
+        comp("rye_bread", 1, "pcs"), comp("butter", 0.005, "kg"), comp("shrimp", 0.06, "kg"),
+        comp("mayonnaise", 0.01), comp("dill", 0.002, "kg"), comp("lemon", 0.01, "kg", optional=True),
+    ], satiety_factor=0.35, tags=["fingerfood_food", "fish", "seafood", "bread", "traditional"]),
+    mk_recipe("smorrebrod_leverpostej", "Smørrebrød mit Leberpastete", "fingerfood", "snack", [
+        comp("rye_bread", 1, "pcs"), comp("liver_pate", 0.04, "kg"), comp("pickles", 0.015, "kg"),
+        comp("fried_onions", 0.01, "kg"),
+    ], satiety_factor=0.35, tags=["fingerfood_food", "pork", "bread", "comfort_food", "traditional"]),
+    mk_recipe("smorrebrod_roastbeef", "Smørrebrød mit Roastbeef", "fingerfood", "snack", [
+        comp("rye_bread", 1, "pcs"), comp("beef_steak_rump", 0.06, "kg"), comp("remoulade", 0.01),
+        comp("fried_onions", 0.01, "kg"), comp("pickles", 0.01, "kg", optional=True),
+    ], satiety_factor=0.35, tags=["fingerfood_food", "beef", "bread", "traditional"]),
+    mk_recipe("danske_frikadeller", "Danske Frikadeller", "main_dish", "main", [
+        comp("ground_pork", 0.15, "kg"), comp("onion", 0.02, "kg"), comp("eggs", 0.2, "pcs"),
+        comp("breadcrumbs", 0.02, "kg"), comp("milk", 0.03), comp("flour", 0.01, "kg"),
+    ], tags=["main", "pork", "meat", "comfort_food", "traditional"]),
+    mk_recipe("flaeskesteg", "Flæskesteg", "main_dish", "main", [
+        comp("pork_belly", 0.22, "kg"), comp("red_cabbage", 0.06, "kg", optional=True),
+        comp("rosemary", 0.002, "kg", optional=True),
+    ], tags=["main", "pork", "meat", "comfort_food", "traditional", "festive"]),
+    mk_recipe("rodkal", "Rødkål", "side", "side", [
+        comp("red_cabbage", 0.12, "kg"), comp("apple", 0.03, "kg"), comp("vinegar", 0.01),
+        comp("sugar", 0.01, "kg"), comp("butter", 0.01, "kg", optional=True),
+    ], satiety_factor=0.3, tags=["side", "vegan", "vegetarian", "comfort_food", "traditional"]),
+    mk_recipe("karrysild", "Karrysild", "salad", "salad", [
+        comp("herring", 0.1, "kg"), comp("curry_paste", 0.015), comp("apple", 0.03, "kg"),
+        comp("onion", 0.02, "kg"), comp("mayonnaise", 0.02),
+    ], satiety_factor=0.4, tags=["salad", "fish", "comfort_food", "traditional"]),
+    mk_recipe("aebleskiver", "Æbleskiver", "dessert", "dessert", [
+        comp("flour", 0.04, "kg"), comp("eggs", 0.4, "pcs"), comp("milk", 0.06),
+        comp("butter", 0.015, "kg"), comp("baking_powder", 0.002, "kg"), comp("powdered_sugar", 0.01, "kg"),
+    ], satiety_factor=0.35, tags=["dessert", "vegetarian", "sweet_food", "traditional", "festive"]),
+    mk_recipe("wienerbroed", "Wienerbrød", "dessert", "dessert", [
+        comp("puff_pastry", 0.06, "kg"), comp("butter", 0.02, "kg"), comp("sugar", 0.015, "kg"),
+        comp("vanilla_extract", 0.002), comp("almonds", 0.01, "kg", optional=True),
+    ], satiety_factor=0.3, tags=["dessert", "vegetarian", "sweet_food", "baked_food", "traditional"]),
+
+    # --- Japan --------------------------------------------------------------------
+    mk_recipe("chicken_yakitori", "Chicken Yakitori", "grill", "main", [
+        comp("chicken_thigh", 0.15, "kg"), comp("soy_sauce", 0.015), comp("mirin", 0.01),
+        comp("sugar", 0.005, "kg", optional=True),
+    ], tags=["main", "poultry", "grilled_food", "savory", "traditional"]),
+    mk_recipe("gyoza", "Gyoza", "fingerfood", "snack", [
+        comp("ground_pork", 0.08, "kg"), comp("cabbage", 0.04, "kg"), comp("garlic", 0.002, "kg"),
+        comp("ginger", 0.002, "kg"), comp("soy_sauce", 0.01), comp("spring_roll_wrapper", 0.04, "kg"),
+        comp("cooking_oil", 0.01),
+    ], satiety_factor=0.4, tags=["fingerfood_food", "pork", "fried_food", "savory", "traditional"]),
+    mk_recipe("edamame_steamed", "Edamame", "fingerfood", "snack", [
+        comp("edamame", 0.1, "kg"), comp("salt", 0.002, "kg", optional=True),
+    ], satiety_factor=0.25, tags=["fingerfood_food", "vegan", "vegetarian", "fresh", "light_food"]),
+    mk_recipe("onigiri", "Onigiri", "fingerfood", "snack", [
+        comp("rice", 0.08, "kg"), comp("nori", 0.002, "kg"), comp("salt", 0.001, "kg", optional=True),
+        comp("salmon_fillet", 0.03, "kg", optional=True),
+    ], satiety_factor=0.4, tags=["fingerfood_food", "rice", "vegetarian", "light_food", "traditional"]),
+    mk_recipe("tempura_vegetable", "Gemüse-Tempura", "fingerfood", "snack", [
+        comp("sweet_potato", 0.05, "kg"), comp("bell_pepper", 0.03, "kg"), comp("zucchini", 0.03, "kg"),
+        comp("flour", 0.03, "kg"), comp("eggs", 0.2, "pcs"), comp("cooking_oil", 0.03),
+    ], satiety_factor=0.4, tags=["fingerfood_food", "vegetarian", "fried_food", "vegetable", "light_food"]),
+    mk_recipe("miso_soup", "Miso-Suppe", "side", "side", [
+        comp("miso_paste", 0.02), comp("tofu", 0.04, "kg"), comp("vegetable_stock", 0.15),
+        comp("scallion", 0.005, "kg", optional=True),
+    ], satiety_factor=0.3, tags=["side", "vegan", "vegetarian", "light_food", "traditional"]),
+    mk_recipe("salmon_maki", "Lachs-Maki", "fingerfood", "snack", [
+        comp("rice", 0.06, "kg"), comp("nori", 0.003, "kg"), comp("salmon_fillet", 0.06, "kg"),
+        comp("cucumber", 0.02, "kg"), comp("vinegar", 0.005, "kg", optional=True),
+    ], satiety_factor=0.4, tags=["fingerfood_food", "fish", "seafood", "rice", "fresh"]),
+    mk_recipe("okonomiyaki", "Okonomiyaki", "main_dish", "main", [
+        comp("flour", 0.05, "kg"), comp("cabbage", 0.08, "kg"), comp("eggs", 0.5, "pcs"),
+        comp("bacon", 0.02, "kg", optional=True), comp("okonomiyaki_sauce", 0.02),
+        comp("mayonnaise", 0.01, optional=True),
+    ], tags=["main", "vegetarian", "savory", "comfort_food", "traditional"]),
+
+    # --- USA --------------------------------------------------------------------
+    mk_recipe("cornbread", "Cornbread", "side", "side", [
+        comp("cornmeal", 0.05, "kg"), comp("flour", 0.02, "kg"), comp("milk", 0.05),
+        comp("eggs", 0.3, "pcs"), comp("butter", 0.015, "kg"), comp("sugar", 0.01, "kg"),
+        comp("baking_powder", 0.002, "kg"),
+    ], satiety_factor=0.4, tags=["side", "bread", "vegetarian", "comfort_food", "traditional"]),
+    mk_recipe("smoked_brisket", "Smoked Brisket", "grill", "main", [
+        comp("beef_brisket", 0.25, "kg"), comp("bbq_sauce", 0.03, optional=True), comp("paprika_powder", 0.003, "kg"),
+    ], tags=["main", "beef", "meat", "bbq", "grilled_food"]),
+    mk_recipe("clam_chowder", "Clam Chowder", "main_dish", "main", [
+        comp("clams", 0.12, "kg"), comp("potato", 0.08, "kg"), comp("cream", 0.06),
+        comp("onion", 0.02, "kg"), comp("celery", 0.02, "kg"), comp("butter", 0.01, "kg"),
+    ], satiety_factor=0.6, tags=["main", "fish", "seafood", "comfort_food", "traditional"]),
+    mk_recipe("apple_pie", "Apple Pie", "dessert", "dessert", [
+        comp("apple", 0.1, "kg"), comp("flour", 0.04, "kg"), comp("butter", 0.025, "kg"),
+        comp("sugar", 0.02, "kg"), comp("cinnamon", 0.001, "kg"), comp("eggs", 0.15, "pcs", optional=True),
+    ], satiety_factor=0.35, tags=["dessert", "vegetarian", "sweet_food", "baked_food", "traditional"]),
+    mk_recipe("pecan_pie", "Pecan Pie", "dessert", "dessert", [
+        comp("pecans", 0.05, "kg"), comp("flour", 0.02, "kg"), comp("butter", 0.015, "kg"),
+        comp("sugar", 0.03, "kg"), comp("eggs", 0.3, "pcs"), comp("vanilla_extract", 0.002),
+    ], satiety_factor=0.35, tags=["dessert", "vegetarian", "sweet_food", "baked_food", "traditional"]),
+    mk_recipe("smores", "S'mores", "fingerfood", "snack", [
+        comp("graham_crackers", 0.02, "kg"), comp("marshmallow", 0.02, "kg"), comp("chocolate", 0.015, "kg"),
+    ], satiety_factor=0.3, tags=["fingerfood_food", "vegetarian", "sweet_food", "nostalgic", "party_classic"]),
+    mk_recipe("buffalo_cauliflower", "Buffalo Cauliflower", "fingerfood", "snack", [
+        comp("cauliflower", 0.12, "kg"), comp("hot_sauce", 0.02), comp("flour", 0.02, "kg"),
+        comp("cooking_oil", 0.02),
+    ], satiety_factor=0.35, tags=["fingerfood_food", "vegan", "vegetarian", "spicy_food", "fried_food"]),
+    mk_recipe("cobb_salad", "Cobb Salad", "salad", "salad", [
+        comp("mixed_greens", 0.08, "kg"), comp("chicken_breast", 0.08, "kg"), comp("bacon", 0.02, "kg"),
+        comp("blue_cheese", 0.02, "kg"), comp("eggs", 0.3, "pcs"), comp("avocado", 0.04, "kg"),
+        comp("tomato", 0.03, "kg"),
+    ], satiety_factor=0.7, tags=["salad", "poultry", "meat", "comfort_food", "fresh"]),
+])
+
 
 # --- SONSTIGE REZEPTE (nicht eindeutig Cocktail/Food, aber Alias-Ziele) --------
 # z.B. "Spezi" (Cola/Fanta-Mix), das in §26 als eigenes Alias-Ziel genannt wird.
@@ -2128,6 +2426,54 @@ MISC_RECIPES_RAW: list[dict] = [
         comp("cola", 0.15), comp("fanta_orange", 0.15),
     ], serving_unit="glass", popular=True),
 ]
+
+# --- Geo-Kultur-Getränke, alkoholfrei (Geo-/Kultur-Kontext-Spec §4/§6) ----------
+MISC_RECIPES_RAW.extend([
+    # --- Indien -----------------------------------------------------------------
+    mk_recipe("masala_chai", "Masala Chai", "tea", "non_alcoholic_beverage", [
+        comp("black_tea", 0.005, "kg"), comp("milk", 0.1), comp("cardamom", 0.001, "kg"),
+        comp("cinnamon", 0.001, "kg", optional=True), comp("sugar", 0.01, "kg", optional=True),
+    ], serving_unit="glass", tags=["hot_drink", "tea", "non_alcoholic", "traditional"]),
+    mk_recipe("mango_lassi", "Mango Lassi", "lassi", "non_alcoholic_beverage", [
+        comp("yogurt", 0.15), comp("mango_juice", 0.08), comp("sugar", 0.01, "kg", optional=True),
+    ], serving_unit="glass", tags=["non_alcoholic", "fruity", "refreshing", "tropical", "traditional"]),
+    mk_recipe("salted_lassi", "Salted Lassi", "lassi", "non_alcoholic_beverage", [
+        comp("yogurt", 0.18), comp("water", 0.05), comp("cumin", 0.001, "kg"),
+        comp("mint", 0.002, "kg", optional=True),
+    ], serving_unit="glass", tags=["non_alcoholic", "refreshing", "traditional", "savory"]),
+    mk_recipe("nimbu_pani", "Nimbu Pani", "softdrink_mix", "non_alcoholic_beverage", [
+        comp("lime_juice_fresh", 0.03), comp("water", 0.15), comp("sugar", 0.015, "kg"),
+        comp("mint", 0.002, "kg", optional=True), comp("salt", 0.001, "kg", optional=True),
+    ], serving_unit="glass", tags=["non_alcoholic", "refreshing", "citrus", "traditional", "hydrating"]),
+
+    # --- Peru -----------------------------------------------------------------
+    mk_recipe("chicha_morada", "Chicha Morada", "softdrink_mix", "non_alcoholic_beverage", [
+        comp("purple_corn", 0.06, "kg"), comp("pineapple", 0.03, "kg"), comp("cinnamon", 0.001, "kg"),
+        comp("cane_sugar_syrup", 0.03), comp("lime_juice_fresh", 0.01), comp("water", 0.15),
+    ], serving_unit="glass", tags=["non_alcoholic", "fruity", "refreshing", "traditional"]),
+
+    # --- Dänemark ---------------------------------------------------------------
+    mk_recipe("solbaersaft", "Solbærsaft", "softdrink_mix", "non_alcoholic_beverage", [
+        comp("currant_juice", 0.1), comp("water", 0.1), comp("sugar", 0.01, "kg", optional=True),
+    ], serving_unit="glass", tags=["non_alcoholic", "refreshing", "fruity", "traditional"]),
+
+    # --- Japan ------------------------------------------------------------------
+    mk_recipe("matcha_latte", "Matcha Latte", "tea", "non_alcoholic_beverage", [
+        comp("matcha", 0.003, "kg"), comp("milk", 0.12), comp("honey", 0.01, optional=True),
+    ], serving_unit="glass", tags=["hot_drink", "tea", "non_alcoholic", "caffeinated", "traditional"]),
+
+    # --- USA --------------------------------------------------------------------
+    mk_recipe("arnold_palmer", "Arnold Palmer", "softdrink_mix", "non_alcoholic_beverage", [
+        comp("black_tea", 0.003, "kg"), comp("lemonade_lemon", 0.15), comp("water", 0.05, optional=True),
+    ], serving_unit="glass", tags=["non_alcoholic", "refreshing", "citrus", "traditional"]),
+    mk_recipe("fresh_lemonade", "Fresh Lemonade", "softdrink_mix", "non_alcoholic_beverage", [
+        comp("lemon", 0.06, "kg"), comp("sugar", 0.02, "kg"), comp("water", 0.2),
+        comp("mint", 0.002, "kg", optional=True),
+    ], serving_unit="glass", tags=["non_alcoholic", "refreshing", "citrus", "fresh"]),
+    mk_recipe("root_beer_float", "Root Beer Float", "softdrink_mix", "non_alcoholic_beverage", [
+        comp("root_beer", 0.2), comp("vanilla_ice_cream", 0.06, "kg"),
+    ], serving_unit="glass", tags=["non_alcoholic", "sweet", "creamy", "nostalgic", "party_classic"]),
+])
 
 # Alle Rezepte (Cocktails + Food + Sonstige) in einem gemeinsamen Container,
 # da PartyCatalog.recipes ein einziges dict ist (keine Trennung nach Herkunft).
@@ -2517,6 +2863,7 @@ _FAMILY_SKU_TEMPLATES: dict[str, list[tuple]] = {
     "liqueur": [(0.7, "l", "Flasche 0,7L", 1), (1.0, "l", "Flasche 1L", 1)],
     "fortified_wine": [(0.7, "l", "Flasche 0,7L", 1), (0.75, "l", "Flasche 0,75L", 1)],
     "wine": [(0.75, "l", "Flasche 0,75L", 1)],
+    "sake": [(0.72, "l", "Flasche 0,72L", 1)],
     "sparkling_wine": [(0.75, "l", "Flasche 0,75L", 1)],
     "beer": [(0.33, "l", "Flasche 0,33L", 1), (0.5, "l", "Flasche 0,5L", 1),
              (0.5, "l", "Kasten (20x0,5L)", 20)],

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from party_context import config
 from party_context.capabilities import derive_capabilities
+from party_context.culture import get_culture_profile
 from party_context.daypart import derive_daypart, derive_daypart_weights
 from party_context.domain import (
     BeverageContextModifiers,
@@ -21,6 +22,7 @@ from party_context.domain import (
     PartyContext,
     PartyContextOverride,
 )
+from party_context.geocoding import resolve_country_code
 from party_context.locations import get_location_profile
 from party_context.season import derive_season
 from party_context.temperature import classify_temperature, fallback_temperature_class
@@ -40,6 +42,7 @@ class PartyContextEngine:
         party_context: PartyContext,
         overrides: list[PartyContextOverride] | None = None,
         weather_provider: object | None = None,
+        geocoding_provider: object | None = None,
         hemisphere: str = "northern",
     ) -> DerivedPartyContext:
         explanations: list[str] = []
@@ -92,6 +95,31 @@ class PartyContextEngine:
         location_profile = get_location_profile(party_context.location_type)
         explanations.append(f"Die Party findet überwiegend {indoor_outdoor} in der Location '{party_context.location_type}' statt.")
 
+        # --- Geo-/Kultur-Kontext (Geo-Kultur-Spec §2-§4) ------------------------
+        country_code, country_source = resolve_country_code(
+            party_context.party_address, party_context.country_code, provider=geocoding_provider
+        )
+        culture_profile = get_culture_profile(country_code)
+        country_name = culture_profile.country_name or country_code
+        if country_source == "admin_override":
+            explanations.append(f"Land '{country_name}' wurde vom Admin manuell gesetzt.")
+        elif country_source == "geocoded":
+            explanations.append(f"Land '{country_name}' wurde aus der Party-Adresse abgeleitet (Geocoding).")
+
+        culture_food_tags: dict[str, float] = {}
+        for tag, weight in culture_profile.preferred_food_tags.items():
+            culture_food_tags[tag] = weight
+        for tag, weight in culture_profile.discouraged_food_tags.items():
+            culture_food_tags[tag] = -weight
+
+        culture_beverage_tags: dict[str, float] = {}
+        for tag, weight in culture_profile.preferred_beverage_tags.items():
+            culture_beverage_tags[tag] = weight
+        for tag, weight in culture_profile.discouraged_beverage_tags.items():
+            culture_beverage_tags[tag] = -weight
+
+        culture_genre_bias = dict(culture_profile.genre_bias)
+
         # --- Gästezahl-Klasse (§39) -------------------------------------------
         group_size_class = config.classify_group_size(party_context.guest_count)
 
@@ -109,6 +137,11 @@ class PartyContextEngine:
         }
         location_tags |= set(location_profile.preferred_tags.keys())
         location_tags |= set(party_context.context_tags)
+        # Geo-Kultur-Spec §3: bevorzugte Kultur-Tags fließen wie Location-Tags
+        # ein (nur die positiven - discouraged sind kein "Ausschluss", siehe
+        # culture_score in context_fit.py für die eigentliche Gewichtung).
+        location_tags |= set(culture_profile.preferred_food_tags.keys())
+        location_tags |= set(culture_profile.preferred_beverage_tags.keys())
 
         # --- Operational Constraints (§11 Hard Constraint / §28) ---------------
         operational_constraints: set[str] = set()
@@ -152,6 +185,19 @@ class PartyContextEngine:
             for tag, delta in config.LARGE_GROUP_OPERATIONAL_TAGS_PENALTY.items():
                 recommendation_tags[tag] = recommendation_tags.get(tag, 0.0) + delta
             explanations.append(f"Gästezahl-Klasse '{group_size_class}' bevorzugt batchable/buffet-freundliche Empfehlungen.")
+        # Geo-Kultur-Spec §3: Kultur-Food-/Getränke-Tags werden wie
+        # location_profile.preferred_tags/discouraged_tags gemergt (gleiche
+        # max/min-Mechanik) - bewusst additiv, kein harter Filter.
+        for tag, weight in culture_food_tags.items():
+            if weight >= 0:
+                recommendation_tags[tag] = max(recommendation_tags.get(tag, 0.0), weight)
+            else:
+                recommendation_tags[tag] = min(recommendation_tags.get(tag, 0.0), weight)
+        for tag, weight in culture_beverage_tags.items():
+            if weight >= 0:
+                recommendation_tags[tag] = max(recommendation_tags.get(tag, 0.0), weight)
+            else:
+                recommendation_tags[tag] = min(recommendation_tags.get(tag, 0.0), weight)
 
         # --- Beverage Context Modifiers (§19-§23/§64) -----------------------------
         bev_deltas: dict[str, list[float]] = {}
@@ -237,6 +283,12 @@ class PartyContextEngine:
             weather_condition=weather_condition,
             indoor_outdoor=indoor_outdoor,
             location_type=party_context.location_type,
+            country_code=country_code,
+            country_name=country_name if country_code else "",
+            country_source=country_source,
+            culture_food_tags=culture_food_tags,
+            culture_beverage_tags=culture_beverage_tags,
+            culture_genre_bias=culture_genre_bias,
             group_size_class=group_size_class,
             location_tags=location_tags,
             available_capabilities=available_capabilities,
@@ -350,6 +402,23 @@ if __name__ == "__main__":
     derived_override = engine.derive_context(winter_ctx, overrides=overrides)
     assert derived_override.temperature_class == "warm"
     assert any("Admin-Override" in e for e in derived_override.explanations)
+
+    # Geo-Kultur-Spec §2-§4: Admin-Override gewinnt, Kultur-Tags werden befüllt.
+    india_ctx = PartyContext(location_type="garden", indoor_outdoor="outdoor", country_code="in")
+    derived_india = engine.derive_context(india_ctx)
+    assert derived_india.country_code == "IN"
+    assert derived_india.country_source == "admin_override"
+    assert derived_india.culture_food_tags["vegetarian"] > 0
+    assert derived_india.culture_beverage_tags["tea"] > 0
+    assert derived_india.culture_genre_bias["bollywood"] > 0
+    assert any("Land 'India'" in e for e in derived_india.explanations)
+
+    # Kein Override, kein Geocoding-Provider -> neutral, kein Bias.
+    no_country_ctx = PartyContext(location_type="garden", indoor_outdoor="outdoor")
+    derived_no_country = engine.derive_context(no_country_ctx)
+    assert derived_no_country.country_code == ""
+    assert derived_no_country.country_source == "unknown"
+    assert derived_no_country.culture_food_tags == {}
 
     print(f"summer beverage_modifiers -> {derived_summer.beverage_modifiers}")
     print(f"winter food_modifiers -> {derived_winter.food_modifiers}")

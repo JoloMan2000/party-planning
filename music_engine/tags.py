@@ -69,6 +69,11 @@ GENRES: frozenset[str] = frozenset({
     "afrobeats",
     "throwback_party",
     "acoustic",
+    # Geo-Kultur-Spec §5: Genres für Länder, die im bisherigen Katalog nicht
+    # vertreten waren (Indien/Japan) bzw. zur Vertiefung (Peru).
+    "bollywood", "indian_pop", "bhangra",
+    "jpop", "city_pop",
+    "cumbia",
     "other",
 })
 

@@ -55,7 +55,7 @@ from party_engine.recommendation_domain import (
     RecommendationScore,
 )
 from party_context.context_fit import calculate_context_fit
-from party_context.domain import DerivedPartyContext, FoodContextModifiers
+from party_context.domain import DerivedPartyContext, FoodContextModifiers, LearningHistory
 
 # ---------------------------------------------------------------------------
 # §7 — Basisformel-Gewichte
@@ -86,6 +86,15 @@ _W_GROUP_SIGNAL = 0.15
 # ``derived_context`` übergeben wird (sonst 0.0, volle Rückwärtskompatibilität
 # zur bisherigen Basisformel/Tests).
 _W_CONTEXT_FIT = 0.15
+
+# Geo-Kultur-Spec §7: gelernte Cross-Party-Präferenz - analog zu
+# _W_GROUP_SIGNAL eine kleine, additive Verschiebung relativ zum NEUTRALEN
+# Prior 0.5 (nicht zum popularity_score - ``compute_learned_preference_score``
+# schrumpft bereits selbst Richtung 0.5, siehe dortige Docstring). Bewusst
+# klein gehalten (§5-Prinzip: Historie ergänzt, überstimmt nie tatsächliche
+# aktuelle Gästewünsche/``group_signal``). 0.0 Effekt bei leerer Historie
+# (Kaltstart-Pflichtverhalten, §7) — learned_score ist dann exakt 0.5.
+_W_LEARNED = 0.08
 
 # §24-28 (Party-Context-Engine-Spec): FoodContextModifiers-Präferenzen sind
 # tag-basiert (analog zum bereits etablierten Diät-Heuristik-Muster in
@@ -494,6 +503,7 @@ def _build_reasons(
     guest_count: int | None,
     is_signature: bool,
     context_fit_score: float = 0.0,
+    learned_score: float = 0.5,
 ) -> list[str]:
     reasons: list[str] = []
     if tag_match_score >= 0.55:
@@ -502,6 +512,11 @@ def _build_reasons(
         reasons.append("Passt gut zum aktuellen Kontext (Saison/Uhrzeit)")
     if context_fit_score >= 0.70:
         reasons.append("Passt gut zu Ort, Wetter und Infrastruktur der Party")
+    if learned_score >= 0.60:
+        # Geo-Kultur-Spec §8: Explainability für die gelernte Komponente -
+        # nur sichtbar, wenn sie den Score TATSÄCHLICH spürbar verschoben hat
+        # (0.5 = neutral/Kaltstart, kein Reason-Text).
+        reasons.append("Bei früheren Partys in ähnlichem Kontext häufig gewählt")
     if (
         guest_count is not None
         and guest_count >= _LARGE_GROUP_THRESHOLD
@@ -537,6 +552,7 @@ def score_item_for_occasion(
     group_signal: GroupSignal | None = None,
     admin_override: dict[str, float] | None = None,
     derived_context: DerivedPartyContext | None = None,
+    learning_history: LearningHistory | None = None,
 ) -> RecommendationScore:
     """§7/§82: Kern-Scoring-Funktion. ``admin_override`` ist optional ein
     Dict mit den Keys ``"boost"``/``"suppress"`` (beide >= 0, additiv
@@ -551,6 +567,15 @@ def score_item_for_occasion(
     Context Logic in score_item_for_occasion() hineinmischen" (§78). Bleibt
     ``derived_context`` ``None`` (Standard), ist ``context_fit_score`` 0.0 und
     das Verhalten identisch zur bisherigen Formel.
+
+    ``learning_history`` (Geo-Kultur-Spec §7): optional, aggregierte Sicht
+    über vergangene ``party_runs``/``selection_events``
+    (``party_context.learning_storage.get_learning_history``). Nur wirksam,
+    wenn ZUSÄTZLICH ``derived_context`` übergeben wird (liefert die
+    Kontext-Dimensionen season/location_type/country_code für den
+    Ähnlichkeits-Abgleich). Bleibt ``learning_history`` ``None`` oder ist sie
+    leer (Kaltstart), ist ``learned_score`` exakt 0.5 und hat GAR KEINEN
+    Effekt auf ``total_score`` (Rückwärtskompatibilität).
 
     Diät-Sicherheit (§61/§78): wird ein harter ``guest.dietary``-Constraint
     strukturell verletzt, wird SOFORT ein Score mit ``total_score=0.0``
@@ -626,6 +651,20 @@ def score_item_for_occasion(
     else:
         context_fit_score = 0.0
 
+    if derived_context is not None and learning_history is not None:
+        context_dims = {
+            "season": derived_context.season,
+            "location_type": derived_context.location_type,
+            "country_code": derived_context.country_code,
+        }
+        learned_score = compute_learned_preference_score(item.id, context_dims, learning_history)
+        # Analog zu §62 (Gruppenfeedback): additive, begrenzte Verschiebung
+        # relativ zum NEUTRALEN Prior 0.5 (nicht zum popularity_score) - bei
+        # 0.5 (Kaltstart/keine ähnliche Historie) exakt 0.0 Effekt.
+        total_score += _W_LEARNED * (learned_score - 0.5)
+    else:
+        learned_score = 0.5
+
     penalties: dict[str, float] = {}
 
     if derived_context is not None:
@@ -661,6 +700,7 @@ def score_item_for_occasion(
         guest_count=party_context.guest_count,
         is_signature=is_signature,
         context_fit_score=context_fit_score,
+        learned_score=learned_score,
     )
 
     return RecommendationScore(
@@ -676,6 +716,7 @@ def score_item_for_occasion(
         group_score=group_score,
         admin_score=admin_score,
         context_fit_score=context_fit_score,
+        learned_score=learned_score,
         penalties=penalties,
         reasons=reasons,
         is_signature=is_signature,
@@ -707,6 +748,70 @@ def compute_group_signal_score(
     return (
         group_signal.supporting_guests + prior_strength * occasion_prior
     ) / (group_signal.eligible_response_count + prior_strength)
+
+
+# ---------------------------------------------------------------------------
+# Geo-Kultur-Spec §7 — Persistentes Cross-Party-Lernen (Bayesian Shrinkage)
+# ---------------------------------------------------------------------------
+
+# Kontext-Dimensionen, über die ÄHNLICHKEIT vergangener Partys bestimmt wird
+# (Geo-Kultur-Spec §7: "gleiche season ODER gleicher location_type ODER
+# gleicher country_code - gewichtete Teilmengen-Übereinstimmung"). Bewusst
+# als Modulkonstante, damit der Aufrufer (``score_item_for_occasion``) und
+# ``compute_learned_preference_score`` denselben Dimensions-Satz verwenden.
+_LEARNING_CONTEXT_DIMENSIONS: tuple[str, ...] = ("season", "location_type", "country_code")
+
+
+def compute_learned_preference_score(
+    item_id: str,
+    context_dims: dict[str, str],
+    history: LearningHistory,
+    prior_strength: float = 10.0,
+) -> float:
+    """Geo-Kultur-Spec §7: identisches mathematisches Muster wie
+    ``compute_group_signal_score`` (Bayesian Shrinkage Richtung eines
+    neutralen Priors), nur über ``history.runs``/``history.events`` (mehrere
+    vergangene Partys) statt über die Gäste-Antworten EINER Party.
+
+    ``observed_rate`` = Anteil ÄHNLICHER vergangener Partys (mindestens eine
+    übereinstimmende Dimension aus ``context_dims``, gewichtet nach Anzahl
+    übereinstimmender Dimensionen - kein exaktes Kontext-Match nötig, sonst
+    zu wenige Datenpunkte), in denen ``item_id`` tatsächlich gewählt wurde.
+
+    Kaltstart (Pflicht, §7): ohne Historie (``history.runs`` leer) oder ohne
+    auch nur eine ähnliche vergangene Party liefert diese Funktion exakt
+    ``0.5`` (neutral) - hat dann per Definition KEINEN Effekt auf die
+    Ranking-Reihenfolge (siehe ``_W_LEARNED``-Verrechnung in
+    ``score_item_for_occasion``, die relativ zu diesem Neutral-Prior 0.5
+    verschiebt, nicht relativ zu ``popularity_score``)."""
+    if not history.runs:
+        return 0.5
+
+    dim_names = [dim for dim in _LEARNING_CONTEXT_DIMENSIONS if context_dims.get(dim)]
+    if not dim_names:
+        return 0.5
+
+    selected_item_ids_by_run: dict[int, set[str]] = {}
+    for event in history.events:
+        if event.event_type != "selected":
+            continue
+        selected_item_ids_by_run.setdefault(event.party_run_id, set()).add(event.item_id)
+
+    eligible_weight = 0.0
+    supporting_weight = 0.0
+    for run in history.runs:
+        matches = sum(1 for dim in dim_names if getattr(run, dim, "") == context_dims[dim])
+        if matches == 0:
+            continue
+        weight = matches / len(dim_names)
+        eligible_weight += weight
+        if item_id in selected_item_ids_by_run.get(run.id, set()):
+            supporting_weight += weight
+
+    if eligible_weight <= 0:
+        return 0.5
+
+    return (supporting_weight + prior_strength * 0.5) / (eligible_weight + prior_strength)
 
 
 # ---------------------------------------------------------------------------
@@ -890,6 +995,7 @@ def recommend_for_guest(
     already_selected_ids: set[str] | None = None,
     top_n: int = 12,
     derived_context: DerivedPartyContext | None = None,
+    learning_history: LearningHistory | None = None,
 ) -> list[tuple[CatalogItem, RecommendationScore]]:
     """§60-61/§64-67: rankt alle empfehlbaren Items für einen konkreten
     Gast. Optimiert für Anlass-Fit, persönliche Diät-Kompatibilität,
@@ -923,7 +1029,12 @@ def recommend_for_guest(
         if _dietary_violation_reason(item, guest, catalog) is not None:
             continue  # harter Diät-Ausschluss - wird gar nicht erst gescort
         score = score_item_for_occasion(
-            item, occasion_profile, party_context, guest=guest, derived_context=derived_context
+            item,
+            occasion_profile,
+            party_context,
+            guest=guest,
+            derived_context=derived_context,
+            learning_history=learning_history,
         )
         scored.append((item, score))
 
@@ -962,6 +1073,7 @@ def recommend_for_admin(
     already_selected_ids: set[str] | None = None,
     top_n: int = 20,
     derived_context: DerivedPartyContext | None = None,
+    learning_history: LearningHistory | None = None,
 ) -> list[tuple[CatalogItem, RecommendationScore]]:
     """§58-59: rankt Items für den Admin-Sortiment-Bauassistenten. Optimiert
     für Abdeckung, Balance, operative Einfachheit, Anlass-Fit,
@@ -971,6 +1083,11 @@ def recommend_for_admin(
     ``derived_context`` (§76 Party-Context-Engine-Spec): optional, wird
     unverändert an ``score_item_for_occasion`` durchgereicht (eigene additive
     ContextFit-Schicht, §78).
+
+    ``learning_history`` (Geo-Kultur-Spec §7): optional, wird unverändert an
+    ``score_item_for_occasion`` durchgereicht (gelernte Cross-Party-Präferenz,
+    Bayesian Shrinkage). Kaltstart-neutral (0.5), falls ``None`` oder keine
+    ähnliche vergangene Party existiert.
 
     ``admin_score = recommendation_score + assortment_coverage_bonus +
     dietary_coverage_bonus + ingredient_overlap_bonus - complexity_penalty -
@@ -1002,7 +1119,13 @@ def recommend_for_admin(
             continue
         if not item.recommendation.recommendation_enabled:
             continue
-        base = score_item_for_occasion(item, occasion_profile, party_context, derived_context=derived_context)
+        base = score_item_for_occasion(
+            item,
+            occasion_profile,
+            party_context,
+            derived_context=derived_context,
+            learning_history=learning_history,
+        )
 
         overlap_bonus = 0.0
         if isinstance(item, Recipe) and selected_ingredient_ids:

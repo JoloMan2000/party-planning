@@ -130,6 +130,26 @@ def _location_score(item: object, derived_context: DerivedPartyContext, affinity
     return max(0.0, min(1.0, score))
 
 
+def _culture_score(item: object, derived_context: DerivedPartyContext) -> float:
+    """Tag-Overlap zwischen Item und den kulturellen Food-/Beverage-Tags des
+    aktiven Länder-Profils (Geo-Kultur-Spec §4/§9). Mirrors exakt den
+    Tag-Overlap-Fallback von ``_location_score()`` - positive Gewichte
+    (``preferred_*_tags``) heben den Score, negative (``discouraged_*_tags``,
+    bereits in ``culture_food_tags``/``culture_beverage_tags`` als negative
+    Werte gehalten, siehe engine.py) senken ihn. Neutral 0.5, solange kein
+    Land bekannt ist ODER das Item keinen der kulturellen Tags trägt - NIE
+    eine harte Filterung, ein Item bleibt immer wählbar (§4)."""
+    culture_tags = {**derived_context.culture_food_tags, **derived_context.culture_beverage_tags}
+    if not culture_tags:
+        return 0.5
+    item_tags = _recommendation_tags(item)
+    hits = [weight for tag, weight in culture_tags.items() if tag in item_tags]
+    if not hits:
+        return 0.5
+    score = 0.5 + 0.5 * (sum(hits) / len(hits))
+    return max(0.0, min(1.0, score))
+
+
 def calculate_context_fit(item: object, derived_context: DerivedPartyContext) -> ContextFitScore:
     """Berechnet den erklärbaren Context-Fit eines einzelnen Items (§42/§43).
     Hard Constraints (fehlende ``required_capabilities``) dominieren den
@@ -191,6 +211,12 @@ def calculate_context_fit(item: object, derived_context: DerivedPartyContext) ->
     elif affinity.preferred_capabilities and not affinity.required_capabilities:
         penalties.append("etwas Serviceaufwand ohne passende Infrastruktur")
 
+    culture_score = _culture_score(item, derived_context)
+    if culture_score >= 0.8:
+        reasons.append(f"passt zu kulinarischen Vorlieben in '{derived_context.country_name}'")
+    elif culture_score <= 0.3:
+        penalties.append(f"weniger typisch für '{derived_context.country_name}' (bleibt trotzdem wählbar)")
+
     weights = config.CONTEXT_FIT_SUBSCORE_WEIGHTS
     total_score = (
         weights["season_score"] * season_score
@@ -199,6 +225,7 @@ def calculate_context_fit(item: object, derived_context: DerivedPartyContext) ->
         + weights["daypart_score"] * daypart_score
         + weights["weather_score"] * weather_score
         + weights["infrastructure_score"] * infrastructure_score
+        + weights["culture_score"] * culture_score
     )
     if missing_required:
         # Hard Constraint (§11) dominiert - Item bleibt wählbar, aber deutlich zurückgestuft.
@@ -206,6 +233,7 @@ def calculate_context_fit(item: object, derived_context: DerivedPartyContext) ->
 
     return ContextFitScore(
         total_score=round(total_score, 4),
+        culture_score=round(culture_score, 4),
         season_score=round(season_score, 4),
         location_score=round(location_score, 4),
         indoor_outdoor_score=round(indoor_outdoor_score, 4),

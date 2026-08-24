@@ -99,6 +99,24 @@ def _apply_admin_genre_bias(
     return adjusted
 
 
+def _apply_culture_genre_bias(
+    genre_weights: dict[str, float], culture_genre_bias: dict[str, float], occasion_share: float
+) -> dict[str, float]:
+    """Geo-Kultur-Spec §5: addiert ``derived_context.culture_genre_bias`` auf
+    die bereits Occasion/Gruppen-geblendeten und Admin-biased Genre-Gewichte
+    (gleiches additives Muster wie ``_apply_admin_genre_bias``). Bewusst mit
+    ``occasion_share`` skaliert (== 1 - group_weight aus ``compute_group_weight``):
+    je MEHR echte Song-Wünsche vorliegen, desto schwächer wirkt der
+    Kultur-Bias - er darf niemals tatsächliche Gästewünsche überstimmen,
+    sondern nur bei wenig/keinen Song-Wünschen sichtbar ins Gewicht fallen."""
+    if not culture_genre_bias:
+        return genre_weights
+    adjusted = dict(genre_weights)
+    for genre, weight in culture_genre_bias.items():
+        adjusted[genre] = _clamp01(adjusted.get(genre, 0.0) + weight * occasion_share)
+    return adjusted
+
+
 def _clamp01(value: float) -> float:
     return max(0.0, min(1.0, value))
 
@@ -176,6 +194,8 @@ def build_music_strategy(
         occasion_profile.preferred_genres, group_profile.genre_weights, occasion_share, group_weight
     )
     genre_weights = _apply_admin_genre_bias(genre_weights, admin_settings)
+    if derived_context is not None:
+        genre_weights = _apply_culture_genre_bias(genre_weights, derived_context.culture_genre_bias, occasion_share)
     era_weights = _blend_weights(
         occasion_profile.preferred_eras, group_profile.era_weights, occasion_share, group_weight
     )
@@ -433,5 +453,15 @@ if __name__ == "__main__":
     assert [s.position for s in _result.playlist] == list(range(1, len(_result.playlist) + 1))
     assert _result.unique_guests_with_requests == 12
     assert _result.unique_guests_covered >= 1
+
+    # Geo-Kultur-Spec §5: Kultur-Genre-Bias wirkt additiv bei wenig Song-Wünschen
+    # (kalter Start, request_count=0 -> occasion_share=1.0, volle Wirkung).
+    from party_context.domain import DerivedPartyContext
+
+    _empty_group_profile = GroupMusicProfile(request_count=0)
+    _india_context = DerivedPartyContext(culture_genre_bias={"bollywood": 0.8})
+    _strategy_with_culture = build_music_strategy(_grill, _empty_group_profile, AdminMusicSettings(), 120.0, derived_context=_india_context)
+    _strategy_without_culture = build_music_strategy(_grill, _empty_group_profile, AdminMusicSettings(), 120.0)
+    assert _strategy_with_culture.genre_weights.get("bollywood", 0.0) > _strategy_without_culture.genre_weights.get("bollywood", 0.0)
 
     print("music_engine/engine.py sanity check OK.")

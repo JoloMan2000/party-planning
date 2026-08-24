@@ -43,6 +43,15 @@ class PartyContext:
     location_type: str = "other"
     indoor_outdoor: str = "outdoor"  # indoor, outdoor, mixed
 
+    # Geografie/Kultur (Geo-Kultur-Erweiterung §2/§3): party_address wird vom
+    # Aufrufer aus der bereits bestehenden ``event_theme.party_location``
+    # gespiegelt (kein Duplikat-Eingabefeld in der UI). country_code ist ein
+    # optionaler Admin-Override (ISO 3166-1 alpha-2) - leer bedeutet
+    # "automatisch per Geocoding aus party_address ableiten" (§2 der
+    # Geo-Kultur-Spec, analog zum ``season``-Override-Muster oben).
+    party_address: str = ""
+    country_code: str = ""
+
     # Infrastruktur (§49/§50)
     has_grill: bool = False
     has_kitchen: bool = False
@@ -204,6 +213,91 @@ class WeatherProvider(Protocol):
     ) -> WeatherContext | None: ...
 
 
+# --- Geo-Kultur-Erweiterung §2: Geocoding-Architektur ---------------------------------
+
+
+@dataclass
+class GeocodingResult:
+    """Ergebnis einer Adress->Land-Auflösung (Geo-Kultur-Spec §2)."""
+
+    country_code: str  # ISO 3166-1 alpha-2, z.B. "DE", "IN", "PE"
+    country_name: str = ""
+    display_address: str = ""  # von der API normalisierte Adresse (Debug/Log)
+
+
+class GeocodingProvider(Protocol):
+    """Interface für eine Adress->Land-Quelle (Geo-Kultur-Spec §2). Muss NIE
+    raisen - jeder Fehler (Netzwerk/Timeout/kein Treffer) liefert ``None``,
+    der Aufrufer fällt dann auf den neutralen Fallback zurück (§4)."""
+
+    def geocode(self, address: str) -> GeocodingResult | None: ...
+
+
+# --- Geo-Kultur-Erweiterung §4: Culture-Stammdaten -------------------------------------
+
+
+@dataclass
+class CultureProfile:
+    """Länder-Stammdaten für kulturell geprägte Essens-/Getränke-/Musik-
+    Präferenzen (Geo-Kultur-Spec §4). Wirkt ausschließlich als leichtes,
+    gecapptes Re-Weighting bestehender Tags - NIE als harte Filterung
+    (siehe Modul-Docstring von ``party_context.culture``)."""
+
+    country_code: str
+    country_name: str = ""
+
+    preferred_food_tags: dict[str, float] = field(default_factory=dict)
+    discouraged_food_tags: dict[str, float] = field(default_factory=dict)
+    preferred_beverage_tags: dict[str, float] = field(default_factory=dict)
+    discouraged_beverage_tags: dict[str, float] = field(default_factory=dict)
+
+    genre_bias: dict[str, float] = field(default_factory=dict)
+
+
+# --- Geo-Kultur-Erweiterung §7: Persistentes Cross-Party-Lernen -----------------------
+
+
+@dataclass
+class PartyRunSnapshot:
+    """Eingefrorener Kontext-Snapshot einer ABGESCHLOSSENEN Party (Geo-Kultur-
+    Spec §7). Wird beim automatischen Party-Lifecycle-Trigger geschrieben und
+    danach NIE mehr verändert - stabile Lern-Basis. ``id=None`` vor dem
+    Speichern (wird von ``learning_storage.save_party_run`` vergeben)."""
+
+    id: int | None = None
+    started_at: datetime | None = None
+    occasion_id: str = ""
+    country_code: str = ""
+    season: str = ""
+    temperature_class: str = ""
+    location_type: str = ""
+    group_size_class: str = ""
+
+
+@dataclass
+class SelectionEvent:
+    """Eine einzelne, bewusst ANONYMISIERTE Gast-Auswahl innerhalb eines
+    ``PartyRunSnapshot`` (Geo-Kultur-Spec §7). Kein guest_name/keine sonst
+    identifizierende Info - getrennt von der operativen ``responses``-Tabelle."""
+
+    id: int | None = None
+    party_run_id: int = 0
+    item_id: str = ""
+    item_type: str = ""  # direct_consumable | recipe | track
+    event_type: str = "selected"
+
+
+@dataclass
+class LearningHistory:
+    """Aggregierte Sicht über alle vergangenen ``PartyRunSnapshot``s + deren
+    ``SelectionEvent``s (Geo-Kultur-Spec §7), Eingabe für
+    ``compute_learned_preference_score()``. Leer (keine runs/events) beim
+    ersten Lauf ohne Historie - Kaltstart-Pflichtverhalten §7."""
+
+    runs: list[PartyRunSnapshot] = field(default_factory=list)
+    events: list[SelectionEvent] = field(default_factory=list)
+
+
 # --- §8: zentrales Ergebnis-Objekt ---------------------------------------------------
 
 
@@ -225,6 +319,15 @@ class DerivedPartyContext:
 
     indoor_outdoor: str = "outdoor"
     location_type: str = "other"
+
+    # Geo-Kultur-Erweiterung §3: country_code bleibt "" (neutral, kein Bias),
+    # solange weder Admin-Override noch erfolgreiches Geocoding vorliegen.
+    country_code: str = ""
+    country_name: str = ""
+    country_source: str = "unknown"  # "admin_override" | "geocoded" | "unknown"
+    culture_food_tags: dict[str, float] = field(default_factory=dict)
+    culture_beverage_tags: dict[str, float] = field(default_factory=dict)
+    culture_genre_bias: dict[str, float] = field(default_factory=dict)
 
     group_size_class: str = "medium_group"
 
@@ -259,6 +362,12 @@ class ContextFitScore:
     daypart_score: float = 0.5
     weather_score: float = 0.5
     infrastructure_score: float = 0.5
+
+    # Geo-Kultur-Spec §4/§9: Tag-Overlap zwischen Item und den vom aktiven
+    # Länder-``CultureProfile`` gelieferten ``culture_food_tags``/
+    # ``culture_beverage_tags``. Neutral 0.5, solange kein Land bekannt ist
+    # (kein Bias, siehe ``culture.get_culture_profile``-Fallback).
+    culture_score: float = 0.5
 
     penalties: list[str] = field(default_factory=list)
     reasons: list[str] = field(default_factory=list)

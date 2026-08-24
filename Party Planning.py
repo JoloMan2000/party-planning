@@ -67,9 +67,12 @@ from party_engine.recommendation import (
     resolve_occasion_for_scoring,
 )
 from party_engine.recommendation_domain import OccasionProfile, RecommendationContext
+from party_context import learning_storage
 from party_context import storage as party_context_storage
-from party_context.domain import DerivedPartyContext, PartyContext, PartyContextOverride
+from party_context.countries import ISO_COUNTRIES
+from party_context.domain import DerivedPartyContext, PartyContext, PartyContextOverride, PartyRunSnapshot, SelectionEvent
 from party_context.engine import PartyContextEngine
+from party_context.geocoding import CachingGeocodingProvider, NominatimGeocodingProvider
 from party_context.locations import LOCATION_LABELS, LOCATION_TYPES
 from translations import (
     ALL_LANGUAGES,
@@ -101,6 +104,7 @@ event_theme.init_party_settings(DB_PATH)
 _PARTY_SETTINGS = event_theme.get_party_settings(DB_PATH)
 music_admin_settings.init_music_admin_settings(DB_PATH)
 party_context_storage.init_party_context_storage(DB_PATH)
+learning_storage.init_learning_storage(DB_PATH)
 
 @st.cache_resource
 def get_catalog() -> PartyCatalog:
@@ -177,17 +181,28 @@ def get_party_context() -> PartyContext:
     else:
         ctx.start_datetime = None
     ctx.duration_hours = float(_PARTY_SETTINGS["party_duration_hours"])
+    # Geo-Kultur-Spec §2: party_address ist kein eigenes UI-Eingabefeld,
+    # sondern wird 1:1 aus dem bereits bestehenden party_location-Feld
+    # (render_party_settings_section) gespiegelt.
+    ctx.party_address = _PARTY_SETTINGS["party_location"]
     return ctx
 
 
 def get_derived_party_context(guest_count: int) -> DerivedPartyContext:
     """Leitet den zentralen ``DerivedPartyContext`` ab (inkl. admin-gesetzter
     Overrides, §71/§72) - die einzige Stelle, an der ``PartyContextEngine``
-    aufgerufen wird (§10: keine nachgelagerte Engine leitet Kontext selbst ab)."""
+    aufgerufen wird (§10: keine nachgelagerte Engine leitet Kontext selbst ab).
+
+    Geo-Kultur-Spec §2: übergibt einen ``CachingGeocodingProvider`` (nur bei
+    vorhandener ``party_address`` UND fehlendem Admin-Override überhaupt
+    genutzt, siehe ``resolve_country_code``) - Live-Geocoding via Nominatim,
+    Ergebnis wird in ``geocode_cache`` persistiert (Pflicht-Cache, max. 1
+    Request/Sekunde laut Nominatim-Nutzungsrichtlinie)."""
     ctx = get_party_context()
     ctx.guest_count = guest_count or 1
     overrides = party_context_storage.get_party_context_overrides(DB_PATH)
-    return PartyContextEngine().derive_context(ctx, overrides=overrides)
+    geocoding_provider = CachingGeocodingProvider(DB_PATH, NominatimGeocodingProvider())
+    return PartyContextEngine().derive_context(ctx, overrides=overrides, geocoding_provider=geocoding_provider)
 
 
 # --- Katalog-getriebene Getränke-/Essens-Auswahl (AUFGABE §38-39, §45) ------
@@ -604,6 +619,77 @@ def load_responses() -> list[dict]:
     return [dict(row) for row in rows]
 
 
+def _classify_item_type(item_id: str, catalog: PartyCatalog) -> str:
+    """Ordnet eine gespeicherte Auswahl-ID ihrem Katalog-Item-Typ zu
+    (Geo-Kultur-Spec §7). Leerer String für unbekannte/Freitext-IDs -
+    diese werden beim Einfrieren nicht als ``SelectionEvent`` geloggt."""
+    if item_id in catalog.recipes:
+        return "recipe"
+    if item_id in catalog.direct_consumables:
+        return "direct_consumable"
+    return ""
+
+
+def maybe_freeze_and_reset_party(catalog: PartyCatalog) -> bool:
+    """Party-Lifecycle-Trigger (Geo-Kultur-Spec §7): automatische Erkennung,
+    kein Extra-Button. MUSS vor dem Speichern eines NEUEN ``party_date``
+    aufgerufen werden (siehe Save-Button-Handler in
+    ``render_party_settings_section``). Falls das BISHER gespeicherte
+    ``party_date`` bereits in der Vergangenheit liegt, werden die aktuellen
+    ``responses`` + der zu diesem Zeitpunkt gültige ``DerivedPartyContext``
+    als ``PartyRunSnapshot``/``SelectionEvent``s eingefroren, danach wird
+    NUR die ``responses``-Tabelle geleert. ``party_settings`` bleibt
+    vollständig als wiederverwendbare Vorlage erhalten (der Aufrufer
+    speichert das neue Datum separat via ``event_theme.save_party_settings``).
+    Liefert ``True``, falls ein Reset stattgefunden hat (für eine Admin-
+    Erfolgsmeldung), sonst ``False`` (z.B. beim allerersten Party-Setup, wenn
+    noch kein ``party_date`` gesetzt war, oder wenn keine ``responses``
+    vorliegen - dann gibt es nichts Sinnvolles zu lernen)."""
+    old_settings = event_theme.get_party_settings(DB_PATH)
+    old_date_str = old_settings["party_date"]
+    if not old_date_str:
+        return False
+    try:
+        old_date = ddate.fromisoformat(old_date_str)
+    except ValueError:
+        return False
+    if old_date >= ddate.today():
+        return False
+
+    responses = load_responses()
+    if not responses:
+        return False
+
+    derived_context = get_derived_party_context(len(responses))
+    snapshot = PartyRunSnapshot(
+        started_at=datetime.now(),
+        occasion_id=event_theme.resolve_occasion_id(old_settings["event_type"]),
+        country_code=derived_context.country_code,
+        season=derived_context.season,
+        temperature_class=derived_context.temperature_class,
+        location_type=derived_context.location_type,
+        group_size_class=derived_context.group_size_class,
+    )
+    party_run_id = learning_storage.save_party_run(DB_PATH, snapshot)
+
+    events: list[SelectionEvent] = []
+    for row in responses:
+        for item_id in json.loads(row["drinks"] or "[]"):
+            item_type = _classify_item_type(item_id, catalog)
+            if item_type:
+                events.append(SelectionEvent(item_id=item_id, item_type=item_type))
+        for item_id in json.loads(row["food"] or "[]"):
+            item_type = _classify_item_type(item_id, catalog)
+            if item_type:
+                events.append(SelectionEvent(item_id=item_id, item_type=item_type))
+    learning_storage.save_selection_events(DB_PATH, party_run_id, events)
+
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("DELETE FROM responses")
+
+    return True
+
+
 init_db()
 
 # --- Hilfsfunktionen --------------------------------------------------------
@@ -732,10 +818,12 @@ def _guest_recommended_ids(catalog: PartyCatalog, top_n: int = 16) -> list[str]:
     occasion_profile = get_active_occasion()
     party_context = RecommendationContext(occasion_ids=[occasion_profile.id])
     derived_context = get_derived_party_context(len(load_responses()))
+    learning_history = learning_storage.get_learning_history(DB_PATH)
     recommended = recommend_for_guest(
         catalog, occasion_profile, party_context, stub_guest,
         already_selected_ids=already_selected, top_n=top_n,
         derived_context=derived_context,
+        learning_history=learning_history,
     )
     return [item.id for item, _score in recommended]
 
@@ -980,15 +1068,25 @@ def render_party_settings_section(lang: str) -> None:
         )
 
         if st.button(t(lang, "btn_save_party_settings"), key="party_settings_save_btn"):
+            new_date_str = party_date.isoformat() if party_date else ""
+            reset_happened = False
+            if new_date_str and new_date_str != settings["party_date"]:
+                # Geo-Kultur-Spec §7: automatischer Party-Lifecycle-Trigger -
+                # ein neues Datum wird gesetzt UND das bisherige Datum liegt
+                # bereits in der Vergangenheit -> aktuelle responses werden
+                # vor dem Überschreiben als Lern-Snapshot eingefroren.
+                reset_happened = maybe_freeze_and_reset_party(get_catalog())
             event_theme.save_party_settings(
                 DB_PATH,
                 chosen_type,
                 party_name,
-                party_date=party_date.isoformat() if party_date else "",
+                party_date=new_date_str,
                 party_start_time=party_start_time.strftime("%H:%M"),
                 party_duration_hours=party_duration_hours,
                 party_location=party_location,
             )
+            if reset_happened:
+                st.info(t(lang, "party_settings_reset_notice"))
             st.success(t(lang, "party_settings_saved"))
             st.rerun()
 
@@ -1069,6 +1167,24 @@ def render_party_context_section(lang: str) -> None:
             key="party_context_indoor_outdoor",
         )
 
+        # Geo-Kultur-Spec §2/§13: optionaler Admin-Override des Länder-Codes.
+        # "" bedeutet "automatisch per Geocoding aus der Party-Adresse ableiten"
+        # (siehe party_location in render_party_settings_section) - gewinnt bei
+        # Nicht-Leer immer gegen das Geocoding-Ergebnis (resolve_country_code).
+        country_keys = [""] + sorted(ISO_COUNTRIES, key=lambda code: ISO_COUNTRIES[code])
+
+        def _format_country(code: str) -> str:
+            return t(lang, "country_override_auto") if code == "" else f"{code} — {ISO_COUNTRIES[code]}"
+
+        country_code = st.selectbox(
+            t(lang, "party_context_country_override_label"),
+            country_keys,
+            index=country_keys.index(ctx.country_code) if ctx.country_code in country_keys else 0,
+            format_func=_format_country,
+            key="party_context_country_override",
+        )
+        st.caption(t(lang, "party_context_country_override_caption"))
+
         st.markdown(f"**{t(lang, 'party_context_infrastructure_label')}**")
         col1, col2, col3 = st.columns(3)
         with col1:
@@ -1113,6 +1229,7 @@ def render_party_context_section(lang: str) -> None:
         if st.button(t(lang, "btn_save_party_context"), key="party_context_save_btn"):
             ctx.location_type = location_type
             ctx.indoor_outdoor = indoor_outdoor
+            ctx.country_code = country_code
             ctx.has_grill = has_grill
             ctx.has_kitchen = has_kitchen
             ctx.has_fridge = has_fridge
@@ -1150,6 +1267,19 @@ def render_party_context_dashboard(lang: str, derived_context: DerivedPartyConte
             st.write(", ".join(sorted(c.replace("_", " ") for c in derived_context.operational_constraints)))
         else:
             st.caption(t(lang, "party_context_constraints_none"))
+
+        # Geo-Kultur-Spec §3/§13: rein informativ - country_code bleibt "",
+        # solange weder Admin-Override noch erfolgreiches Geocoding vorliegen
+        # (neutraler Zustand, kein Kultur-Bias, siehe culture.py).
+        st.write(f"**{t(lang, 'party_context_country_label')}:**")
+        if derived_context.country_code:
+            source_key = {
+                "admin_override": "party_context_country_source_admin",
+                "geocoded": "party_context_country_source_geocoded",
+            }.get(derived_context.country_source, "party_context_country_source_unknown")
+            st.write(f"{derived_context.country_name} ({derived_context.country_code}) — {t(lang, source_key)}")
+        else:
+            st.caption(t(lang, "party_context_country_none"))
 
         with st.expander(t(lang, "party_context_explanations_expander"), expanded=False):
             for explanation in derived_context.explanations:
@@ -1224,10 +1354,12 @@ def render_recommendations_section(
     occasion_label = occasion_profile.label_de if lang == "de" else occasion_profile.label_en
     party_context = RecommendationContext(occasion_ids=[occasion_profile.id], guest_count=len(responses) or None)
 
+    learning_history = learning_storage.get_learning_history(DB_PATH)
     recommended = recommend_for_admin(
         catalog, occasion_profile, party_context,
         already_selected_ids=already_selected_ids, top_n=20,
         derived_context=derived_context,
+        learning_history=learning_history,
     )
 
     with st.expander(t(lang, "admin_recommendations_header", occasion=occasion_label), expanded=False):

@@ -1624,6 +1624,41 @@
     "brand": ""
   },
   {
+    "alias_text": "chilcano",
+    "target_type": "recipe",
+    "target_id": "chilcano",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "maracuyá sour",
+    "target_type": "recipe",
+    "target_id": "maracuya_sour",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "glögg",
+    "target_type": "recipe",
+    "target_id": "gloegg",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gloegg",
+    "target_type": "recipe",
+    "target_id": "gloegg",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "peach bourbon smash",
+    "target_type": "recipe",
+    "target_id": "peach_bourbon_smash",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
     "alias_text": "bratwurst",
     "target_type": "recipe",
     "target_id": "bratwurst",
@@ -3283,6 +3318,384 @@
     "brand": ""
   },
   {
+    "alias_text": "chicken biryani",
+    "target_type": "recipe",
+    "target_id": "chicken_biryani",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "palak paneer",
+    "target_type": "recipe",
+    "target_id": "palak_paneer",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "chana masala",
+    "target_type": "recipe",
+    "target_id": "chana_masala",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "naan",
+    "target_type": "recipe",
+    "target_id": "naan",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "raita",
+    "target_type": "recipe",
+    "target_id": "raita",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gemüse-pakora",
+    "target_type": "recipe",
+    "target_id": "vegetable_pakora",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gemuese-pakora",
+    "target_type": "recipe",
+    "target_id": "vegetable_pakora",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "gulab jamun",
+    "target_type": "recipe",
+    "target_id": "gulab_jamun",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "aloo gobi",
+    "target_type": "recipe",
+    "target_id": "aloo_gobi",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "dal tadka",
+    "target_type": "recipe",
+    "target_id": "dal_tadka",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "ceviche",
+    "target_type": "recipe",
+    "target_id": "ceviche",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "lomo saltado",
+    "target_type": "recipe",
+    "target_id": "lomo_saltado",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "causa limeña",
+    "target_type": "recipe",
+    "target_id": "causa_limena",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "anticuchos",
+    "target_type": "recipe",
+    "target_id": "anticuchos",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "papa a la huancaína",
+    "target_type": "recipe",
+    "target_id": "papa_a_la_huancaina",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "arroz con pollo",
+    "target_type": "recipe",
+    "target_id": "arroz_con_pollo",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "picarones",
+    "target_type": "recipe",
+    "target_id": "picarones",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "ají de gallina",
+    "target_type": "recipe",
+    "target_id": "aji_de_gallina",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "smørrebrød mit krabben",
+    "target_type": "recipe",
+    "target_id": "smorrebrod_reje",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "smørrebrød mit leberpastete",
+    "target_type": "recipe",
+    "target_id": "smorrebrod_leverpostej",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "smørrebrød mit roastbeef",
+    "target_type": "recipe",
+    "target_id": "smorrebrod_roastbeef",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "danske frikadeller",
+    "target_type": "recipe",
+    "target_id": "danske_frikadeller",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "flæskesteg",
+    "target_type": "recipe",
+    "target_id": "flaeskesteg",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "rødkål",
+    "target_type": "recipe",
+    "target_id": "rodkal",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "karrysild",
+    "target_type": "recipe",
+    "target_id": "karrysild",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "æbleskiver",
+    "target_type": "recipe",
+    "target_id": "aebleskiver",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "wienerbrød",
+    "target_type": "recipe",
+    "target_id": "wienerbroed",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "chicken yakitori",
+    "target_type": "recipe",
+    "target_id": "chicken_yakitori",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gyoza",
+    "target_type": "recipe",
+    "target_id": "gyoza",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "edamame",
+    "target_type": "recipe",
+    "target_id": "edamame_steamed",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "onigiri",
+    "target_type": "recipe",
+    "target_id": "onigiri",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gemüse-tempura",
+    "target_type": "recipe",
+    "target_id": "tempura_vegetable",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gemuese-tempura",
+    "target_type": "recipe",
+    "target_id": "tempura_vegetable",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "miso-suppe",
+    "target_type": "recipe",
+    "target_id": "miso_soup",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "lachs-maki",
+    "target_type": "recipe",
+    "target_id": "salmon_maki",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "okonomiyaki",
+    "target_type": "recipe",
+    "target_id": "okonomiyaki",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "cornbread",
+    "target_type": "recipe",
+    "target_id": "cornbread",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "smoked brisket",
+    "target_type": "recipe",
+    "target_id": "smoked_brisket",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "clam chowder",
+    "target_type": "recipe",
+    "target_id": "clam_chowder",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "apple pie",
+    "target_type": "recipe",
+    "target_id": "apple_pie",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "pecan pie",
+    "target_type": "recipe",
+    "target_id": "pecan_pie",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "s'mores",
+    "target_type": "recipe",
+    "target_id": "smores",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "buffalo cauliflower",
+    "target_type": "recipe",
+    "target_id": "buffalo_cauliflower",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "cobb salad",
+    "target_type": "recipe",
+    "target_id": "cobb_salad",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "masala chai",
+    "target_type": "recipe",
+    "target_id": "masala_chai",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "mango lassi",
+    "target_type": "recipe",
+    "target_id": "mango_lassi",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "salted lassi",
+    "target_type": "recipe",
+    "target_id": "salted_lassi",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "nimbu pani",
+    "target_type": "recipe",
+    "target_id": "nimbu_pani",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "chicha morada",
+    "target_type": "recipe",
+    "target_id": "chicha_morada",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "solbærsaft",
+    "target_type": "recipe",
+    "target_id": "solbaersaft",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "matcha latte",
+    "target_type": "recipe",
+    "target_id": "matcha_latte",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "arnold palmer",
+    "target_type": "recipe",
+    "target_id": "arnold_palmer",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "fresh lemonade",
+    "target_type": "recipe",
+    "target_id": "fresh_lemonade",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "root beer float",
+    "target_type": "recipe",
+    "target_id": "root_beer_float",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
     "alias_text": "vodka",
     "target_type": "direct_consumable",
     "target_id": "vodka",
@@ -4613,6 +5026,48 @@
     "brand": ""
   },
   {
+    "alias_text": "inca kola",
+    "target_type": "direct_consumable",
+    "target_id": "inca_kola",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "dänisches pilsner",
+    "target_type": "direct_consumable",
+    "target_id": "beer_dk_pilsner",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "daenisches pilsner",
+    "target_type": "direct_consumable",
+    "target_id": "beer_dk_pilsner",
+    "confidence": 0.9,
+    "brand": ""
+  },
+  {
+    "alias_text": "kirschwein",
+    "target_type": "direct_consumable",
+    "target_id": "cherry_wine",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "umeshu (pflaumenwein)",
+    "target_type": "direct_consumable",
+    "target_id": "umeshu",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "ramune",
+    "target_type": "direct_consumable",
+    "target_id": "ramune",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
     "alias_text": "kaffee",
     "target_type": "direct_consumable",
     "target_id": "filter_coffee",
@@ -5163,6 +5618,27 @@
     "target_type": "direct_consumable",
     "target_id": "toast_bread",
     "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "sake",
+    "target_type": "direct_consumable",
+    "target_id": "sake",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "grüner tee (flasche)",
+    "target_type": "direct_consumable",
+    "target_id": "green_tea_bottled",
+    "confidence": 1.0,
+    "brand": ""
+  },
+  {
+    "alias_text": "gruener tee (flasche)",
+    "target_type": "direct_consumable",
+    "target_id": "green_tea_bottled",
+    "confidence": 0.9,
     "brand": ""
   }
 ]

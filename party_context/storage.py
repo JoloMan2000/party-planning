@@ -30,7 +30,10 @@ _BOOL_FIELDS = [
     "has_bar", "has_coffee_machine", "has_power", "has_running_water",
     "dancing_possible", "neighbors_sensitive", "self_service",
 ]
-_TEXT_FIELDS = ["occasion_id", "season", "location_type", "indoor_outdoor", "music_volume_limit", "weather_condition"]
+_TEXT_FIELDS = [
+    "occasion_id", "season", "location_type", "indoor_outdoor", "music_volume_limit", "weather_condition",
+    "party_address", "country_code",
+]
 _REAL_FIELDS = ["duration_hours", "expected_temperature_c", "rain_probability", "seating_ratio"]
 _INT_FIELDS = ["guest_count", "month"]
 
@@ -70,7 +73,9 @@ def init_party_context_storage(db_path: str | Path) -> None:
                 seating_ratio REAL,
                 self_service INTEGER NOT NULL DEFAULT 1,
                 context_tags TEXT NOT NULL DEFAULT '[]',
-                context_model_version TEXT NOT NULL DEFAULT '1.0'
+                context_model_version TEXT NOT NULL DEFAULT '1.0',
+                party_address TEXT NOT NULL DEFAULT '',
+                country_code TEXT NOT NULL DEFAULT ''
             )
             """
         )
@@ -96,8 +101,21 @@ def init_party_context_storage(db_path: str | Path) -> None:
             )
             """
         )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS geocode_cache (
+                address_key TEXT PRIMARY KEY,
+                country_code TEXT NOT NULL DEFAULT '',
+                cached_at TEXT NOT NULL DEFAULT ''
+            )
+            """
+        )
         existing_cols = {row[1] for row in conn.execute("PRAGMA table_info(party_context)")}
-        migrations = {"context_model_version": "ALTER TABLE party_context ADD COLUMN context_model_version TEXT NOT NULL DEFAULT '1.0'"}
+        migrations = {
+            "context_model_version": "ALTER TABLE party_context ADD COLUMN context_model_version TEXT NOT NULL DEFAULT '1.0'",
+            "party_address": "ALTER TABLE party_context ADD COLUMN party_address TEXT NOT NULL DEFAULT ''",
+            "country_code": "ALTER TABLE party_context ADD COLUMN country_code TEXT NOT NULL DEFAULT ''",
+        }
         for column, ddl in migrations.items():
             if column not in existing_cols:
                 conn.execute(ddl)
@@ -139,6 +157,8 @@ def get_party_context(db_path: str | Path) -> PartyContext:
         "rain_probability": row["rain_probability"],
         "seating_ratio": row["seating_ratio"],
         "context_tags": set(json.loads(row["context_tags"] or "[]")),
+        "party_address": row["party_address"] or "",
+        "country_code": row["country_code"] or "",
     }
     for field_name in _BOOL_FIELDS:
         kwargs[field_name] = bool(row[field_name])
@@ -235,6 +255,32 @@ def save_weather_snapshot(db_path: str | Path, weather: WeatherContext) -> None:
                 weather.wind_speed,
                 weather.fetched_at.isoformat() if weather.fetched_at else None,
             ),
+        )
+
+
+def get_cached_country_code(db_path: str | Path, address: str) -> str | None:
+    """Liefert einen gecachten Ländercode für ``address`` (normalisiert per
+    ``.strip().lower()``), oder ``None`` falls noch nicht gecacht. Pflicht-
+    Cache (Geo-Kultur-Spec §2), um Nominatims Rate-Limit (max. 1 req/s) zu
+    respektieren und redundante Netzwerk-Calls zu vermeiden."""
+    key = address.strip().lower()
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        row = conn.execute("SELECT country_code FROM geocode_cache WHERE address_key = ?", (key,)).fetchone()
+    if row is None:
+        return None
+    return row["country_code"]
+
+
+def save_geocode_cache(db_path: str | Path, address: str, country_code: str) -> None:
+    key = address.strip().lower()
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """
+            INSERT INTO geocode_cache (address_key, country_code, cached_at) VALUES (?, ?, ?)
+            ON CONFLICT(address_key) DO UPDATE SET country_code = excluded.country_code, cached_at = excluded.cached_at
+            """,
+            (key, country_code, datetime.now().isoformat()),
         )
 
 

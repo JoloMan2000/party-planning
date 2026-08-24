@@ -185,12 +185,16 @@ RECOMMENDATION_SCORE_WEIGHTS = {
 # Sub-Gewichte für ContextFitScore.total_score (§42), unabhängig von obiger
 # Gesamt-Recommendation-Formel (die ContextScore ist nur EIN Summand davon, §78).
 CONTEXT_FIT_SUBSCORE_WEIGHTS = {
-    "season_score": 0.25,
-    "location_score": 0.25,
+    "season_score": 0.20,
+    "location_score": 0.20,
     "indoor_outdoor_score": 0.15,
     "daypart_score": 0.15,
     "weather_score": 0.10,
     "infrastructure_score": 0.10,
+    # Geo-Kultur-Spec §4/§9: bewusst klein gehalten (leichtes Re-Weighting,
+    # NIE eine harte Filterung - ein Bier-Item bleibt in "IN" weiterhin
+    # wählbar, wird nur nicht bevorzugt vorgeschlagen).
+    "culture_score": 0.10,
 }
 
 

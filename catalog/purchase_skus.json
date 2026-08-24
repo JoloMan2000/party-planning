@@ -5753,6 +5753,520 @@
       "pack_count": 1
     }
   ],
+  "paneer": [
+    {
+      "size": 0.4,
+      "unit": "kg",
+      "pack_label": "Packung 400g",
+      "pack_count": 1
+    }
+  ],
+  "naan_bread": [
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "Stück",
+      "pack_count": 1
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "4er Pack",
+      "pack_count": 4
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "6er Pack",
+      "pack_count": 6
+    }
+  ],
+  "cardamom": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Streuer/Tüte",
+      "pack_count": 1
+    }
+  ],
+  "chickpea_flour": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Streuer/Tüte",
+      "pack_count": 1
+    }
+  ],
+  "cauliflower": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "black_tea": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Streuer/Tüte",
+      "pack_count": 1
+    }
+  ],
+  "spinach": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "aji_amarillo": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "queso_fresco": [
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Packung 200g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Block 1kg",
+      "pack_count": 1
+    }
+  ],
+  "purple_corn": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "vinegar": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "inca_kola": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.25,
+      "unit": "l",
+      "pack_label": "Flasche 1,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 2.0,
+      "unit": "l",
+      "pack_label": "Flasche 2L",
+      "pack_count": 1
+    }
+  ],
+  "rye_bread": [
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "Stück",
+      "pack_count": 1
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "4er Pack",
+      "pack_count": 4
+    },
+    {
+      "size": 1,
+      "unit": "pcs",
+      "pack_label": "6er Pack",
+      "pack_count": 6
+    }
+  ],
+  "liver_pate": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "red_cabbage": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "herring": [
+    {
+      "size": 0.3,
+      "unit": "kg",
+      "pack_label": "Packung 300g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    }
+  ],
+  "raisins": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "beer_dk_pilsner": [
+    {
+      "size": 0.33,
+      "unit": "l",
+      "pack_label": "Flasche 0,33L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Kasten (20x0,5L)",
+      "pack_count": 20
+    }
+  ],
+  "cherry_wine": [
+    {
+      "size": 0.75,
+      "unit": "l",
+      "pack_label": "Flasche 0,75L",
+      "pack_count": 1
+    }
+  ],
+  "mirin": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "soy_sauce": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "nori": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Streuer/Tüte",
+      "pack_count": 1
+    }
+  ],
+  "edamame": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "miso_paste": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "scallion": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "okonomiyaki_sauce": [
+    {
+      "size": 0.25,
+      "unit": "l",
+      "pack_label": "Flasche 0,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    }
+  ],
+  "matcha": [
+    {
+      "size": 0.05,
+      "unit": "kg",
+      "pack_label": "Streuer/Tüte",
+      "pack_count": 1
+    }
+  ],
+  "sake": [
+    {
+      "size": 0.72,
+      "unit": "l",
+      "pack_label": "Flasche 0,72L",
+      "pack_count": 1
+    }
+  ],
+  "umeshu": [
+    {
+      "size": 0.7,
+      "unit": "l",
+      "pack_label": "Flasche 0,7L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    }
+  ],
+  "ramune": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.25,
+      "unit": "l",
+      "pack_label": "Flasche 1,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 2.0,
+      "unit": "l",
+      "pack_label": "Flasche 2L",
+      "pack_count": 1
+    }
+  ],
+  "green_tea_bottled": [
+    {
+      "size": 0.5,
+      "unit": "l",
+      "pack_label": "Flasche 0,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "l",
+      "pack_label": "Flasche 1L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.25,
+      "unit": "l",
+      "pack_label": "Flasche 1,25L",
+      "pack_count": 1
+    },
+    {
+      "size": 1.5,
+      "unit": "l",
+      "pack_label": "Flasche 1,5L",
+      "pack_count": 1
+    },
+    {
+      "size": 2.0,
+      "unit": "l",
+      "pack_label": "Flasche 2L",
+      "pack_count": 1
+    }
+  ],
+  "cornmeal": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "beef_brisket": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    },
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Packung 1kg",
+      "pack_count": 1
+    }
+  ],
+  "clams": [
+    {
+      "size": 0.3,
+      "unit": "kg",
+      "pack_label": "Packung 300g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    }
+  ],
+  "celery": [
+    {
+      "size": 1.0,
+      "unit": "kg",
+      "pack_label": "Netz 1kg",
+      "pack_count": 1
+    }
+  ],
+  "pecans": [
+    {
+      "size": 0.1,
+      "unit": "kg",
+      "pack_label": "Tüte 100g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.15,
+      "unit": "kg",
+      "pack_label": "Tüte 150g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Tüte 200g",
+      "pack_count": 1
+    }
+  ],
+  "graham_crackers": [
+    {
+      "size": 0.1,
+      "unit": "kg",
+      "pack_label": "Tüte 100g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.15,
+      "unit": "kg",
+      "pack_label": "Tüte 150g",
+      "pack_count": 1
+    },
+    {
+      "size": 0.2,
+      "unit": "kg",
+      "pack_label": "Tüte 200g",
+      "pack_count": 1
+    }
+  ],
+  "marshmallow": [
+    {
+      "size": 0.5,
+      "unit": "kg",
+      "pack_label": "Packung 500g",
+      "pack_count": 1
+    }
+  ],
   "baking_powder": [
     {
       "size": 0.05,
