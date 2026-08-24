@@ -63,6 +63,7 @@ from music_engine.phases import compute_phases
 from music_engine.ranking import RuleBasedTrackRanker, TrackRanker
 from music_engine.resolver import deduplicate_requests, resolve_song_requests
 from music_engine.sequence import optimize_sequence
+from party_context.domain import DerivedPartyContext, MusicContextModifiers
 
 _DEFAULT_ADMIN_GENRE_BOOST = 0.3
 _DEFAULT_ADMIN_GENRE_SUPPRESS = 0.3
@@ -98,16 +99,76 @@ def _apply_admin_genre_bias(
     return adjusted
 
 
+def _clamp01(value: float) -> float:
+    return max(0.0, min(1.0, value))
+
+
+def _apply_music_context_modifiers(
+    genre_weights: dict[str, float],
+    tag_weights: dict[str, float],
+    mood_weights: dict[str, float],
+    energy_target: float,
+    danceability_target: float,
+    phases: list,
+    modifiers: MusicContextModifiers,
+) -> tuple[dict[str, float], dict[str, float], dict[str, float], float, float, list]:
+    """§30-37 (Party-Context-Engine-Spec): ``MusicContextModifiers`` wirken
+    AUSSCHLIESSLICH auf Genre-Gewichte/Energy-Curve/Danceability/
+    Phasen-Strategie - niemals auf die Musikmenge (§66, kein
+    Demand-Multiplier-Feld auf ``MusicContextModifiers``, die Trackanzahl
+    ergibt sich ausschließlich aus der Partydauer, siehe
+    ``select_tracks_for_duration``). Gibt neue, unabhängige Kopien zurück
+    (kein In-Place-Mutieren der vom Aufrufer übergebenen Dicts/Listen)."""
+    from dataclasses import replace as _replace
+
+    genre_weights = dict(genre_weights)
+    tag_weights = dict(tag_weights)
+    mood_weights = dict(mood_weights)
+
+    energy_target = _clamp01(energy_target + modifiers.energy_modifier)
+    danceability_target = _clamp01(danceability_target + modifiers.danceability_modifier)
+
+    if modifiers.bass_penalty > 0:
+        tag_weights["bass_heavy"] = max(0.0, tag_weights.get("bass_heavy", 0.0) - modifiers.bass_penalty)
+
+    if modifiers.conversation_modifier != 0:
+        tag_weights["conversation_friendly"] = _clamp01(
+            tag_weights.get("conversation_friendly", 0.0) + modifiers.conversation_modifier
+        )
+        mood_weights["chill"] = _clamp01(mood_weights.get("chill", 0.0) + modifiers.conversation_modifier)
+        mood_weights["relaxed"] = _clamp01(mood_weights.get("relaxed", 0.0) + modifiers.conversation_modifier)
+
+    if modifiers.outdoor_modifier != 0:
+        tag_weights["dancefloor"] = _clamp01(tag_weights.get("dancefloor", 0.0) + modifiers.outdoor_modifier)
+
+    if modifiers.late_night_energy_penalty > 0:
+        phases = [
+            _replace(phase, target_energy=max(0.0, phase.target_energy - modifiers.late_night_energy_penalty))
+            if phase.id in ("late", "closing")
+            else phase
+            for phase in phases
+        ]
+
+    return genre_weights, tag_weights, mood_weights, energy_target, danceability_target, phases
+
+
 def build_music_strategy(
     occasion_profile: MusicOccasionProfile,
     group_profile: GroupMusicProfile,
     admin_settings: AdminMusicSettings,
     total_minutes: float,
+    derived_context: DerivedPartyContext | None = None,
 ) -> MusicStrategy:
     """Spec §50: verschmilzt den statischen Anlass-Prior mit dem aus den
     Songwünschen abgeleiteten Gruppenprofil per Bayesian Shrinkage
     (``group_weight = request_count / (request_count + 15)``) und berechnet
-    daraus die konkreten Party-Phasen (Spec §46/§47)."""
+    daraus die konkreten Party-Phasen (Spec §46/§47).
+
+    ``derived_context`` (§77 Party-Context-Engine-Spec, optional): wird
+    ``derived_context.music_modifiers`` über ``_apply_music_context_modifiers``
+    NACH dem Occasion/Gruppen-Blend angewendet (eigene Schicht, ändert nie
+    die Musikmenge). Bleibt ``None`` (Standard), ist das Verhalten
+    unverändert zur bisherigen Formel."""
     group_weight = compute_group_weight(group_profile.request_count)
     occasion_share = 1.0 - group_weight
 
@@ -140,13 +201,27 @@ def build_music_strategy(
         explicit_policy = "ban"
 
     phases = compute_phases(total_minutes, occasion_profile)
+    tag_weights = dict(occasion_profile.preferred_tags)
+
+    if derived_context is not None:
+        genre_weights, tag_weights, mood_weights, energy_target, danceability_target, phases = (
+            _apply_music_context_modifiers(
+                genre_weights,
+                tag_weights,
+                mood_weights,
+                energy_target,
+                danceability_target,
+                phases,
+                derived_context.music_modifiers,
+            )
+        )
 
     return MusicStrategy(
         occasion_id=occasion_profile.occasion_id,
         genre_weights=genre_weights,
         era_weights=era_weights,
         mood_weights=mood_weights,
-        tag_weights=dict(occasion_profile.preferred_tags),
+        tag_weights=tag_weights,
         familiarity_target=round(familiarity_target, 4),
         danceability_target=round(danceability_target, 4),
         energy_target=round(energy_target, 4),
@@ -206,10 +281,16 @@ def plan_party_music(
     admin_artist_overrides: dict[str, AdminArtistOverride] | None = None,
     providers: list[MusicCandidateProvider] | None = None,
     ranker: TrackRanker | None = None,
+    derived_context: DerivedPartyContext | None = None,
 ) -> MusicPlanningResult:
     """Kern-API der Music Recommendation & Party Playlist Engine (Spec §92).
     Nimmt rohe Songwünsche + Partydauer + Anlass + Admin-Settings entgegen und
-    liefert eine vollständig geplante, sequenzierte ``MusicPlanningResult``."""
+    liefert eine vollständig geplante, sequenzierte ``MusicPlanningResult``.
+
+    ``derived_context`` (§76/§77 Party-Context-Engine-Spec, optional): wird
+    unverändert an ``build_music_strategy`` durchgereicht (eigene additive
+    Modifier-Schicht auf Energy/Danceability/Genre-/Tag-Gewichte/
+    Late-Night-Phase, §30-37) - ändert NIE die Musikmenge (§66)."""
     admin_track_overrides = admin_track_overrides or {}
     admin_artist_overrides = admin_artist_overrides or {}
     ranker = ranker or RuleBasedTrackRanker()
@@ -225,7 +306,9 @@ def plan_party_music(
     target_minutes = party_duration_minutes * (1.0 + admin_settings.playlist_duration_buffer)
 
     # 5. Strategie (Bayesian-Blend Occasion x Gruppe + Phasen, Spec §46/§50).
-    strategy = build_music_strategy(occasion_profile, group_profile, admin_settings, target_minutes)
+    strategy = build_music_strategy(
+        occasion_profile, group_profile, admin_settings, target_minutes, derived_context=derived_context
+    )
 
     # 6. Kandidaten (Spec §51/§52).
     ctx = CandidateContext(

@@ -66,7 +66,11 @@ from party_engine.recommendation import (
     recommend_for_guest,
     resolve_occasion_for_scoring,
 )
-from party_engine.recommendation_domain import OccasionProfile, PartyContext
+from party_engine.recommendation_domain import OccasionProfile, RecommendationContext
+from party_context import storage as party_context_storage
+from party_context.domain import DerivedPartyContext, PartyContext, PartyContextOverride
+from party_context.engine import PartyContextEngine
+from party_context.locations import LOCATION_LABELS, LOCATION_TYPES
 from translations import (
     ALL_LANGUAGES,
     DEFAULT_LANGUAGE,
@@ -96,6 +100,7 @@ SPOTIFY_CONFIGURED = bool(SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET and SPOTIF
 event_theme.init_party_settings(DB_PATH)
 _PARTY_SETTINGS = event_theme.get_party_settings(DB_PATH)
 music_admin_settings.init_music_admin_settings(DB_PATH)
+party_context_storage.init_party_context_storage(DB_PATH)
 
 @st.cache_resource
 def get_catalog() -> PartyCatalog:
@@ -147,6 +152,42 @@ def get_active_music_occasion() -> MusicOccasionProfile:
     music_catalog/occasions/)."""
     occasion_id = event_theme.resolve_occasion_id(_PARTY_SETTINGS["event_type"])
     return get_music_occasion(occasion_id, get_music_occasions())
+
+
+# --- Party Context Intelligence Layer (Party-Context-Engine-Spec) ------------
+#
+# Zentrale, von Beverage-/Food-/Music-/Recommendation-Engine geteilte Wahrheit
+# über die Party (Saison/Tageszeit/Wetter/Location/Infrastruktur, §8/§9). Die
+# admin-erfassten Kernfelder Datum/Startzeit/Dauer sowie die Gästezahl werden
+# NICHT doppelt gepflegt, sondern live aus den bereits bestehenden
+# Quellen (event_theme.party_settings / tatsächliche Gästeantworten)
+# übernommen - EINE Quelle der Wahrheit statt Doppelpflege in zwei Formularen.
+
+
+def get_party_context() -> PartyContext:
+    """Lädt den gespeicherten (Infrastruktur-/Location-)``PartyContext`` und
+    überschreibt Anlass/Datum/Startzeit/Dauer mit den bereits an anderer
+    Stelle gepflegten, live aktuellen Werten."""
+    ctx = party_context_storage.get_party_context(DB_PATH)
+    ctx.occasion_id = event_theme.resolve_occasion_id(_PARTY_SETTINGS["event_type"])
+    if _PARTY_SETTINGS["party_date"] and _PARTY_SETTINGS["party_start_time"]:
+        ctx.start_datetime = datetime.fromisoformat(
+            f"{_PARTY_SETTINGS['party_date']}T{_PARTY_SETTINGS['party_start_time']}"
+        )
+    else:
+        ctx.start_datetime = None
+    ctx.duration_hours = float(_PARTY_SETTINGS["party_duration_hours"])
+    return ctx
+
+
+def get_derived_party_context(guest_count: int) -> DerivedPartyContext:
+    """Leitet den zentralen ``DerivedPartyContext`` ab (inkl. admin-gesetzter
+    Overrides, §71/§72) - die einzige Stelle, an der ``PartyContextEngine``
+    aufgerufen wird (§10: keine nachgelagerte Engine leitet Kontext selbst ab)."""
+    ctx = get_party_context()
+    ctx.guest_count = guest_count or 1
+    overrides = party_context_storage.get_party_context_overrides(DB_PATH)
+    return PartyContextEngine().derive_context(ctx, overrides=overrides)
 
 
 # --- Katalog-getriebene Getränke-/Essens-Auswahl (AUFGABE §38-39, §45) ------
@@ -689,10 +730,12 @@ def _guest_recommended_ids(catalog: PartyCatalog, top_n: int = 16) -> list[str]:
     )
     already_selected = set(st.session_state.get("drinks", [])) | set(st.session_state.get("food", []))
     occasion_profile = get_active_occasion()
-    party_context = PartyContext(occasion_ids=[occasion_profile.id])
+    party_context = RecommendationContext(occasion_ids=[occasion_profile.id])
+    derived_context = get_derived_party_context(len(load_responses()))
     recommended = recommend_for_guest(
         catalog, occasion_profile, party_context, stub_guest,
         already_selected_ids=already_selected, top_n=top_n,
+        derived_context=derived_context,
     )
     return [item.id for item, _score in recommended]
 
@@ -950,7 +993,221 @@ def render_party_settings_section(lang: str) -> None:
             st.rerun()
 
 
-def render_recommendations_section(lang: str, responses: list[dict], catalog: PartyCatalog) -> None:
+_WEATHER_CONDITION_OPTIONS = ["", "sunny", "cloudy", "rain", "snow", "windy"]
+_WEATHER_CONDITION_LABEL_KEYS = {
+    "": "weather_condition_none",
+    "sunny": "weather_condition_sunny",
+    "cloudy": "weather_condition_cloudy",
+    "rain": "weather_condition_rain",
+    "snow": "weather_condition_snow",
+    "windy": "weather_condition_windy",
+}
+_SEASON_LABEL_KEYS = {
+    "spring": "season_spring", "summer": "season_summer",
+    "autumn": "season_autumn", "winter": "season_winter",
+}
+_DAYPART_LABEL_KEYS = {
+    "morning": "daypart_morning", "brunch": "daypart_brunch", "daytime": "daypart_daytime",
+    "afternoon": "daypart_afternoon", "evening": "daypart_evening", "late_night": "daypart_late_night",
+}
+_TEMPERATURE_CLASS_LABEL_KEYS = {
+    "cold": "temp_class_cold", "cool": "temp_class_cool", "mild": "temp_class_mild",
+    "warm": "temp_class_warm", "hot": "temp_class_hot",
+}
+_GROUP_SIZE_LABEL_KEYS = {
+    "small_group": "group_size_small_group", "medium_group": "group_size_medium_group",
+    "large_group": "group_size_large_group", "very_large_group": "group_size_very_large_group",
+}
+_INDOOR_OUTDOOR_LABEL_KEYS = {
+    "indoor": "indoor_outdoor_indoor", "outdoor": "indoor_outdoor_outdoor", "mixed": "indoor_outdoor_mixed",
+}
+
+# Overridebare Top-Level-Felder von DerivedPartyContext (siehe
+# party_context.engine._apply_overrides) mit geschlossenem Wertebereich - die
+# UI bietet bewusst nur diese an (statt Freitext), um ungültige Overrides zu
+# vermeiden (§71/§72).
+_OVERRIDE_KEY_OPTIONS: dict[str, dict] = {
+    "season": {"label_key": "override_key_season", "values": list(_SEASON_LABEL_KEYS)},
+    "temperature_class": {"label_key": "override_key_temperature_class", "values": list(_TEMPERATURE_CLASS_LABEL_KEYS)},
+    "indoor_outdoor": {"label_key": "override_key_indoor_outdoor", "values": list(_INDOOR_OUTDOOR_LABEL_KEYS)},
+    "daypart_primary": {"label_key": "override_key_daypart_primary", "values": list(_DAYPART_LABEL_KEYS)},
+    "group_size_class": {"label_key": "override_key_group_size_class", "values": list(_GROUP_SIZE_LABEL_KEYS)},
+}
+
+
+def render_party_context_section(lang: str) -> None:
+    """Admin-Sektion zur Erfassung der Location-/Infrastruktur-/Wetter-
+    Basisdaten für die Party Context Intelligence Layer (Party-Context-
+    Engine-Spec §2-4/§49/§50/§73). Anlass/Datum/Startzeit/Dauer kommen bereits
+    aus render_party_settings_section() und werden hier NICHT erneut
+    abgefragt (siehe get_party_context(), EINE Quelle der Wahrheit)."""
+    ctx = party_context_storage.get_party_context(DB_PATH)
+
+    with st.expander(t(lang, "party_context_header"), expanded=False):
+        st.caption(t(lang, "party_context_caption"))
+
+        location_keys = LOCATION_TYPES
+
+        def _format_location(key: str) -> str:
+            label_de, label_en = LOCATION_LABELS[key]
+            return label_de if lang == "de" else label_en
+
+        location_type = st.selectbox(
+            t(lang, "party_context_location_type_label"),
+            location_keys,
+            index=location_keys.index(ctx.location_type) if ctx.location_type in location_keys else location_keys.index("other"),
+            format_func=_format_location,
+            key="party_context_location_type",
+        )
+
+        indoor_outdoor_keys = ["indoor", "outdoor", "mixed"]
+        indoor_outdoor = st.selectbox(
+            t(lang, "party_context_indoor_outdoor_label"),
+            indoor_outdoor_keys,
+            index=indoor_outdoor_keys.index(ctx.indoor_outdoor) if ctx.indoor_outdoor in indoor_outdoor_keys else 0,
+            format_func=lambda k: t(lang, _INDOOR_OUTDOOR_LABEL_KEYS[k]),
+            key="party_context_indoor_outdoor",
+        )
+
+        st.markdown(f"**{t(lang, 'party_context_infrastructure_label')}**")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            has_grill = st.checkbox(t(lang, "has_grill_label"), value=ctx.has_grill, key="party_context_has_grill")
+            has_kitchen = st.checkbox(t(lang, "has_kitchen_label"), value=ctx.has_kitchen, key="party_context_has_kitchen")
+            has_fridge = st.checkbox(t(lang, "has_fridge_label"), value=ctx.has_fridge, key="party_context_has_fridge")
+        with col2:
+            has_freezer = st.checkbox(t(lang, "has_freezer_label"), value=ctx.has_freezer, key="party_context_has_freezer")
+            has_ice_machine = st.checkbox(t(lang, "has_ice_machine_label"), value=ctx.has_ice_machine, key="party_context_has_ice_machine")
+            has_bar = st.checkbox(t(lang, "has_bar_label"), value=ctx.has_bar, key="party_context_has_bar")
+        with col3:
+            has_coffee_machine = st.checkbox(t(lang, "has_coffee_machine_label"), value=ctx.has_coffee_machine, key="party_context_has_coffee_machine")
+            has_power = st.checkbox(t(lang, "has_power_label"), value=ctx.has_power, key="party_context_has_power")
+            has_running_water = st.checkbox(t(lang, "has_running_water_label"), value=ctx.has_running_water, key="party_context_has_running_water")
+
+        dancing_possible = st.checkbox(t(lang, "dancing_possible_label"), value=ctx.dancing_possible, key="party_context_dancing_possible")
+        neighbors_sensitive = st.checkbox(t(lang, "neighbors_sensitive_label"), value=ctx.neighbors_sensitive, key="party_context_neighbors_sensitive")
+        volume_limited = st.checkbox(
+            t(lang, "music_volume_limit_label"), value=bool(ctx.music_volume_limit), key="party_context_volume_limited",
+        )
+        self_service = st.checkbox(t(lang, "self_service_label"), value=ctx.self_service, key="party_context_self_service")
+
+        seating_ratio_pct = st.slider(
+            t(lang, "seating_ratio_label"), 0, 100, int((ctx.seating_ratio or 0.0) * 100), 5,
+            key="party_context_seating_ratio",
+        )
+
+        weather_condition = st.selectbox(
+            t(lang, "weather_condition_label"),
+            _WEATHER_CONDITION_OPTIONS,
+            index=_WEATHER_CONDITION_OPTIONS.index(ctx.weather_condition) if ctx.weather_condition in _WEATHER_CONDITION_OPTIONS else 0,
+            format_func=lambda k: t(lang, _WEATHER_CONDITION_LABEL_KEYS[k]),
+            key="party_context_weather_condition",
+        )
+        expected_temperature_c = st.number_input(
+            t(lang, "expected_temperature_label"),
+            min_value=-20.0, max_value=50.0, step=1.0,
+            value=float(ctx.expected_temperature_c) if ctx.expected_temperature_c is not None else 20.0,
+            key="party_context_expected_temperature",
+        )
+
+        if st.button(t(lang, "btn_save_party_context"), key="party_context_save_btn"):
+            ctx.location_type = location_type
+            ctx.indoor_outdoor = indoor_outdoor
+            ctx.has_grill = has_grill
+            ctx.has_kitchen = has_kitchen
+            ctx.has_fridge = has_fridge
+            ctx.has_freezer = has_freezer
+            ctx.has_ice_machine = has_ice_machine
+            ctx.has_bar = has_bar
+            ctx.has_coffee_machine = has_coffee_machine
+            ctx.has_power = has_power
+            ctx.has_running_water = has_running_water
+            ctx.dancing_possible = dancing_possible
+            ctx.neighbors_sensitive = neighbors_sensitive
+            ctx.music_volume_limit = "limited" if volume_limited else None
+            ctx.self_service = self_service
+            ctx.seating_ratio = seating_ratio_pct / 100.0
+            ctx.weather_condition = weather_condition or None
+            ctx.expected_temperature_c = expected_temperature_c
+            party_context_storage.save_party_context(DB_PATH, ctx)
+            st.success(t(lang, "party_context_saved"))
+            st.rerun()
+
+
+def render_party_context_dashboard(lang: str, derived_context: DerivedPartyContext) -> None:
+    """Rein informatives Read-Only-Dashboard der abgeleiteten Party-Wahrheit
+    (Party-Context-Engine-Spec §9) - zeigt WAS abgeleitet wurde und liefert
+    Explainability (§12), verändert selbst nichts."""
+    with st.expander(t(lang, "party_context_dashboard_header"), expanded=False):
+        col1, col2, col3, col4 = st.columns(4)
+        col1.metric(t(lang, "party_context_season_label"), t(lang, _SEASON_LABEL_KEYS.get(derived_context.season, derived_context.season)))
+        col2.metric(t(lang, "party_context_daypart_label"), t(lang, _DAYPART_LABEL_KEYS.get(derived_context.daypart_primary, derived_context.daypart_primary)))
+        col3.metric(t(lang, "party_context_temperature_class_label"), t(lang, _TEMPERATURE_CLASS_LABEL_KEYS.get(derived_context.temperature_class, derived_context.temperature_class)))
+        col4.metric(t(lang, "party_context_group_size_label"), t(lang, _GROUP_SIZE_LABEL_KEYS.get(derived_context.group_size_class, derived_context.group_size_class)))
+
+        st.write(f"**{t(lang, 'party_context_constraints_label')}:**")
+        if derived_context.operational_constraints:
+            st.write(", ".join(sorted(c.replace("_", " ") for c in derived_context.operational_constraints)))
+        else:
+            st.caption(t(lang, "party_context_constraints_none"))
+
+        with st.expander(t(lang, "party_context_explanations_expander"), expanded=False):
+            for explanation in derived_context.explanations:
+                st.write(f"- {explanation}")
+
+
+def render_party_context_overrides_section(lang: str) -> None:
+    """Admin-Override-UI (§71/§72): erlaubt gezieltes Überschreiben einzelner
+    abgeleiteter Top-Level-Felder (z.B. 'Zelt mit Heizung -> temperature_class
+    warm trotz Winter'). Overrides sind stärker als abgeleitete Defaults, siehe
+    party_context.engine._apply_overrides()."""
+    with st.expander(t(lang, "party_context_override_header"), expanded=False):
+        st.caption(t(lang, "party_context_override_caption"))
+
+        existing = party_context_storage.get_party_context_overrides(DB_PATH)
+        if existing:
+            for override in existing:
+                reason_part = f" ({override.reason})" if override.reason else ""
+                col_a, col_b = st.columns([5, 1])
+                col_a.write(f"- **{override.key}** = {override.value}{reason_part}")
+                if col_b.button("🗑️", key=f"party_context_override_remove_{override.key}"):
+                    party_context_storage.delete_party_context_override(DB_PATH, override.key)
+                    st.rerun()
+        else:
+            st.caption(t(lang, "party_context_overrides_none"))
+
+        st.divider()
+        override_keys = list(_OVERRIDE_KEY_OPTIONS.keys())
+        chosen_key = st.selectbox(
+            t(lang, "override_key_label"),
+            override_keys,
+            format_func=lambda k: t(lang, _OVERRIDE_KEY_OPTIONS[k]["label_key"]),
+            key="party_context_override_key",
+        )
+        value_label_keys = {
+            "season": _SEASON_LABEL_KEYS, "temperature_class": _TEMPERATURE_CLASS_LABEL_KEYS,
+            "indoor_outdoor": _INDOOR_OUTDOOR_LABEL_KEYS, "daypart_primary": _DAYPART_LABEL_KEYS,
+            "group_size_class": _GROUP_SIZE_LABEL_KEYS,
+        }[chosen_key]
+        chosen_value = st.selectbox(
+            t(lang, "override_value_label"),
+            _OVERRIDE_KEY_OPTIONS[chosen_key]["values"],
+            format_func=lambda v: t(lang, value_label_keys[v]),
+            key="party_context_override_value",
+        )
+        reason = st.text_input(t(lang, "override_reason_label"), key="party_context_override_reason")
+
+        if st.button(t(lang, "btn_add_override"), key="party_context_override_add_btn"):
+            party_context_storage.save_party_context_override(
+                DB_PATH, PartyContextOverride(key=chosen_key, value=chosen_value, reason=reason or None)
+            )
+            st.success(t(lang, "override_added"))
+            st.rerun()
+
+
+def render_recommendations_section(
+    lang: str, responses: list[dict], catalog: PartyCatalog, derived_context: DerivedPartyContext | None = None
+) -> None:
     """Admin-Sortiment-Empfehlungen (§58/§59/§83 der Recommendation-Spec):
     rein informativer Vorschlag für den Sortiment-Aufbau basierend auf dem
     aktuell konfigurierten Event-Typ (event_theme.py -> Occasion Recommendation
@@ -965,11 +1222,12 @@ def render_recommendations_section(lang: str, responses: list[dict], catalog: Pa
 
     occasion_profile = get_active_occasion()
     occasion_label = occasion_profile.label_de if lang == "de" else occasion_profile.label_en
-    party_context = PartyContext(occasion_ids=[occasion_profile.id], guest_count=len(responses) or None)
+    party_context = RecommendationContext(occasion_ids=[occasion_profile.id], guest_count=len(responses) or None)
 
     recommended = recommend_for_admin(
         catalog, occasion_profile, party_context,
         already_selected_ids=already_selected_ids, top_n=20,
+        derived_context=derived_context,
     )
 
     with st.expander(t(lang, "admin_recommendations_header", occasion=occasion_label), expanded=False):
@@ -980,7 +1238,9 @@ def render_recommendations_section(lang: str, responses: list[dict], catalog: Pa
                 st.text(format_score_explanation(score, lang=lang if lang in ("de", "en") else "en"))
 
 
-def render_music_playlist_section(lang: str, responses: list[dict]) -> None:
+def render_music_playlist_section(
+    lang: str, responses: list[dict], derived_context: DerivedPartyContext | None = None
+) -> None:
     """Admin-Sektion für die Music Recommendation & Party Playlist Engine
     (music_engine/, AUFGABE-Musik-Spec §60-92): Admin-Steuerparameter
     (Sliders/Checkbox), Playlist-Generierung via
@@ -1038,6 +1298,7 @@ def render_music_playlist_section(lang: str, responses: list[dict]) -> None:
             catalog=catalog,
             admin_track_overrides=track_overrides,
             admin_artist_overrides=artist_overrides,
+            derived_context=derived_context,
         )
         st.session_state["music_planning_result"] = result
 
@@ -1140,13 +1401,17 @@ def render_admin_view() -> None:
     render_hero(t(lang, "admin_title"), t(lang, "admin_subtitle"))
 
     render_party_settings_section(lang)
+    render_party_context_section(lang)
+    render_party_context_overrides_section(lang)
 
     responses = load_responses()
     catalog = get_catalog()
+    derived_context = get_derived_party_context(len(responses))
+    render_party_context_dashboard(lang, derived_context)
 
-    render_recommendations_section(lang, responses, catalog)
+    render_recommendations_section(lang, responses, catalog, derived_context=derived_context)
 
-    render_music_playlist_section(lang, responses)
+    render_music_playlist_section(lang, responses, derived_context=derived_context)
 
     if not responses:
         st.info(t(lang, "no_responses_yet"))
@@ -1176,18 +1441,20 @@ def render_admin_view() -> None:
             )
 
     if st.button(t(lang, "btn_create_shopping_list")):
-        render_shopping_list(responses, catalog, lang)
+        render_shopping_list(responses, catalog, lang, derived_context=derived_context)
 
     render_spotify_section(responses, lang)
 
 
-def render_shopping_list(responses: list[dict], catalog: PartyCatalog, lang: str) -> None:
+def render_shopping_list(
+    responses: list[dict], catalog: PartyCatalog, lang: str, derived_context: DerivedPartyContext | None = None
+) -> None:
     """Unified Shopping-List-Ansicht (AUFGABE §40-41): ersetzt die früheren
     getrennten Getränke-/Essen-Sektionen durch EINE Ansicht, die auf der
     vollständigen Demand-Pipeline (``compute_party_demand``) basiert - egal
     ob ein Getränk oder ein Gericht die Zutat letztlich benötigt."""
     guest_responses = [guest_response_from_row(r, catalog) for r in responses]
-    result = compute_party_demand(catalog, guest_responses, PartyConfig())
+    result = compute_party_demand(catalog, guest_responses, PartyConfig(), derived_context=derived_context)
 
     st.subheader(t(lang, "times_header", n=len(responses)))
     st.write(", ".join(sorted(r["start_time"] for r in responses)))

@@ -40,6 +40,7 @@ from party_engine.domain import (
 )
 from party_engine.purchasing import build_purchase_plan
 from party_engine.resolver import get_resolver_index
+from party_context.domain import DerivedPartyContext
 
 
 def _summarize_item_demand(allocations: list[GuestAllocation], catalog: PartyCatalog) -> list[ItemDemandSummary]:
@@ -75,8 +76,15 @@ def compute_party_demand(
     catalog: PartyCatalog,
     responses: list[GuestResponse],
     config: PartyConfig | None = None,
+    derived_context: DerivedPartyContext | None = None,
 ) -> PartyDemandResult:
-    """Führt die vollständige Demand-Pipeline für alle Gästeantworten aus."""
+    """Führt die vollständige Demand-Pipeline für alle Gästeantworten aus.
+
+    ``derived_context`` (§77 Party-Context-Engine-Spec, optional): zentral
+    von ``PartyContextEngine.derive_context()`` abgeleiteter Kontext. Wird
+    unverändert an ``allocate_guest_demand`` (Wasser-/Getränke-Modifier) und
+    ``compute_ice_demand_kg`` (Eis-Modifier) durchgereicht - siehe dortige
+    Docstrings. Bleibt ``None`` (Standard), ist das Verhalten unverändert."""
     config = config or PartyConfig()
     index = get_resolver_index(catalog)
 
@@ -87,7 +95,12 @@ def compute_party_demand(
         preferences, issues = resolve_guest_preferences(response, catalog, index, config)
         all_review_issues.extend(issues)
         allocations = allocate_guest_demand(
-            response.guest_name, preferences, catalog, config, dietary=response.dietary
+            response.guest_name,
+            preferences,
+            catalog,
+            config,
+            dietary=response.dietary,
+            derived_context=derived_context,
         )
         all_allocations.extend(allocations)
 
@@ -100,7 +113,8 @@ def compute_party_demand(
     purchase_plan, purchase_issues = build_purchase_plan(final_ingredient_demand, catalog)
     all_review_issues.extend(purchase_issues)
 
-    ice_demand_kg = compute_ice_demand_kg(all_allocations, catalog)
+    ice_multiplier = derived_context.beverage_modifiers.ice_multiplier if derived_context is not None else 1.0
+    ice_demand_kg = compute_ice_demand_kg(all_allocations, catalog, ice_multiplier=ice_multiplier)
 
     return PartyDemandResult(
         item_demand=item_demand,

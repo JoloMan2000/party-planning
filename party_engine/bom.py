@@ -174,7 +174,13 @@ def explode_to_ingredient_demand(
     return demand
 
 
-def compute_ice_demand_kg(allocations: list[GuestAllocation], catalog: PartyCatalog) -> float:
+def compute_ice_demand_kg(
+    allocations: list[GuestAllocation], catalog: PartyCatalog, ice_multiplier: float = 1.0
+) -> float:
+    """``ice_multiplier`` (§77/§19 Party-Context-Engine-Spec, optional):
+    ``derived_context.beverage_modifiers.ice_multiplier`` - skaliert den
+    gesamten Eisbedarf (z.B. Hitze/Sommer/Outdoor -> mehr Eis), ohne die
+    Rezept-Vorgaben (``ICE_KG_PER_SERVING_BY_PROFILE``) selbst zu ändern."""
     total = 0.0
     for alloc in allocations:
         if alloc.item_type != "recipe":
@@ -184,7 +190,7 @@ def compute_ice_demand_kg(allocations: list[GuestAllocation], catalog: PartyCata
             continue
         per_serving = ICE_KG_PER_SERVING_BY_PROFILE.get(recipe.ice_profile, 0.0)
         total += per_serving * alloc.servings
-    return total
+    return total * ice_multiplier
 
 
 def apply_production_rules(

@@ -50,10 +50,12 @@ from party_engine.recommendation_domain import (
     DEFAULT_OCCASION_ID,
     GroupSignal,
     OccasionProfile,
-    PartyContext,
+    RecommendationContext,
     RecommendationExposure,
     RecommendationScore,
 )
+from party_context.context_fit import calculate_context_fit
+from party_context.domain import DerivedPartyContext, FoodContextModifiers
 
 # ---------------------------------------------------------------------------
 # §7 — Basisformel-Gewichte
@@ -76,6 +78,35 @@ _W_DIETARY = 0.05
 # gewichten ihn als kleine, begrenzte Verschiebung relativ zum Popularitäts-
 # Prior (nur wirksam, wenn ein GroupSignal übergeben wird).
 _W_GROUP_SIGNAL = 0.15
+
+# §78 (Party-Context-Engine-Spec): ContextFitScore (Saison/Location/Daypart/
+# Wetter/Infrastruktur aus dem zentralen ``party_context``-Package) ist
+# explizit eine EIGENE, additive Schicht - "Nicht Context Logic in
+# score_item_for_occasion() hineinmischen". Wird nur angewendet, wenn ein
+# ``derived_context`` übergeben wird (sonst 0.0, volle Rückwärtskompatibilität
+# zur bisherigen Basisformel/Tests).
+_W_CONTEXT_FIT = 0.15
+
+# §24-28 (Party-Context-Engine-Spec): FoodContextModifiers-Präferenzen sind
+# tag-basiert (analog zum bereits etablierten Diät-Heuristik-Muster in
+# ``_structural_diet_flags``) - das Domain-Modell hat keine expliziten
+# "ist Salat"/"ist Fingerfood"-Felder, das bestehende Tag-Vokabular
+# (``party_engine/tags.py``) deckt diese Kategorien aber bereits ab.
+_FOOD_PREFERENCE_TAG_GROUPS: dict[str, frozenset[str]] = {
+    "fresh_food_preference": frozenset({"fresh", "vegetable", "fruit", "light_food", "refreshing_food"}),
+    "hot_food_preference": frozenset({"baked_food", "cooked", "rich"}),
+    "comfort_food_preference": frozenset({"comfort_food", "rich", "filling"}),
+    "salad_preference": frozenset({"salad"}),
+    "grill_preference": frozenset({"grilled_food", "bbq", "grilled"}),
+    "fingerfood_preference": frozenset({"fingerfood", "fingerfood_food", "handheld", "snack"}),
+    "dessert_preference": frozenset({"dessert", "sweet_food"}),
+}
+
+# §28/§29: Hinweis-Tags auf potenziell kühlkritische/verderbliche Speisen,
+# genutzt als Fallback, wenn kein explizites ``perishability_score``/
+# ``requires_cooling`` auf dem Item selbst kuratiert ist (Katalog-Default
+# bleibt neutral 0.5/False, siehe ``party_engine/domain.py``).
+_PERISHABLE_HINT_TAGS: frozenset[str] = frozenset({"creamy", "cheese", "fish", "seafood"})
 
 # total_score wird NICHT hart auf [0, 1] geklemmt (das würde für Ranking-
 # Zwecke Signal verlieren, insbesondere positive occasion_affinity_overrides
@@ -388,6 +419,43 @@ def _large_group_complexity_penalty(
     return penalty
 
 
+def _food_context_preference_score(item: CatalogItem, food_modifiers: FoodContextModifiers) -> float:
+    """§24-27 (Party-Context-Engine-Spec): mittelt die ``FoodContextModifiers``-
+    Präferenzwerte über alle Tag-Gruppen, die ``item`` trifft (z.B. Sommer
+    boostet ``fresh_food_preference``/``salad_preference`` für ein Item mit
+    Tag "salad"). Trifft ein Item keine Gruppe (z.B. ein reines Getränk),
+    ergibt sich neutral 0.0. Werte liegen typischerweise in
+    ``FOOD_MODIFIER_FIELD_BOUNDS`` (0.5-1.6) - zentriert auf 1.0 -> als
+    additiver Score-Delta wird ``multiplier - 1.0`` verwendet."""
+    tags = item.recommendation.tags
+    deltas = [
+        getattr(food_modifiers, field_name) - 1.0
+        for field_name, group_tags in _FOOD_PREFERENCE_TAG_GROUPS.items()
+        if tags & group_tags
+    ]
+    if not deltas:
+        return 0.0
+    return sum(deltas) / len(deltas)
+
+
+def _food_spoilage_penalty(item: CatalogItem, food_modifiers: FoodContextModifiers) -> float:
+    """§28/§29: wendet ``spoilage_operational_penalty`` NUR auf Items an, die
+    tatsächlich ein Verderbs-/Kühlrisiko tragen (kuratiertes
+    ``perishability_score``/``requires_cooling``/``temperature_sensitive``
+    auf Ingredient/Recipe, sonst Tag-Fallback über
+    ``_PERISHABLE_HINT_TAGS``) - ein uniform auf ALLE Food-Items angewendeter
+    Malus würde die Verderbs-Warnung bedeutungslos machen."""
+    if food_modifiers.spoilage_operational_penalty <= 0:
+        return 0.0
+    perishability_score = getattr(item, "perishability_score", 0.5)
+    requires_cooling = getattr(item, "requires_cooling", False)
+    temperature_sensitive = getattr(item, "temperature_sensitive", False)
+    is_perishable = requires_cooling or temperature_sensitive or perishability_score >= 0.6
+    if not is_perishable:
+        is_perishable = bool(item.recommendation.tags & _PERISHABLE_HINT_TAGS)
+    return food_modifiers.spoilage_operational_penalty if is_perishable else 0.0
+
+
 def _operational_score(item: CatalogItem, is_bar_occasion: bool) -> float:
     """§53/§54 Komplexitäts-Philosophie: belohnt operativ einfache Items
     (``1 - complexity``), gewichtet Vorbereitung am stärksten, dann Service,
@@ -425,12 +493,15 @@ def _build_reasons(
     admin_override: dict[str, float] | None,
     guest_count: int | None,
     is_signature: bool,
+    context_fit_score: float = 0.0,
 ) -> list[str]:
     reasons: list[str] = []
     if tag_match_score >= 0.55:
         reasons.append(f"Typisch für {occasion_profile.label_de}")
     if context_score >= 0.70:
         reasons.append("Passt gut zum aktuellen Kontext (Saison/Uhrzeit)")
+    if context_fit_score >= 0.70:
+        reasons.append("Passt gut zu Ort, Wetter und Infrastruktur der Party")
     if (
         guest_count is not None
         and guest_count >= _LARGE_GROUP_THRESHOLD
@@ -461,14 +532,25 @@ def _build_reasons(
 def score_item_for_occasion(
     item: CatalogItem,
     occasion_profile: OccasionProfile,
-    party_context: PartyContext,
+    party_context: RecommendationContext,
     guest: GuestResponse | None = None,
     group_signal: GroupSignal | None = None,
     admin_override: dict[str, float] | None = None,
+    derived_context: DerivedPartyContext | None = None,
 ) -> RecommendationScore:
     """§7/§82: Kern-Scoring-Funktion. ``admin_override`` ist optional ein
     Dict mit den Keys ``"boost"``/``"suppress"`` (beide >= 0, additiv
     verrechnet als ``boost - suppress``).
+
+    ``derived_context`` (§76/§78 der Party-Context-Engine-Spec): optionaler,
+    zentral von ``PartyContextEngine.derive_context()`` abgeleiteter
+    Kontext (Saison/Location/Daypart/Wetter/Infrastruktur). Wird bewusst NICHT
+    in die bestehende ``context_score``-Basisformel gemischt, sondern als
+    eigene additive Schicht (``context_fit_score``, siehe
+    ``party_context.context_fit.calculate_context_fit``) angewendet - "Nicht
+    Context Logic in score_item_for_occasion() hineinmischen" (§78). Bleibt
+    ``derived_context`` ``None`` (Standard), ist ``context_fit_score`` 0.0 und
+    das Verhalten identisch zur bisherigen Formel.
 
     Diät-Sicherheit (§61/§78): wird ein harter ``guest.dietary``-Constraint
     strukturell verletzt, wird SOFORT ein Score mit ``total_score=0.0``
@@ -538,7 +620,23 @@ def score_item_for_occasion(
     else:
         group_score = 0.0
 
+    if derived_context is not None:
+        context_fit_score = calculate_context_fit(item, derived_context).total_score
+        total_score += _W_CONTEXT_FIT * context_fit_score
+    else:
+        context_fit_score = 0.0
+
     penalties: dict[str, float] = {}
+
+    if derived_context is not None:
+        food_preference_delta = _food_context_preference_score(item, derived_context.food_modifiers)
+        if food_preference_delta:
+            total_score += _W_CONTEXT_FIT * food_preference_delta
+        spoilage_penalty = _food_spoilage_penalty(item, derived_context.food_modifiers)
+        if spoilage_penalty > 0:
+            penalties["food_spoilage_risk"] = -spoilage_penalty
+            total_score -= spoilage_penalty
+
     complexity_penalty = _large_group_complexity_penalty(item, party_context.guest_count, is_bar_occasion)
     if complexity_penalty > 0:
         penalties["complexity"] = -complexity_penalty
@@ -562,6 +660,7 @@ def score_item_for_occasion(
         admin_override=admin_override,
         guest_count=party_context.guest_count,
         is_signature=is_signature,
+        context_fit_score=context_fit_score,
     )
 
     return RecommendationScore(
@@ -576,6 +675,7 @@ def score_item_for_occasion(
         dietary_score=dietary_score,
         group_score=group_score,
         admin_score=admin_score,
+        context_fit_score=context_fit_score,
         penalties=penalties,
         reasons=reasons,
         is_signature=is_signature,
@@ -785,15 +885,20 @@ def _dedupe_sorted(
 def recommend_for_guest(
     catalog: PartyCatalog,
     occasion_profile: OccasionProfile,
-    party_context: PartyContext,
+    party_context: RecommendationContext,
     guest: GuestResponse,
     already_selected_ids: set[str] | None = None,
     top_n: int = 12,
+    derived_context: DerivedPartyContext | None = None,
 ) -> list[tuple[CatalogItem, RecommendationScore]]:
     """§60-61/§64-67: rankt alle empfehlbaren Items für einen konkreten
     Gast. Optimiert für Anlass-Fit, persönliche Diät-Kompatibilität,
     Popularität, Diversity und Entdeckung — NICHT für Einkaufs-Effizienz
     (das ist die Aufgabe von ``recommend_for_admin``).
+
+    ``derived_context`` (§76 Party-Context-Engine-Spec): optional, wird
+    unverändert an ``score_item_for_occasion`` durchgereicht (eigene additive
+    ContextFit-Schicht, §78).
 
     Diät-Sicherheit (§61/§78, AUTORITATIVE Durchsetzung): strukturell
     inkompatible Items werden HIER, VOR jeglichem Scoring, aus dem
@@ -817,7 +922,9 @@ def recommend_for_guest(
             continue
         if _dietary_violation_reason(item, guest, catalog) is not None:
             continue  # harter Diät-Ausschluss - wird gar nicht erst gescort
-        score = score_item_for_occasion(item, occasion_profile, party_context, guest=guest)
+        score = score_item_for_occasion(
+            item, occasion_profile, party_context, guest=guest, derived_context=derived_context
+        )
         scored.append((item, score))
 
     beverage_pool, food_pool = _split_by_domain(scored)
@@ -851,14 +958,19 @@ def _selected_ingredient_ids(catalog: PartyCatalog, already_selected_ids: set[st
 def recommend_for_admin(
     catalog: PartyCatalog,
     occasion_profile: OccasionProfile,
-    party_context: PartyContext,
+    party_context: RecommendationContext,
     already_selected_ids: set[str] | None = None,
     top_n: int = 20,
+    derived_context: DerivedPartyContext | None = None,
 ) -> list[tuple[CatalogItem, RecommendationScore]]:
     """§58-59: rankt Items für den Admin-Sortiment-Bauassistenten. Optimiert
     für Abdeckung, Balance, operative Einfachheit, Anlass-Fit,
     Diät-Diversität und Einkaufs-Effizienz — NICHT primär für individuelle
     Gast-Präferenzen.
+
+    ``derived_context`` (§76 Party-Context-Engine-Spec): optional, wird
+    unverändert an ``score_item_for_occasion`` durchgereicht (eigene additive
+    ContextFit-Schicht, §78).
 
     ``admin_score = recommendation_score + assortment_coverage_bonus +
     dietary_coverage_bonus + ingredient_overlap_bonus - complexity_penalty -
@@ -890,7 +1002,7 @@ def recommend_for_admin(
             continue
         if not item.recommendation.recommendation_enabled:
             continue
-        base = score_item_for_occasion(item, occasion_profile, party_context)
+        base = score_item_for_occasion(item, occasion_profile, party_context, derived_context=derived_context)
 
         overlap_bonus = 0.0
         if isinstance(item, Recipe) and selected_ingredient_ids:
@@ -962,6 +1074,7 @@ _DE_LABELS: dict[str, str] = {
     "dietary_score": "Diät-Abdeckung",
     "group_score": "Gruppenfeedback",
     "admin_score": "Admin-Anpassung",
+    "context_fit_score": "Party-Kontext (Ort/Wetter/Infrastruktur)",
 }
 
 _EN_LABELS: dict[str, str] = {
@@ -974,6 +1087,7 @@ _EN_LABELS: dict[str, str] = {
     "dietary_score": "Dietary coverage",
     "group_score": "Group feedback",
     "admin_score": "Admin adjustment",
+    "context_fit_score": "Party context (location/weather/infrastructure)",
 }
 
 
@@ -997,6 +1111,7 @@ def format_score_explanation(score: RecommendationScore, lang: str = "de") -> st
         "dietary_score": score.dietary_score,
         "group_score": score.group_score,
         "admin_score": score.admin_score,
+        "context_fit_score": score.context_fit_score,
     }
     for key, value in components.items():
         if abs(value) < 1e-9:

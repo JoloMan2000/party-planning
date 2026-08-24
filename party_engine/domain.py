@@ -155,6 +155,15 @@ class Ingredient(CatalogItem):
     gluten_free: bool = True
     lactose_free: bool = True
 
+    # §29 (Party-Context-Engine-Spec): beeinflusst ``operational_fit``
+    # (Lagerungs-/Verderbsrisiko, z.B. Sahne-/Mayonnaise-/Rohfisch-lastige
+    # Zutaten bei Outdoor+Hitze+kein Kühlschrank). Neutrale Defaults, sofern
+    # nicht explizit im Katalog kuratiert (analog zu den 0.5-Neutral-Defaults
+    # von RecommendationMetadata).
+    perishability_score: float = 0.5
+    requires_cooling: bool = False
+    temperature_sensitive: bool = False
+
 
 @dataclass
 class DirectConsumable(CatalogItem):
@@ -187,6 +196,15 @@ class Recipe(CatalogItem):
     is_vegetarian: bool = True
     is_vegan: bool = False
     contains_alcohol: bool = False
+
+    # §29 (Party-Context-Engine-Spec), siehe ``Ingredient`` oben. Für Rezepte
+    # bewusst eigenständig kuratierbar statt automatisch aus den Komponenten
+    # abgeleitet (ein Rezept kann z.B. Sahne enthalten, aber komplett
+    # durchgegart/nicht kühlkritisch sein - eine reine Max-Aggregation über
+    # Komponenten würde das nicht korrekt abbilden).
+    perishability_score: float = 0.5
+    requires_cooling: bool = False
+    temperature_sensitive: bool = False
 
 
 @dataclass

@@ -17,7 +17,7 @@ import pytest
 
 from party_engine.domain import CatalogItem, DietaryProfile, GuestResponse, Recipe
 from party_engine.occasions import load_all_occasions
-from party_engine.recommendation_domain import PartyContext
+from party_engine.recommendation_domain import RecommendationContext
 from party_engine.recommendation import (
     apply_diversity_constraints,
     apply_exposure_shrinkage,
@@ -74,7 +74,7 @@ def test_occasion_coverage_underlying_pool_is_large(catalog, occasions):
 
 
 def test_recommend_for_admin_nonempty_for_all_23_occasions(catalog, occasions):
-    ctx = PartyContext(season="summer", hour_of_day=19, guest_count=20)
+    ctx = RecommendationContext(season="summer", hour_of_day=19, guest_count=20)
     assert len(occasions) == 23
     for occasion_id in _ALL_OCCASION_IDS:
         profile = occasions[occasion_id]
@@ -87,7 +87,7 @@ def test_recommend_for_admin_nonempty_for_all_23_occasions(catalog, occasions):
 
 
 def test_recommend_for_guest_nonempty_for_major_occasions(catalog, occasions):
-    ctx = PartyContext(season="summer", hour_of_day=19, guest_count=20)
+    ctx = RecommendationContext(season="summer", hour_of_day=19, guest_count=20)
     guest = GuestResponse(guest_name="Test Guest", start_time="18:00")
     for occasion_id in _MAJOR_OCCASIONS:
         profile = occasions[occasion_id]
@@ -147,7 +147,7 @@ def test_full_catalog_coverage_rule(catalog):
 
 
 def test_grill_party_snapshot_quality(catalog, occasions):
-    ctx = PartyContext(season="summer", hour_of_day=17, guest_count=25)
+    ctx = RecommendationContext(season="summer", hour_of_day=17, guest_count=25)
     result = recommend_for_admin(catalog, occasions["grill_party"], ctx, top_n=20)
     top10 = result[:10]
 
@@ -172,7 +172,7 @@ def test_grill_party_snapshot_quality(catalog, occasions):
 
 
 def test_cocktail_party_snapshot_quality(catalog, occasions):
-    ctx = PartyContext(season="summer", hour_of_day=21, guest_count=15)
+    ctx = RecommendationContext(season="summer", hour_of_day=21, guest_count=15)
     result = recommend_for_admin(catalog, occasions["cocktail_party"], ctx, top_n=20)
     top10 = result[:10]
     cocktail_count = sum(1 for item, _ in top10 if "cocktail" in item.recommendation.tags)
@@ -183,7 +183,7 @@ def test_cocktail_party_snapshot_quality(catalog, occasions):
 
 
 def test_movie_night_snapshot_quality(catalog, occasions):
-    ctx = PartyContext(season="winter", hour_of_day=21, guest_count=8)
+    ctx = RecommendationContext(season="winter", hour_of_day=21, guest_count=8)
     result = recommend_for_admin(catalog, occasions["movie_night"], ctx, top_n=20)
     top10 = result[:10]
     snack_comfort_count = sum(
@@ -203,7 +203,7 @@ _NON_VEGAN_TAGS = {"meat", "beef", "pork", "poultry", "fish", "seafood"}
 
 
 def test_vegan_guest_never_gets_structurally_non_vegan_item(catalog, occasions):
-    ctx = PartyContext(season="summer", hour_of_day=19, guest_count=20)
+    ctx = RecommendationContext(season="summer", hour_of_day=19, guest_count=20)
     guest = GuestResponse(
         guest_name="Vegan Guest",
         start_time="18:00",
@@ -236,7 +236,7 @@ def test_dietary_hard_violation_scores_zero_directly():
     meat_recipe.recommendation.tags = {"meat", "beef", "main"}
 
     profile = OccasionProfile(id="test_occasion", label_de="Test", label_en="Test")
-    ctx = PartyContext()
+    ctx = RecommendationContext()
     guest = GuestResponse(guest_name="Vegan", start_time="18:00", dietary=DietaryProfile(vegan=True))
 
     score = score_item_for_occasion(meat_recipe, profile, ctx, guest=guest)
@@ -255,7 +255,7 @@ def test_apply_diversity_constraints_caps_repeated_category(catalog, occasions):
     derselben Kategorie (z.B. cocktail_vodka) dominiert werden können -
     nach apply_diversity_constraints darf keine Kategorie den Cap
     überschreiten."""
-    ctx = PartyContext(season="summer", hour_of_day=21, guest_count=15)
+    ctx = RecommendationContext(season="summer", hour_of_day=21, guest_count=15)
     profile = occasions["cocktail_party"]
 
     scored = []
@@ -286,7 +286,7 @@ def test_apply_diversity_constraints_caps_repeated_category(catalog, occasions):
 
 
 def test_ensure_required_coverage_backfills_non_alcoholic(catalog, occasions):
-    ctx = PartyContext(season="summer", hour_of_day=21, guest_count=15)
+    ctx = RecommendationContext(season="summer", hour_of_day=21, guest_count=15)
     profile = occasions["cocktail_party"]
 
     scored = []
@@ -376,7 +376,7 @@ def test_resolve_occasion_for_scoring_multi_occasion(occasions):
 
 
 def test_format_score_explanation_contains_reasons(catalog, occasions):
-    ctx = PartyContext(season="summer", hour_of_day=17, guest_count=25)
+    ctx = RecommendationContext(season="summer", hour_of_day=17, guest_count=25)
     item = catalog.get_item("beer_pils")
     score = score_item_for_occasion(item, occasions["grill_party"], ctx)
     text = format_score_explanation(score, lang="de")

@@ -102,8 +102,15 @@ DEFAULT_OCCASION_ID = "casual_get_together"
 
 
 @dataclass
-class PartyContext:
-    """Kontext-Modifikatoren, unabhängig vom Occasion-Profil (§51/52/69)."""
+class RecommendationContext:
+    """Kontext-Modifikatoren, unabhängig vom Occasion-Profil (§51/52/69).
+
+    Hinweis: Nicht zu verwechseln mit ``party_context.domain.PartyContext``
+    (der zentralen, admin-erfassten Party-Rahmendaten). Dieser Typ hier ist
+    bewusst schlank und wird intern von ``score_item_for_occasion()``
+    konsumiert; die reichhaltigen, saison-/location-/infrastruktur-bewussten
+    Signale kommen künftig zusätzlich über eine separate ContextScore-Schicht
+    aus dem neuen ``party_context`` Package (§78 der Party-Context-Engine-Spec)."""
 
     season: str | None = None  # spring, summer, autumn, winter
     hour_of_day: int | None = None  # 0-23, steuert Tageszeit-Boosts
@@ -157,6 +164,13 @@ class RecommendationScore:
     dietary_score: float = 0.0
     group_score: float = 0.0
     admin_score: float = 0.0
+
+    # §78 (Party-Context-Engine-Spec): eigene, additive Schicht - NICHT in
+    # die Basisformel/``context_score`` (Saison/Zeit/Gruppe aus
+    # ``RecommendationContext``) hineingemischt. 0.0, solange kein
+    # ``derived_context`` an ``score_item_for_occasion`` übergeben wird
+    # (Rückwärtskompatibilität).
+    context_fit_score: float = 0.0
 
     penalties: dict[str, float] = field(default_factory=dict)
     reasons: list[str] = field(default_factory=list)

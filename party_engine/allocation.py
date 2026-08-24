@@ -31,6 +31,7 @@ from party_engine.domain import (
 )
 from party_engine.resolver import ResolverIndex, get_resolver_index, resolve_freetext_field
 from party_engine.substitution import get_substitution_candidates
+from party_context.domain import BeverageContextModifiers, DerivedPartyContext
 
 WEIGHT_SELECTION = 1.0
 # Designentscheidung: explizit getippter Freitext-Wunsch wird geringfügig
@@ -359,12 +360,44 @@ def _collect_raw_preferences(
     return by_item
 
 
+def _apply_beverage_context_weight_modifiers(
+    beverage_items: dict[str, _RawPreference],
+    catalog: PartyCatalog,
+    modifiers: BeverageContextModifiers,
+) -> None:
+    """§19-23 (Party-Context-Engine-Spec): passt AUSSCHLIESSLICH die
+    Gewichtung innerhalb des bereits bestehenden, gemeinsamen
+    Getränke-Choice-Budgets an (§30/§31) - niemals das Budget selbst. Damit
+    verschiebt Kontext (Hitze/Sommer/Outdoor) nur die MISCHUNG innerhalb des
+    Budgets zugunsten Wasser/alkoholfrei/Heißgetränk/erfrischend, erhöht aber
+    nie den Alkoholanteil (``BeverageContextModifiers`` hat bewusst kein
+    ``alcohol_demand_multiplier``-Feld, siehe ``party_context/domain.py``).
+    Mutiert ``beverage_items`` in-place (konsistent mit dem übrigen
+    In-Place-Stil dieses Moduls)."""
+    for raw in beverage_items.values():
+        item = catalog.get_item(raw.item_id)
+        if item is None:
+            continue
+        tags = item.recommendation.tags
+        factor = 1.0
+        if "non_alcoholic" in tags:
+            factor *= modifiers.non_alcoholic_multiplier
+        if "hot_drink" in tags:
+            factor *= modifiers.hot_drink_multiplier
+        if "refreshing" in tags:
+            factor *= modifiers.cold_refreshing_drink_multiplier
+        if "cocktail" in tags and modifiers.cocktail_complexity_penalty > 0:
+            factor *= max(0.1, 1.0 - modifiers.cocktail_complexity_penalty)
+        raw.weight *= factor
+
+
 def allocate_guest_demand(
     guest_name: str,
     preferences: list[Preference],
     catalog: PartyCatalog,
     config: PartyConfig,
     dietary: DietaryProfile | None = None,
+    derived_context: DerivedPartyContext | None = None,
 ) -> list[GuestAllocation]:
     """Verteilt Choice-Budgets pro Demand-Group-Pool, wendet Alkohol-/Energy-
     Caps mit Overflow-Umverteilung an und liefert die finalen "Expected
@@ -373,7 +406,13 @@ def allocate_guest_demand(
     ``dietary`` (falls übergeben) wird an jede Overflow-Substitution
     weitergereicht (siehe ``party_engine.substitution``), damit Dietary
     Constraints - safety-critical, §29/§33 - JEDE automatische Substitution
-    schlagen, nicht nur solche für Food-Demand-Groups."""
+    schlagen, nicht nur solche für Food-Demand-Groups.
+
+    ``derived_context`` (§77 Party-Context-Engine-Spec, optional): wird
+    ``derived_context.beverage_modifiers`` auf die Wasser-Baseline
+    (``water_multiplier``) sowie die Getränke-Pool-Gewichtung angewendet
+    (siehe ``_apply_beverage_context_weight_modifiers``). Bleibt ``None``
+    (Standard), ist das Verhalten unverändert zur bisherigen Formel."""
     allocations: list[GuestAllocation] = []
 
     raw_by_item = _collect_raw_preferences(preferences, catalog)
@@ -381,6 +420,8 @@ def allocate_guest_demand(
     # Wasser-Baseline: IMMER, unabhängig von der Auswahl (§31).
     water_dc = catalog.direct_consumables.get(_WATER_DIRECT_CONSUMABLE_ID)
     water_l_total = config.water_l_per_guest
+    if derived_context is not None:
+        water_l_total *= derived_context.beverage_modifiers.water_multiplier
 
     # Wasser als explizite Auswahl nimmt NICHT am Choice-Budget teil (Baseline
     # deckt es bereits ab) - wird daher aus dem Pool entfernt.
@@ -391,6 +432,9 @@ def allocate_guest_demand(
         demand_group = _demand_group_of(item_id, raw.item_type, catalog)
         pool_key = _POOL_BY_DEMAND_GROUP.get(demand_group, "other")
         pools.setdefault(pool_key, {})[item_id] = raw
+
+    if derived_context is not None and "beverage" in pools:
+        _apply_beverage_context_weight_modifiers(pools["beverage"], catalog, derived_context.beverage_modifiers)
 
     allocated_servings: dict[str, float] = {}
 
