@@ -64,6 +64,8 @@ from party_engine.catalog_curation import (
 )
 from party_engine.domain import CatalogCurationSettings, CatalogItem, DietaryProfile, GuestResponse, PartyCatalog, PartyConfig
 from party_engine.engine import compute_party_demand
+import party_engine.context_orchestration as context_orchestration
+import party_engine.response_storage as response_storage
 from party_engine.legacy_adapter import guest_response_from_row
 from party_engine.occasions import load_all_occasions
 from party_engine.recommendation import (
@@ -76,7 +78,7 @@ from party_engine.recommendation_domain import OccasionProfile, RecommendationCo
 from party_context import learning_storage
 from party_context import storage as party_context_storage
 from party_context.countries import ISO_COUNTRIES
-from party_context.domain import DerivedPartyContext, PartyContext, PartyContextOverride, PartyRunSnapshot, SelectionEvent
+from party_context.domain import DerivedPartyContext, PartyContext, PartyContextOverride
 from party_context.engine import PartyContextEngine
 from party_context.geocoding import CachingGeocodingProvider, NominatimGeocodingProvider
 from party_context.locations import LOCATION_LABELS, LOCATION_TYPES
@@ -181,40 +183,18 @@ def get_active_music_occasion() -> MusicOccasionProfile:
 
 
 def get_party_context() -> PartyContext:
-    """Lädt den gespeicherten (Infrastruktur-/Location-)``PartyContext`` und
-    überschreibt Anlass/Datum/Startzeit/Dauer mit den bereits an anderer
-    Stelle gepflegten, live aktuellen Werten."""
-    ctx = party_context_storage.get_party_context(DB_PATH)
-    ctx.occasion_id = event_theme.resolve_occasion_id(_PARTY_SETTINGS["event_type"])
-    if _PARTY_SETTINGS["party_date"] and _PARTY_SETTINGS["party_start_time"]:
-        ctx.start_datetime = datetime.fromisoformat(
-            f"{_PARTY_SETTINGS['party_date']}T{_PARTY_SETTINGS['party_start_time']}"
-        )
-    else:
-        ctx.start_datetime = None
-    ctx.duration_hours = float(_PARTY_SETTINGS["party_duration_hours"])
-    # Geo-Kultur-Spec §2: party_address ist kein eigenes UI-Eingabefeld,
-    # sondern wird 1:1 aus dem bereits bestehenden party_location-Feld
-    # (render_party_settings_section) gespiegelt.
-    ctx.party_address = _PARTY_SETTINGS["party_location"]
-    return ctx
+    """Dünner Wrapper um ``party_engine.context_orchestration.get_party_context``
+    (Backend-Migration Phase 1, Schritt 0b) - liest ``_PARTY_SETTINGS`` als
+    Modul-Level-Global, da Streamlit das gesamte Skript pro Interaktion
+    rerunnt (siehe Docstring von ``_PARTY_SETTINGS`` oben)."""
+    return context_orchestration.get_party_context(DB_PATH, _PARTY_SETTINGS)
 
 
 def get_derived_party_context(guest_count: int) -> DerivedPartyContext:
-    """Leitet den zentralen ``DerivedPartyContext`` ab (inkl. admin-gesetzter
-    Overrides, §71/§72) - die einzige Stelle, an der ``PartyContextEngine``
-    aufgerufen wird (§10: keine nachgelagerte Engine leitet Kontext selbst ab).
-
-    Geo-Kultur-Spec §2: übergibt einen ``CachingGeocodingProvider`` (nur bei
-    vorhandener ``party_address`` UND fehlendem Admin-Override überhaupt
-    genutzt, siehe ``resolve_country_code``) - Live-Geocoding via Nominatim,
-    Ergebnis wird in ``geocode_cache`` persistiert (Pflicht-Cache, max. 1
-    Request/Sekunde laut Nominatim-Nutzungsrichtlinie)."""
-    ctx = get_party_context()
-    ctx.guest_count = guest_count or 1
-    overrides = party_context_storage.get_party_context_overrides(DB_PATH)
-    geocoding_provider = CachingGeocodingProvider(DB_PATH, NominatimGeocodingProvider())
-    return PartyContextEngine().derive_context(ctx, overrides=overrides, geocoding_provider=geocoding_provider)
+    """Dünner Wrapper um
+    ``party_engine.context_orchestration.get_derived_party_context``
+    (Backend-Migration Phase 1, Schritt 0b)."""
+    return context_orchestration.get_derived_party_context(DB_PATH, _PARTY_SETTINGS, guest_count)
 
 
 # --- Katalog-getriebene Getränke-/Essens-Auswahl (AUFGABE §38-39, §45) ------
@@ -591,27 +571,9 @@ def render_hero(title: str, subtitle: str, meta: str | None = None) -> None:
 
 
 def init_db() -> None:
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS responses (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                start_time TEXT NOT NULL,
-                drinks TEXT NOT NULL,
-                drinks_freetext TEXT,
-                food TEXT NOT NULL,
-                food_freetext TEXT,
-                songs TEXT NOT NULL DEFAULT '[]',
-                submitted_at TEXT NOT NULL
-            )
-            """
-        )
-        # Migration für Datenbanken, die vor der Songwunsch-Funktion angelegt wurden.
-        try:
-            conn.execute("ALTER TABLE responses ADD COLUMN songs TEXT NOT NULL DEFAULT '[]'")
-        except sqlite3.OperationalError:
-            pass  # Spalte existiert bereits
+    """Dünner Wrapper um ``party_engine.response_storage.init_db``
+    (Backend-Migration Phase 1, Schritt 0a)."""
+    response_storage.init_db(DB_PATH)
 
 
 def save_response(
@@ -623,102 +585,29 @@ def save_response(
     food_freetext: str,
     songs: list[dict],
 ) -> None:
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.execute(
-            """
-            INSERT INTO responses
-                (name, start_time, drinks, drinks_freetext, food, food_freetext, songs, submitted_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                name,
-                start_time,
-                json.dumps(drinks),
-                drinks_freetext,
-                json.dumps(food),
-                food_freetext,
-                json.dumps(songs),
-                datetime.now().isoformat(timespec="seconds"),
-            ),
-        )
+    """Dünner Wrapper um ``party_engine.response_storage.save_response``
+    (Backend-Migration Phase 1, Schritt 0a)."""
+    response_storage.save_response(
+        DB_PATH, name, start_time, drinks, drinks_freetext, food, food_freetext, songs
+    )
 
 
 def load_responses() -> list[dict]:
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.row_factory = sqlite3.Row
-        rows = conn.execute("SELECT * FROM responses ORDER BY id").fetchall()
-    return [dict(row) for row in rows]
-
-
-def _classify_item_type(item_id: str, catalog: PartyCatalog) -> str:
-    """Ordnet eine gespeicherte Auswahl-ID ihrem Katalog-Item-Typ zu
-    (Geo-Kultur-Spec §7). Leerer String für unbekannte/Freitext-IDs -
-    diese werden beim Einfrieren nicht als ``SelectionEvent`` geloggt."""
-    if item_id in catalog.recipes:
-        return "recipe"
-    if item_id in catalog.direct_consumables:
-        return "direct_consumable"
-    return ""
+    """Dünner Wrapper um ``party_engine.response_storage.load_responses``
+    (Backend-Migration Phase 1, Schritt 0a)."""
+    return response_storage.load_responses(DB_PATH)
 
 
 def maybe_freeze_and_reset_party(catalog: PartyCatalog) -> bool:
-    """Party-Lifecycle-Trigger (Geo-Kultur-Spec §7): automatische Erkennung,
-    kein Extra-Button. MUSS vor dem Speichern eines NEUEN ``party_date``
-    aufgerufen werden (siehe Save-Button-Handler in
-    ``render_party_settings_section``). Falls das BISHER gespeicherte
-    ``party_date`` bereits in der Vergangenheit liegt, werden die aktuellen
-    ``responses`` + der zu diesem Zeitpunkt gültige ``DerivedPartyContext``
-    als ``PartyRunSnapshot``/``SelectionEvent``s eingefroren, danach wird
-    NUR die ``responses``-Tabelle geleert. ``party_settings`` bleibt
-    vollständig als wiederverwendbare Vorlage erhalten (der Aufrufer
-    speichert das neue Datum separat via ``event_theme.save_party_settings``).
-    Liefert ``True``, falls ein Reset stattgefunden hat (für eine Admin-
-    Erfolgsmeldung), sonst ``False`` (z.B. beim allerersten Party-Setup, wenn
-    noch kein ``party_date`` gesetzt war, oder wenn keine ``responses``
-    vorliegen - dann gibt es nichts Sinnvolles zu lernen)."""
-    old_settings = event_theme.get_party_settings(DB_PATH)
-    old_date_str = old_settings["party_date"]
-    if not old_date_str:
-        return False
-    try:
-        old_date = ddate.fromisoformat(old_date_str)
-    except ValueError:
-        return False
-    if old_date >= ddate.today():
-        return False
-
-    responses = load_responses()
-    if not responses:
-        return False
-
-    derived_context = get_derived_party_context(len(responses))
-    snapshot = PartyRunSnapshot(
-        started_at=datetime.now(),
-        occasion_id=event_theme.resolve_occasion_id(old_settings["event_type"]),
-        country_code=derived_context.country_code,
-        season=derived_context.season,
-        temperature_class=derived_context.temperature_class,
-        location_type=derived_context.location_type,
-        group_size_class=derived_context.group_size_class,
-    )
-    party_run_id = learning_storage.save_party_run(DB_PATH, snapshot)
-
-    events: list[SelectionEvent] = []
-    for row in responses:
-        for item_id in json.loads(row["drinks"] or "[]"):
-            item_type = _classify_item_type(item_id, catalog)
-            if item_type:
-                events.append(SelectionEvent(item_id=item_id, item_type=item_type))
-        for item_id in json.loads(row["food"] or "[]"):
-            item_type = _classify_item_type(item_id, catalog)
-            if item_type:
-                events.append(SelectionEvent(item_id=item_id, item_type=item_type))
-    learning_storage.save_selection_events(DB_PATH, party_run_id, events)
-
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.execute("DELETE FROM responses")
-
-    return True
+    """Dünner Wrapper um
+    ``party_engine.context_orchestration.maybe_freeze_and_reset_party``
+    (Backend-Migration Phase 1, Schritt 0c). Holt ``party_settings`` bewusst
+    frisch aus der DB (statt ``_PARTY_SETTINGS`` zu nutzen) - identisch zum
+    Verhalten der ursprünglichen Implementierung, die ebenfalls einen frischen
+    ``event_theme.get_party_settings(DB_PATH)``-Read durchführte, unabhängig
+    vom Modul-Level-Global."""
+    fresh_settings = event_theme.get_party_settings(DB_PATH)
+    return context_orchestration.maybe_freeze_and_reset_party(DB_PATH, fresh_settings, catalog)
 
 
 init_db()
