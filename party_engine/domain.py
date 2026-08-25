@@ -72,6 +72,20 @@ class PartyConfig:
     confidence_review: float = 0.75
 
 
+@dataclass
+class CatalogCurationSettings:
+    """Admin-Limitierung der für Gäste sichtbaren Katalog-Items ("engere
+    Auswahl"): ist ``enabled`` True UND ``curated_item_ids`` nicht leer,
+    sehen Gäste in der Getränke-/Speisen-Auswahl NUR noch Items aus dieser
+    Menge (siehe ``party_engine.catalog_curation.filter_items_by_curation``).
+    Bewusst getrennt von ``PartyConfig`` (dort: Mengen-Parameter, hier:
+    Sortiments-Auswahl). Default (``enabled=False``) verhält sich exakt wie
+    vor Einführung dieser Funktion - voller Katalog für alle Gäste sichtbar."""
+
+    enabled: bool = False
+    curated_item_ids: set[str] = field(default_factory=set)
+
+
 # --- Gäste & Antworten ---------------------------------------------------------
 
 

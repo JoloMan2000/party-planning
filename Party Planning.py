@@ -56,7 +56,13 @@ from music_engine.legacy_adapter import raw_song_requests_from_responses
 from music_engine.occasions import get_music_occasion, load_all_music_occasions
 from music_engine.spotify_adapter import songs_from_planning_result
 from party_engine.catalog import load_catalog
-from party_engine.domain import CatalogItem, DietaryProfile, GuestResponse, PartyCatalog, PartyConfig
+from party_engine.catalog_curation import (
+    filter_items_by_curation,
+    get_catalog_curation_settings,
+    init_catalog_curation,
+    save_catalog_curation_settings,
+)
+from party_engine.domain import CatalogCurationSettings, CatalogItem, DietaryProfile, GuestResponse, PartyCatalog, PartyConfig
 from party_engine.engine import compute_party_demand
 from party_engine.legacy_adapter import guest_response_from_row
 from party_engine.occasions import load_all_occasions
@@ -105,6 +111,12 @@ _PARTY_SETTINGS = event_theme.get_party_settings(DB_PATH)
 music_admin_settings.init_music_admin_settings(DB_PATH)
 party_context_storage.init_party_context_storage(DB_PATH)
 learning_storage.init_learning_storage(DB_PATH)
+init_catalog_curation(DB_PATH)
+# Streamlit reruns das gesamte Skript pro Interaktion (siehe Docstring von
+# _PARTY_SETTINGS oben) - daher hier ebenfalls ein "frischer" Modul-Level-Read
+# statt Caching, damit ein vom Admin gespeicherter Limitierungs-Stand sofort
+# auch für Gäste wirksam wird.
+_CATALOG_CURATION_SETTINGS = get_catalog_curation_settings(DB_PATH)
 
 @st.cache_resource
 def get_catalog() -> PartyCatalog:
@@ -285,14 +297,20 @@ _FOOD_GROUP_LABEL_KEYS = {
 }
 
 
-def _drink_items(catalog: PartyCatalog) -> list[CatalogItem]:
+def _drink_items(catalog: PartyCatalog, apply_curation: bool = True) -> list[CatalogItem]:
     items = list(catalog.direct_consumables.values()) + list(catalog.recipes.values())
-    return [i for i in items if i.demand_group in _DRINK_DEMAND_GROUPS]
+    items = [i for i in items if i.demand_group in _DRINK_DEMAND_GROUPS]
+    if apply_curation:
+        return filter_items_by_curation(items, _CATALOG_CURATION_SETTINGS)
+    return items
 
 
-def _food_items(catalog: PartyCatalog) -> list[CatalogItem]:
+def _food_items(catalog: PartyCatalog, apply_curation: bool = True) -> list[CatalogItem]:
     items = list(catalog.direct_consumables.values()) + list(catalog.recipes.values())
-    return [i for i in items if i.demand_group in _FOOD_DEMAND_GROUPS]
+    items = [i for i in items if i.demand_group in _FOOD_DEMAND_GROUPS]
+    if apply_curation:
+        return filter_items_by_curation(items, _CATALOG_CURATION_SETTINGS)
+    return items
 
 
 def _drink_group_key(item: CatalogItem) -> str:
@@ -318,6 +336,7 @@ def render_catalog_picker(
     state_key_prefix: str,
     recommended_ids: list[str] = (),
     recommended_label: str = "",
+    default_selected_ids: frozenset[str] = frozenset(),
 ) -> list[str]:
     """Rendert eine kompakte, katalog-getriebene Auswahl: optionale
     "✨ Empfohlen"-Sektion + "Beliebt"-Sektion + globale Suche +
@@ -331,7 +350,13 @@ def render_catalog_picker(
     Recommendation Engine - siehe party_engine/recommendation.py) rendert
     NUR eine zusätzliche Hervorhebung (eigene Sektion + "✨ "-Präfix in allen
     anderen Listen) - erzeugt selbst KEINE Auswahl und keine Demand (§77/§79
-    der Recommendation-Spec: eine Empfehlung ist niemals ein Auto-Select)."""
+    der Recommendation-Spec: eine Empfehlung ist niemals ein Auto-Select).
+
+    `default_selected_ids` (optional): vorbelegt die jeweiligen Multiselects
+    mit einer bereits bestehenden Auswahl (z.B. beim Bearbeiten einer
+    gespeicherten Admin-Kuration, siehe render_catalog_curation_section) -
+    wirkt NUR beim allerersten Rendern eines Widget-Keys innerhalb einer
+    Streamlit-Session (Standardverhalten von `st.multiselect`'s `default`)."""
     by_id = {i.id: i for i in items}
     recommended_set = set(recommended_ids)
 
@@ -362,9 +387,11 @@ def render_catalog_picker(
 
     if popular_items:
         st.markdown(f"**{t(lang, 'popular_label')}**")
+        popular_ids = [i.id for i in popular_items]
         selected_ids += st.multiselect(
             t(lang, "popular_label"),
-            options=[i.id for i in popular_items],
+            options=popular_ids,
+            default=[iid for iid in popular_ids if iid in default_selected_ids],
             format_func=_format_name,
             key=f"{state_key_prefix}_popular",
             label_visibility="collapsed",
@@ -372,9 +399,11 @@ def render_catalog_picker(
 
     st.markdown(f"**{t(lang, 'catalog_search_label')}**")
     all_sorted = sorted(items, key=lambda i: _display_name(i.id))
+    all_sorted_ids = [i.id for i in all_sorted]
     selected_ids += st.multiselect(
         t(lang, "catalog_search_label"),
-        options=[i.id for i in all_sorted],
+        options=all_sorted_ids,
+        default=[iid for iid in all_sorted_ids if iid in default_selected_ids],
         format_func=_format_name,
         key=f"{state_key_prefix}_search",
         label_visibility="collapsed",
@@ -387,9 +416,11 @@ def render_catalog_picker(
         for tab, group_key in zip(tabs, available_groups):
             with tab:
                 group_items = sorted(grouped[group_key], key=lambda i: _display_name(i.id))
+                group_ids = [i.id for i in group_items]
                 selected_ids += st.multiselect(
                     t(lang, group_label_keys[group_key]),
-                    options=[i.id for i in group_items],
+                    options=group_ids,
+                    default=[iid for iid in group_ids if iid in default_selected_ids],
                     format_func=_format_name,
                     key=f"{state_key_prefix}_cat_{group_key}",
                     label_visibility="collapsed",
@@ -1335,6 +1366,59 @@ def render_party_context_overrides_section(lang: str) -> None:
             st.rerun()
 
 
+def render_catalog_curation_section(lang: str) -> None:
+    """Admin-Sektion zur Limitierung der Gäste-Auswahl auf eine "engere
+    Auswahl": ist die Limitierung aktiviert UND mindestens ein Getränk/Gericht
+    ausgewählt, sehen Gäste in Schritt 2/3 des Fragebogens (render_guest_form)
+    NUR noch diese Items (siehe _drink_items()/_food_items() oben, die
+    filter_items_by_curation() anwenden). Wiederverwendet den bestehenden
+    render_catalog_picker() (gleiche Gruppen/Tabs/Suche wie im Gäste-
+    Fragebogen), diesmal mit vorbelegter Auswahl aus den gespeicherten
+    Einstellungen (default_selected_ids)."""
+    settings = get_catalog_curation_settings(DB_PATH)
+    catalog = get_catalog()
+
+    with st.expander(t(lang, "catalog_curation_header"), expanded=False):
+        st.caption(t(lang, "catalog_curation_caption"))
+
+        enabled = st.checkbox(
+            t(lang, "catalog_curation_enabled_label"), value=settings.enabled, key="catalog_curation_enabled",
+        )
+        if enabled and not settings.curated_item_ids:
+            st.warning(t(lang, "catalog_curation_empty_warning"))
+
+        st.markdown(f"**{t(lang, 'catalog_curation_drinks_label')}**")
+        selected_drinks = render_catalog_picker(
+            lang,
+            _drink_items(catalog, apply_curation=False),
+            _drink_group_key,
+            _DRINK_GROUP_ORDER,
+            _DRINK_GROUP_LABEL_KEYS,
+            state_key_prefix="curation_drinks",
+            default_selected_ids=frozenset(settings.curated_item_ids),
+        )
+
+        st.markdown(f"**{t(lang, 'catalog_curation_food_label')}**")
+        selected_food = render_catalog_picker(
+            lang,
+            _food_items(catalog, apply_curation=False),
+            _food_group_key,
+            _FOOD_GROUP_ORDER,
+            _FOOD_GROUP_LABEL_KEYS,
+            state_key_prefix="curation_food",
+            default_selected_ids=frozenset(settings.curated_item_ids),
+        )
+
+        if st.button(t(lang, "btn_save_catalog_curation"), key="catalog_curation_save_btn"):
+            new_settings = CatalogCurationSettings(
+                enabled=enabled,
+                curated_item_ids=set(selected_drinks) | set(selected_food),
+            )
+            save_catalog_curation_settings(DB_PATH, new_settings)
+            st.success(t(lang, "catalog_curation_saved"))
+            st.rerun()
+
+
 def render_recommendations_section(
     lang: str, responses: list[dict], catalog: PartyCatalog, derived_context: DerivedPartyContext | None = None
 ) -> None:
@@ -1535,6 +1619,7 @@ def render_admin_view() -> None:
     render_party_settings_section(lang)
     render_party_context_section(lang)
     render_party_context_overrides_section(lang)
+    render_catalog_curation_section(lang)
 
     responses = load_responses()
     catalog = get_catalog()
