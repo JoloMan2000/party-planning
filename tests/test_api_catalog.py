@@ -27,6 +27,15 @@ def test_occasions_endpoint_liefert_nichtleere_liste(api_client):
     assert len(resp.json()) > 0
 
 
+def test_drinks_endpoint_liefert_uebersetzten_display_name(api_client):
+    de_items = {item["id"]: item for item in api_client.get("/api/v1/catalog/drinks?lang=de").json()}
+    en_items = {item["id"]: item for item in api_client.get("/api/v1/catalog/drinks?lang=en").json()}
+
+    assert de_items["beer_pils"]["display_name"] == de_items["beer_pils"]["name"]
+    assert en_items["beer_pils"]["display_name"] != ""
+    assert en_items["beer_pils"]["name"] == de_items["beer_pils"]["name"]
+
+
 def test_curation_filter_wird_von_drinks_endpoint_respektiert(api_client):
     all_drinks = api_client.get("/api/v1/catalog/drinks").json()
     assert len(all_drinks) > 1

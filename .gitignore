@@ -1,4 +1,6 @@
 responses.db
+responses.db-shm
+responses.db-wal
 .streamlit/secrets.toml
 .spotify_token.json
 __pycache__/
