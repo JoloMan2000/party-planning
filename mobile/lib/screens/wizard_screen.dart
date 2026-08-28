@@ -186,7 +186,7 @@ class _Step2 extends ConsumerWidget {
     ));
     final partyInfoAsync = ref.watch(partyInfoProvider(lang));
     final occasionLabel = partyInfoAsync.maybeWhen(
-      data: (info) => info.partyName.isNotEmpty ? info.partyName : info.eventType,
+      data: (info) => info.occasionLabel,
       orElse: () => '',
     );
 
@@ -251,7 +251,7 @@ class _Step3 extends ConsumerWidget {
     ));
     final partyInfoAsync = ref.watch(partyInfoProvider(lang));
     final occasionLabel = partyInfoAsync.maybeWhen(
-      data: (info) => info.partyName.isNotEmpty ? info.partyName : info.eventType,
+      data: (info) => info.occasionLabel,
       orElse: () => '',
     );
 

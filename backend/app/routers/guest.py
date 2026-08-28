@@ -23,10 +23,15 @@ router = APIRouter(prefix="/api/v1/guest", tags=["guest"])
 
 
 @router.get("/party-info")
-def get_party_info(lang: str = "de", db_path=Depends(get_db_path)) -> dict:
+def get_party_info(
+    lang: str = "de", db_path=Depends(get_db_path), occasions=Depends(get_occasions)
+) -> dict:
     settings = event_theme.get_party_settings(db_path)
     theme = event_theme.EVENT_TYPES.get(settings["event_type"], event_theme.EVENT_TYPES[event_theme.DEFAULT_EVENT_TYPE])
     title = f"{theme['emoji']} {event_theme.resolve_party_title(settings)}"
+    occasion_id = event_theme.resolve_occasion_id(settings["event_type"])
+    occasion_profile = resolve_occasion_for_scoring([occasion_id], occasions)
+    occasion_label = occasion_profile.label_de if lang == "de" else occasion_profile.label_en
     return {
         "event_type": settings["event_type"],
         "party_name": settings["party_name"],
@@ -36,6 +41,7 @@ def get_party_info(lang: str = "de", db_path=Depends(get_db_path)) -> dict:
         "meta_datetime": calendar_export.format_party_datetime(settings),
         "has_scheduled_date": calendar_export.has_scheduled_date(settings),
         "google_calendar_url": calendar_export.google_calendar_url(settings, title),
+        "occasion_label": occasion_label,
     }
 
 

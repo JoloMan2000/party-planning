@@ -12,6 +12,13 @@ def test_party_info_liefert_titel_und_theme(api_client):
     assert body["event_type"]
     assert body["title"]
     assert "hero_subtitle" in body
+    assert body["occasion_label"]
+
+
+def test_party_info_occasion_label_ist_sprachabhaengig(api_client):
+    de_body = api_client.get("/api/v1/guest/party-info?lang=de").json()
+    en_body = api_client.get("/api/v1/guest/party-info?lang=en").json()
+    assert de_body["occasion_label"] != en_body["occasion_label"]
 
 
 def test_submit_response_landet_in_db(api_client):

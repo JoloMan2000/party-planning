@@ -9,6 +9,7 @@ class PartyInfo {
   final String? metaDatetime;
   final bool hasScheduledDate;
   final String? googleCalendarUrl;
+  final String occasionLabel;
 
   const PartyInfo({
     required this.eventType,
@@ -19,6 +20,7 @@ class PartyInfo {
     required this.metaDatetime,
     required this.hasScheduledDate,
     required this.googleCalendarUrl,
+    required this.occasionLabel,
   });
 
   factory PartyInfo.fromJson(Map<String, dynamic> json) {
@@ -31,6 +33,7 @@ class PartyInfo {
       metaDatetime: json['meta_datetime'] as String?,
       hasScheduledDate: (json['has_scheduled_date'] as bool?) ?? false,
       googleCalendarUrl: json['google_calendar_url'] as String?,
+      occasionLabel: (json['occasion_label'] as String?) ?? '',
     );
   }
 }
