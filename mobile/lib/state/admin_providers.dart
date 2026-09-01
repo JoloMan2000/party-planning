@@ -5,6 +5,8 @@ import '../api/api_client.dart';
 import '../models/admin_recommendation.dart';
 import '../models/event_type.dart';
 import '../models/derived_party_context.dart';
+import '../models/music_admin_settings.dart';
+import '../models/music_planning_result.dart';
 import '../models/party_context.dart';
 import '../models/party_context_override.dart';
 import '../models/party_settings.dart';
@@ -168,3 +170,40 @@ final adminRecommendationsProvider = FutureProvider<AdminRecommendationsResponse
   final token = ref.watch(_requiredAdminTokenProvider);
   return ref.watch(apiClientProvider).getAdminRecommendations(token);
 });
+
+/// Musik-Admin-Steuerparameter + Speichern-Aktion (mirroring
+/// `render_music_playlist_section`'s Slider-/Checkbox-Formular).
+class MusicSettingsNotifier extends AsyncNotifier<MusicAdminSettings> {
+  @override
+  Future<MusicAdminSettings> build() async {
+    final token = ref.watch(_requiredAdminTokenProvider);
+    return ref.watch(apiClientProvider).getMusicSettings(token);
+  }
+
+  Future<void> save(MusicAdminSettings settings) async {
+    final token = ref.read(_requiredAdminTokenProvider);
+    await ref.read(apiClientProvider).saveMusicSettings(token, settings);
+    state = AsyncData(await ref.read(apiClientProvider).getMusicSettings(token));
+  }
+}
+
+final musicSettingsProvider = AsyncNotifierProvider<MusicSettingsNotifier, MusicAdminSettings>(
+  MusicSettingsNotifier.new,
+);
+
+/// Zuletzt generierte Playlist (`null` = noch nicht generiert, mirroring
+/// `st.session_state["music_planning_result"]`).
+class MusicPlaylistNotifier extends AsyncNotifier<MusicPlanningResult?> {
+  @override
+  Future<MusicPlanningResult?> build() async => null;
+
+  Future<void> generate() async {
+    final token = ref.read(_requiredAdminTokenProvider);
+    state = const AsyncLoading();
+    state = AsyncData(await ref.read(apiClientProvider).generateMusicPlaylist(token));
+  }
+}
+
+final musicPlaylistProvider = AsyncNotifierProvider<MusicPlaylistNotifier, MusicPlanningResult?>(
+  MusicPlaylistNotifier.new,
+);

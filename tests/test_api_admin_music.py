@@ -15,6 +15,45 @@ from music_engine.legacy_adapter import raw_song_requests_from_responses
 from music_engine.occasions import get_music_occasion
 
 
+def test_music_settings_roundtrip(api_client, admin_headers):
+    resp = api_client.get("/api/v1/admin/music/settings", headers=admin_headers)
+    assert resp.status_code == 200
+    body = resp.json()
+    assert "party_intensity" in body
+    assert "max_tracks_per_artist" in body
+
+    payload = {
+        "party_intensity": 0.8,
+        "mainstream_discovery": 0.3,
+        "guest_request_priority": 0.9,
+        "explicit_allowed": False,
+        "max_tracks_per_artist": 2,
+    }
+    save_resp = api_client.post("/api/v1/admin/music/settings", json=payload, headers=admin_headers)
+    assert save_resp.status_code == 200
+    assert save_resp.json() == {"status": "ok"}
+
+    get_resp = api_client.get("/api/v1/admin/music/settings", headers=admin_headers)
+    assert get_resp.status_code == 200
+    updated = get_resp.json()
+    assert updated["party_intensity"] == 0.8
+    assert updated["explicit_allowed"] is False
+    assert updated["max_tracks_per_artist"] == 2
+
+
+def test_generate_playlist_liefert_track_title_und_artist_pro_slot(api_client, admin_headers):
+    resp = api_client.post("/api/v1/admin/music/generate-playlist", headers=admin_headers)
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["total_tracks"] > 0
+    assert len(body["playlist"]) == body["total_tracks"]
+
+    first_slot = body["playlist"][0]
+    assert "track_title" in first_slot and first_slot["track_title"]
+    assert "track_artist" in first_slot
+    assert {p["id"] for p in body["phases"]} >= {s["phase_id"] for s in body["playlist"]}
+
+
 def test_generate_playlist_api_entspricht_direktem_plan_party_music(api_client, admin_headers):
     response_storage.save_response(
         api_client.db_path,
@@ -54,4 +93,16 @@ def test_generate_playlist_api_entspricht_direktem_plan_party_music(api_client, 
         )
     )
 
+    # Router reichert jeden Playlist-Slot zusätzlich um track_title/track_artist
+    # an (catalog.get_track()-Lookup, siehe admin_music.py::generate_playlist) -
+    # das ist der einzige erlaubte Unterschied zum rohen plan_party_music()-Ergebnis.
+    api_playlist = api_result.pop("playlist")
+    expected_playlist = expected.pop("playlist")
     assert api_result == expected
+
+    assert len(api_playlist) == len(expected_playlist)
+    for api_slot, expected_slot in zip(api_playlist, expected_playlist):
+        assert "track_title" in api_slot and api_slot["track_title"]
+        assert "track_artist" in api_slot
+        enriched_slot = {k: v for k, v in api_slot.items() if k not in {"track_title", "track_artist"}}
+        assert enriched_slot == expected_slot

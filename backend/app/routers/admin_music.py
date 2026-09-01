@@ -83,4 +83,12 @@ def generate_playlist(
         admin_artist_overrides=artist_overrides,
         derived_context=derived_context,
     )
-    return to_jsonable(result)
+    body = to_jsonable(result)
+    # Zusatzinfo pro Slot (Spec-Ergebnis kennt nur track_id) - mirroring
+    # `catalog.get_track(slot.track_id)` in `render_music_playlist_section`,
+    # spart der Flutter-Seite einen eigenen Katalog-Lookup.
+    for slot_json, slot in zip(body["playlist"], result.playlist):
+        track = catalog.get_track(slot.track_id)
+        slot_json["track_title"] = track.title if track else slot.track_id
+        slot_json["track_artist"] = track.artist if track else ""
+    return body

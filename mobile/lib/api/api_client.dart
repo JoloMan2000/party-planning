@@ -8,6 +8,8 @@ import '../models/catalog_item.dart';
 import '../models/derived_party_context.dart';
 import '../models/event_type.dart';
 import '../models/language_option.dart';
+import '../models/music_admin_settings.dart';
+import '../models/music_planning_result.dart';
 import '../models/party_context.dart';
 import '../models/party_context_override.dart';
 import '../models/party_info.dart';
@@ -202,6 +204,33 @@ class ApiClient {
     if (resp.statusCode >= 400) {
       throw ApiException(resp.statusCode, resp.body);
     }
+  }
+
+  Future<MusicAdminSettings> getMusicSettings(String token) async {
+    final resp = await _http.get(
+      _uri('/api/v1/admin/music/settings'),
+      headers: _authHeaders(token),
+    );
+    return MusicAdminSettings.fromJson(_decodeObject(resp));
+  }
+
+  Future<void> saveMusicSettings(String token, MusicAdminSettings settings) async {
+    final resp = await _http.post(
+      _uri('/api/v1/admin/music/settings'),
+      headers: _authHeaders(token),
+      body: jsonEncode(settings.toJson()),
+    );
+    if (resp.statusCode >= 400) {
+      throw ApiException(resp.statusCode, resp.body);
+    }
+  }
+
+  Future<MusicPlanningResult> generateMusicPlaylist(String token) async {
+    final resp = await _http.post(
+      _uri('/api/v1/admin/music/generate-playlist'),
+      headers: _authHeaders(token),
+    );
+    return MusicPlanningResult.fromJson(_decodeObject(resp));
   }
 
   Future<AdminRecommendationsResponse> getAdminRecommendations(String token) async {

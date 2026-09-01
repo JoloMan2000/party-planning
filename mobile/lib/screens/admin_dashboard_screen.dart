@@ -8,6 +8,7 @@ import '../widgets/admin/party_context_dashboard_section.dart';
 import '../widgets/admin/party_context_overrides_section.dart';
 import '../widgets/admin/party_context_section.dart';
 import '../widgets/admin/party_settings_section.dart';
+import '../widgets/admin/music_playlist_section.dart';
 import '../widgets/admin/recommendations_section.dart';
 import '../widgets/party_hero.dart';
 
@@ -66,12 +67,13 @@ class AdminDashboardScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               const RecommendationsSection(),
               const SizedBox(height: 16),
+              const MusicPlaylistSection(),
+              const SizedBox(height: 16),
               const Card(
                 child: Padding(
                   padding: EdgeInsets.all(20),
                   child: Text(
-                    'Weitere Sektionen (Musik-Playlist, Antworten, '
-                    'Einkaufsliste) folgen.',
+                    'Weitere Sektionen (Antworten, Einkaufsliste) folgen.',
                     textAlign: TextAlign.center,
                   ),
                 ),
