@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../api/api_client.dart';
 import '../models/event_type.dart';
+import '../models/derived_party_context.dart';
 import '../models/party_context.dart';
 import '../models/party_context_override.dart';
 import '../models/party_settings.dart';
@@ -115,12 +116,21 @@ class PartyContextNotifier extends AsyncNotifier<PartyContext> {
     final token = ref.read(_requiredAdminTokenProvider);
     await ref.read(apiClientProvider).savePartyContext(token, context);
     state = AsyncData(await ref.read(apiClientProvider).getPartyContext(token));
+    ref.invalidate(derivedPartyContextProvider);
   }
 }
 
 final partyContextProvider = AsyncNotifierProvider<PartyContextNotifier, PartyContext>(
   PartyContextNotifier.new,
 );
+
+/// Rein informative abgeleitete Party-Wahrheit fürs Context-Dashboard
+/// (mirroring `render_party_context_dashboard`) - wird nach jeder Context-/
+/// Override-Änderung neu geladen (siehe `invalidate`-Aufrufe unten).
+final derivedPartyContextProvider = FutureProvider<DerivedPartyContext>((ref) {
+  final token = ref.watch(_requiredAdminTokenProvider);
+  return ref.watch(apiClientProvider).getDerivedPartyContext(token);
+});
 
 /// Bestehende Context-Overrides + Hinzufügen-/Entfernen-Aktionen (mirroring
 /// `render_party_context_overrides_section`).
@@ -135,12 +145,14 @@ class PartyContextOverridesNotifier extends AsyncNotifier<List<PartyContextOverr
     final token = ref.read(_requiredAdminTokenProvider);
     await ref.read(apiClientProvider).addPartyContextOverride(token, key, value, reason);
     state = AsyncData(await ref.read(apiClientProvider).getPartyContextOverrides(token));
+    ref.invalidate(derivedPartyContextProvider);
   }
 
   Future<void> remove(String key) async {
     final token = ref.read(_requiredAdminTokenProvider);
     await ref.read(apiClientProvider).deletePartyContextOverride(token, key);
     state = AsyncData(await ref.read(apiClientProvider).getPartyContextOverrides(token));
+    ref.invalidate(derivedPartyContextProvider);
   }
 }
 

@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 
 import '../models/admin_login_response.dart';
 import '../models/catalog_item.dart';
+import '../models/derived_party_context.dart';
 import '../models/event_type.dart';
 import '../models/language_option.dart';
 import '../models/party_context.dart';
@@ -200,6 +201,14 @@ class ApiClient {
     if (resp.statusCode >= 400) {
       throw ApiException(resp.statusCode, resp.body);
     }
+  }
+
+  Future<DerivedPartyContext> getDerivedPartyContext(String token) async {
+    final resp = await _http.get(
+      _uri('/api/v1/admin/party-context/derived'),
+      headers: _authHeaders(token),
+    );
+    return DerivedPartyContext.fromJson(_decodeObject(resp));
   }
 
   Future<List<PartyContextOverride>> getPartyContextOverrides(String token) async {

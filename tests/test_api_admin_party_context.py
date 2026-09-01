@@ -51,6 +51,18 @@ def test_save_party_context_persistiert_und_gibt_status_ok(api_client, admin_hea
     assert saved["weather_condition"] == "sunny"
 
 
+def test_get_derived_party_context_liefert_abgeleitete_felder(api_client, admin_headers):
+    resp = api_client.get("/api/v1/admin/party-context/derived", headers=admin_headers)
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["season"] in {"spring", "summer", "autumn", "winter"}
+    assert body["daypart_primary"]
+    assert body["temperature_class"] in {"cold", "cool", "mild", "warm", "hot"}
+    assert body["group_size_class"]
+    assert isinstance(body["operational_constraints"], list)
+    assert isinstance(body["explanations"], list)
+
+
 def test_override_add_list_delete_roundtrip(api_client, admin_headers):
     payload = {"key": "temperature_class", "value": "warm", "reason": "Zelt mit Heizung"}
     add_resp = api_client.post("/api/v1/admin/party-context/overrides", json=payload, headers=admin_headers)
