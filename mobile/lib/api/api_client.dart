@@ -13,6 +13,7 @@ import '../models/music_admin_settings.dart';
 import '../models/music_planning_result.dart';
 import '../models/party_context.dart';
 import '../models/party_context_override.dart';
+import '../models/party_demand_result.dart';
 import '../models/party_info.dart';
 import '../models/party_settings.dart';
 import '../models/guest_response_draft.dart';
@@ -304,6 +305,15 @@ class ApiClient {
       throw ApiException(resp.statusCode, resp.body);
     }
     return resp.bodyBytes;
+  }
+
+  /// Einkaufsliste (Unified Demand Pipeline, mirroring `render_shopping_list`).
+  Future<PartyDemandResult> computeShoppingList(String token) async {
+    final resp = await _http.post(
+      _uri('/api/v1/admin/shopping-list'),
+      headers: _authHeaders(token),
+    );
+    return PartyDemandResult.fromJson(_decodeObject(resp));
   }
 
   void close() => _http.close();

@@ -22,4 +22,12 @@ def compute_shopping_list(db_path=Depends(get_db_path), catalog: PartyCatalog = 
     guest_responses = [guest_response_from_row(row, catalog) for row in rows]
     derived_context = context_orchestration.get_derived_party_context(db_path, settings, len(rows))
     result = compute_party_demand(catalog, guest_responses, PartyConfig(), derived_context=derived_context)
-    return to_jsonable(result)
+    body = to_jsonable(result)
+    # Zusatzinfo pro Zutat (Spec-Ergebnis kennt keine Herkunfts-`family`) -
+    # mirroring `catalog.ingredients.get(ingredient_id).family` in
+    # `render_shopping_list`'s Details-Expander, spart der Flutter-Seite
+    # einen eigenen Katalog-Lookup.
+    for ingredient_id, demand_json in body["ingredient_demand"].items():
+        ingredient = catalog.ingredients.get(ingredient_id)
+        demand_json["family"] = ingredient.family if ingredient else ""
+    return body

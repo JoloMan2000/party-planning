@@ -50,4 +50,15 @@ def test_shopping_list_api_entspricht_direktem_compute_party_demand(api_client, 
     derived_context = context_orchestration.get_derived_party_context(api_client.db_path, settings, len(rows))
     expected = to_jsonable(compute_party_demand(catalog, guest_responses, PartyConfig(), derived_context=derived_context))
 
+    # Router reichert jede Zutat zusätzlich um `family` an (siehe
+    # admin_shopping_list.py::compute_shopping_list) - das ist der einzige
+    # erlaubte Unterschied zum rohen compute_party_demand()-Ergebnis.
+    api_ingredient_demand = api_result.pop("ingredient_demand")
+    expected_ingredient_demand = expected.pop("ingredient_demand")
     assert api_result == expected
+
+    assert set(api_ingredient_demand.keys()) == set(expected_ingredient_demand.keys())
+    for ingredient_id, api_demand in api_ingredient_demand.items():
+        assert "family" in api_demand
+        enriched_demand = {k: v for k, v in api_demand.items() if k != "family"}
+        assert enriched_demand == expected_ingredient_demand[ingredient_id]

@@ -11,13 +11,14 @@ import '../widgets/admin/party_settings_section.dart';
 import '../widgets/admin/music_playlist_section.dart';
 import '../widgets/admin/recommendations_section.dart';
 import '../widgets/admin/responses_section.dart';
+import '../widgets/admin/shopping_list_section.dart';
 import '../widgets/party_hero.dart';
 
 /// Admin-Dashboard-Shell (mirroring `render_admin_view()`, Sektionsreihenfolge
 /// aus `"Party Planning.py"`: Party-Settings -> Party-Context -> Overrides ->
 /// Context-Dashboard -> Empfehlungen -> Musik-Playlist -> Antworten/CSV ->
-/// Einkaufsliste). Sektionen werden schrittweise ergänzt; dies ist zunächst
-/// nur das Gerüst mit Logout.
+/// Einkaufsliste). Catalog-Curation-Sektion und Spotify-Export sind bewusst
+/// nicht Teil dieses Dashboards (deferred, siehe Phase-3-Plan).
 class AdminDashboardScreen extends ConsumerWidget {
   const AdminDashboardScreen({super.key});
 
@@ -72,15 +73,7 @@ class AdminDashboardScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               const ResponsesSection(),
               const SizedBox(height: 16),
-              const Card(
-                child: Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Text(
-                    'Weitere Sektionen (Einkaufsliste) folgen.',
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
+              const ShoppingListSection(),
             ],
           ),
         ),

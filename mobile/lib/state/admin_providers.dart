@@ -10,6 +10,7 @@ import '../models/music_admin_settings.dart';
 import '../models/music_planning_result.dart';
 import '../models/party_context.dart';
 import '../models/party_context_override.dart';
+import '../models/party_demand_result.dart';
 import '../models/party_settings.dart';
 import 'providers.dart';
 
@@ -215,3 +216,21 @@ final adminResponsesProvider = FutureProvider<List<GuestResponse>>((ref) {
   final token = ref.watch(_requiredAdminTokenProvider);
   return ref.watch(apiClientProvider).getResponses(token);
 });
+
+/// Zuletzt berechnete Einkaufsliste (`null` = noch nicht berechnet, mirroring
+/// des `btn_create_shopping_list`-Buttons in `render_admin_view`, der
+/// `render_shopping_list` erst bei Klick aufruft statt bei jedem Rerun).
+class ShoppingListNotifier extends AsyncNotifier<PartyDemandResult?> {
+  @override
+  Future<PartyDemandResult?> build() async => null;
+
+  Future<void> compute() async {
+    final token = ref.read(_requiredAdminTokenProvider);
+    state = const AsyncLoading();
+    state = AsyncData(await ref.read(apiClientProvider).computeShoppingList(token));
+  }
+}
+
+final shoppingListProvider = AsyncNotifierProvider<ShoppingListNotifier, PartyDemandResult?>(
+  ShoppingListNotifier.new,
+);
