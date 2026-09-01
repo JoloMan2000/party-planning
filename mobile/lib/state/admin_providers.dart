@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../api/api_client.dart';
+import '../models/event_type.dart';
+import '../models/party_settings.dart';
 import 'providers.dart';
 
 const _tokenStorageKey = 'admin_jwt';
@@ -48,4 +50,46 @@ class AdminAuthNotifier extends AsyncNotifier<String?> {
 
 final adminAuthProvider = AsyncNotifierProvider<AdminAuthNotifier, String?>(
   AdminAuthNotifier.new,
+);
+
+/// Aktuelles Admin-JWT als Nicht-Nullable-Wert - nur innerhalb des
+/// Admin-Dashboards verwendet, wo ein gültiger Token durch [main.dart]'s
+/// Routing bereits garantiert ist (kein Rendern der Dashboard-Widgets ohne
+/// Token).
+final _requiredAdminTokenProvider = Provider<String>((ref) {
+  final token = ref.watch(adminAuthProvider).value;
+  if (token == null) {
+    throw StateError('Admin-Dashboard ohne gültiges Token gerendert.');
+  }
+  return token;
+});
+
+/// Alle wählbaren Event-Typen fürs Party-Settings-Dropdown.
+final eventTypesProvider = FutureProvider<List<EventType>>((ref) {
+  final token = ref.watch(_requiredAdminTokenProvider);
+  return ref.watch(apiClientProvider).getEventTypes(token);
+});
+
+/// Aktuelle Party-Settings + Speichern-Aktion (mirroring
+/// `render_party_settings_section`'s Formular + Save-Button-Handler).
+class PartySettingsNotifier extends AsyncNotifier<PartySettings> {
+  @override
+  Future<PartySettings> build() async {
+    final token = ref.watch(_requiredAdminTokenProvider);
+    return ref.watch(apiClientProvider).getPartySettings(token);
+  }
+
+  /// Speichert [settings], lädt danach die Settings neu (Server ist die
+  /// Quelle der Wahrheit) und gibt zurück, ob der Party-Lifecycle-Reset
+  /// ausgelöst wurde (`party_settings_reset_notice`).
+  Future<bool> save(PartySettings settings) async {
+    final token = ref.read(_requiredAdminTokenProvider);
+    final resetHappened = await ref.read(apiClientProvider).savePartySettings(token, settings);
+    state = AsyncData(await ref.read(apiClientProvider).getPartySettings(token));
+    return resetHappened;
+  }
+}
+
+final partySettingsProvider = AsyncNotifierProvider<PartySettingsNotifier, PartySettings>(
+  PartySettingsNotifier.new,
 );

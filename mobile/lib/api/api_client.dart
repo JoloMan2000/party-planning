@@ -4,8 +4,10 @@ import 'package:http/http.dart' as http;
 
 import '../models/admin_login_response.dart';
 import '../models/catalog_item.dart';
+import '../models/event_type.dart';
 import '../models/language_option.dart';
 import '../models/party_info.dart';
+import '../models/party_settings.dart';
 import '../models/guest_response_draft.dart';
 import 'api_config.dart';
 
@@ -130,6 +132,43 @@ class ApiClient {
       body: jsonEncode({'password': password}),
     );
     return AdminLoginResponse.fromJson(_decodeObject(resp));
+  }
+
+  Map<String, String> _authHeaders(String token) => {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+
+  /// Alle wählbaren Event-Typen fürs Party-Settings-Dropdown
+  /// (`admin_party_settings.py::get_event_types`).
+  Future<List<EventType>> getEventTypes(String token) async {
+    final resp = await _http.get(
+      _uri('/api/v1/admin/party-settings/event-types'),
+      headers: _authHeaders(token),
+    );
+    return _decodeList(resp)
+        .map((e) => EventType.fromJson((e as Map).cast<String, dynamic>()))
+        .toList();
+  }
+
+  Future<PartySettings> getPartySettings(String token) async {
+    final resp = await _http.get(
+      _uri('/api/v1/admin/party-settings'),
+      headers: _authHeaders(token),
+    );
+    return PartySettings.fromJson(_decodeObject(resp));
+  }
+
+  /// Speichert die Party-Settings, liefert `reset_happened` zurück (mirroring
+  /// des Lifecycle-Trigger-Hinweises in `render_party_settings_section`).
+  Future<bool> savePartySettings(String token, PartySettings settings) async {
+    final resp = await _http.post(
+      _uri('/api/v1/admin/party-settings'),
+      headers: _authHeaders(token),
+      body: jsonEncode(settings.toJson()),
+    );
+    final body = _decodeObject(resp);
+    return body['reset_happened'] as bool? ?? false;
   }
 
   void close() => _http.close();

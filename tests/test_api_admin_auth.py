@@ -15,6 +15,7 @@ ADMIN_ROUTES = [
     ("GET", "/api/v1/admin/responses"),
     ("GET", "/api/v1/admin/responses/csv"),
     ("GET", "/api/v1/admin/party-settings"),
+    ("GET", "/api/v1/admin/party-settings/event-types"),
     ("POST", "/api/v1/admin/party-settings"),
     ("GET", "/api/v1/admin/party-context"),
     ("POST", "/api/v1/admin/party-context"),

@@ -17,6 +17,23 @@ def get_party_settings(db_path=Depends(get_db_path)) -> dict:
     return event_theme.get_party_settings(db_path)
 
 
+@router.get("/event-types")
+def get_event_types() -> list[dict]:
+    """Liste aller wählbaren Event-Typen für das Party-Settings-Dropdown
+    (mirroring ``event_type_keys``/``_format_event_type`` in
+    ``render_party_settings_section``)."""
+    return [
+        {
+            "id": key,
+            "emoji": theme["emoji"],
+            "label_de": theme["label_de"],
+            "label_en": theme["label_en"],
+            "default_title": theme["default_title"],
+        }
+        for key, theme in event_theme.EVENT_TYPES.items()
+    ]
+
+
 @router.post("")
 def save_party_settings(
     payload: PartySettingsUpdate,
