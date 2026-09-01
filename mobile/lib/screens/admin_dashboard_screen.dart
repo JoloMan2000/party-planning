@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../state/admin_providers.dart';
 import '../state/providers.dart';
 import '../theme/party_theme.dart';
+import '../widgets/admin/party_context_section.dart';
 import '../widgets/admin/party_settings_section.dart';
 import '../widgets/party_hero.dart';
 
@@ -54,12 +55,14 @@ class AdminDashboardScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               const PartySettingsSection(),
               const SizedBox(height: 16),
+              const PartyContextSection(),
+              const SizedBox(height: 16),
               const Card(
                 child: Padding(
                   padding: EdgeInsets.all(20),
                   child: Text(
-                    'Weitere Sektionen (Kontext, Empfehlungen, Musik-Playlist, '
-                    'Antworten, Einkaufsliste) folgen.',
+                    'Weitere Sektionen (Overrides, Context-Dashboard, Empfehlungen, '
+                    'Musik-Playlist, Antworten, Einkaufsliste) folgen.',
                     textAlign: TextAlign.center,
                   ),
                 ),

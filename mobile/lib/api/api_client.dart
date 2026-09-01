@@ -6,6 +6,7 @@ import '../models/admin_login_response.dart';
 import '../models/catalog_item.dart';
 import '../models/event_type.dart';
 import '../models/language_option.dart';
+import '../models/party_context.dart';
 import '../models/party_info.dart';
 import '../models/party_settings.dart';
 import '../models/guest_response_draft.dart';
@@ -169,6 +170,35 @@ class ApiClient {
     );
     final body = _decodeObject(resp);
     return body['reset_happened'] as bool? ?? false;
+  }
+
+  /// Stammdaten fürs Party-Kontext-Formular (Location-Typen, Länderliste -
+  /// `admin_party_context.py::get_party_context_metadata`).
+  Future<PartyContextMetadata> getPartyContextMetadata(String token) async {
+    final resp = await _http.get(
+      _uri('/api/v1/admin/party-context/metadata'),
+      headers: _authHeaders(token),
+    );
+    return PartyContextMetadata.fromJson(_decodeObject(resp));
+  }
+
+  Future<PartyContext> getPartyContext(String token) async {
+    final resp = await _http.get(
+      _uri('/api/v1/admin/party-context'),
+      headers: _authHeaders(token),
+    );
+    return PartyContext.fromJson(_decodeObject(resp));
+  }
+
+  Future<void> savePartyContext(String token, PartyContext context) async {
+    final resp = await _http.post(
+      _uri('/api/v1/admin/party-context'),
+      headers: _authHeaders(token),
+      body: jsonEncode(context.toJson()),
+    );
+    if (resp.statusCode >= 400) {
+      throw ApiException(resp.statusCode, resp.body);
+    }
   }
 
   void close() => _http.close();

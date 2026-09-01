@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../api/api_client.dart';
 import '../models/event_type.dart';
+import '../models/party_context.dart';
 import '../models/party_settings.dart';
 import 'providers.dart';
 
@@ -92,4 +93,30 @@ class PartySettingsNotifier extends AsyncNotifier<PartySettings> {
 
 final partySettingsProvider = AsyncNotifierProvider<PartySettingsNotifier, PartySettings>(
   PartySettingsNotifier.new,
+);
+
+/// Stammdaten fürs Party-Kontext-Formular (Location-Typen, Länderliste).
+final partyContextMetadataProvider = FutureProvider<PartyContextMetadata>((ref) {
+  final token = ref.watch(_requiredAdminTokenProvider);
+  return ref.watch(apiClientProvider).getPartyContextMetadata(token);
+});
+
+/// Aktueller Party-Kontext + Speichern-Aktion (mirroring
+/// `render_party_context_section`'s Formular + Save-Button-Handler).
+class PartyContextNotifier extends AsyncNotifier<PartyContext> {
+  @override
+  Future<PartyContext> build() async {
+    final token = ref.watch(_requiredAdminTokenProvider);
+    return ref.watch(apiClientProvider).getPartyContext(token);
+  }
+
+  Future<void> save(PartyContext context) async {
+    final token = ref.read(_requiredAdminTokenProvider);
+    await ref.read(apiClientProvider).savePartyContext(token, context);
+    state = AsyncData(await ref.read(apiClientProvider).getPartyContext(token));
+  }
+}
+
+final partyContextProvider = AsyncNotifierProvider<PartyContextNotifier, PartyContext>(
+  PartyContextNotifier.new,
 );

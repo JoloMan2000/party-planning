@@ -10,9 +10,28 @@ from backend.app.core.deps import get_db_path
 from backend.app.core.security import get_current_admin
 from backend.app.schemas.admin import PartyContextOverrideCreate, PartyContextUpdate
 from party_context import storage as party_context_storage
+from party_context.countries import ISO_COUNTRIES
 from party_context.domain import PartyContextOverride
+from party_context.locations import LOCATION_LABELS, LOCATION_TYPES
 
 router = APIRouter(prefix="/api/v1/admin/party-context", tags=["admin"], dependencies=[Depends(get_current_admin)])
+
+
+@router.get("/metadata")
+def get_party_context_metadata() -> dict:
+    """Stammdaten fürs Party-Kontext-Formular (Location-Typen, Länderliste -
+    mirroring der in ``render_party_context_section`` importierten
+    ``LOCATION_TYPES``/``LOCATION_LABELS``/``ISO_COUNTRIES``-Konstanten)."""
+    return {
+        "location_types": [
+            {"id": key, "label_de": LOCATION_LABELS[key][0], "label_en": LOCATION_LABELS[key][1]}
+            for key in LOCATION_TYPES
+        ],
+        "countries": [
+            {"code": code, "name": name}
+            for code, name in sorted(ISO_COUNTRIES.items(), key=lambda item: item[1])
+        ],
+    }
 
 
 @router.get("")
