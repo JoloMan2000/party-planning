@@ -29,8 +29,20 @@ def _format_songs(songs_json: str | None) -> str:
 
 
 @router.get("")
-def list_responses(db_path=Depends(get_db_path)) -> list[dict]:
-    return response_storage.load_responses(db_path)
+def list_responses(
+    lang: str = "de", db_path=Depends(get_db_path), catalog: PartyCatalog = Depends(get_catalog)
+) -> list[dict]:
+    """Rohantworten + zusätzliche, vorformatierte Anzeige-Felder
+    (``drinks_display``/``food_display``/``songs_display``, mirroring
+    ``raw_responses_expander``'s ``display_name_for_selection``/``format_songs``-
+    Aufrufe) - spart der Flutter-Seite einen eigenen Katalog-Lookup, analog zu
+    ``catalog.py``'s ``display_name``-Feld."""
+    responses = response_storage.load_responses(db_path)
+    for r in responses:
+        r["drinks_display"] = [_display_name_for_selection(v, catalog, lang) for v in json.loads(r["drinks"])]
+        r["food_display"] = [_display_name_for_selection(v, catalog, lang) for v in json.loads(r["food"])]
+        r["songs_display"] = _format_songs(r["songs"])
+    return responses
 
 
 @router.get("/csv")

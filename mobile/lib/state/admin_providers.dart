@@ -5,6 +5,7 @@ import '../api/api_client.dart';
 import '../models/admin_recommendation.dart';
 import '../models/event_type.dart';
 import '../models/derived_party_context.dart';
+import '../models/guest_response.dart';
 import '../models/music_admin_settings.dart';
 import '../models/music_planning_result.dart';
 import '../models/party_context.dart';
@@ -207,3 +208,10 @@ class MusicPlaylistNotifier extends AsyncNotifier<MusicPlanningResult?> {
 final musicPlaylistProvider = AsyncNotifierProvider<MusicPlaylistNotifier, MusicPlanningResult?>(
   MusicPlaylistNotifier.new,
 );
+
+/// Gespeicherte Gäste-Antworten fürs Responses-Dashboard (mirroring
+/// `load_responses()` + `raw_responses_expander`).
+final adminResponsesProvider = FutureProvider<List<GuestResponse>>((ref) {
+  final token = ref.watch(_requiredAdminTokenProvider);
+  return ref.watch(apiClientProvider).getResponses(token);
+});

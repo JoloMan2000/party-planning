@@ -10,6 +10,7 @@ import '../widgets/admin/party_context_section.dart';
 import '../widgets/admin/party_settings_section.dart';
 import '../widgets/admin/music_playlist_section.dart';
 import '../widgets/admin/recommendations_section.dart';
+import '../widgets/admin/responses_section.dart';
 import '../widgets/party_hero.dart';
 
 /// Admin-Dashboard-Shell (mirroring `render_admin_view()`, Sektionsreihenfolge
@@ -69,11 +70,13 @@ class AdminDashboardScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               const MusicPlaylistSection(),
               const SizedBox(height: 16),
+              const ResponsesSection(),
+              const SizedBox(height: 16),
               const Card(
                 child: Padding(
                   padding: EdgeInsets.all(20),
                   child: Text(
-                    'Weitere Sektionen (Antworten, Einkaufsliste) folgen.',
+                    'Weitere Sektionen (Einkaufsliste) folgen.',
                     textAlign: TextAlign.center,
                   ),
                 ),

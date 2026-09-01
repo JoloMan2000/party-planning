@@ -7,6 +7,7 @@ import '../models/admin_recommendation.dart';
 import '../models/catalog_item.dart';
 import '../models/derived_party_context.dart';
 import '../models/event_type.dart';
+import '../models/guest_response.dart';
 import '../models/language_option.dart';
 import '../models/music_admin_settings.dart';
 import '../models/music_planning_result.dart';
@@ -278,6 +279,31 @@ class ApiClient {
     if (resp.statusCode >= 400) {
       throw ApiException(resp.statusCode, resp.body);
     }
+  }
+
+  /// Gespeicherte Gäste-Antworten inkl. vorformatierter Anzeige-Felder
+  /// (mirroring `raw_responses_expander`).
+  Future<List<GuestResponse>> getResponses(String token, {String lang = 'de'}) async {
+    final resp = await _http.get(
+      _uri('/api/v1/admin/responses', {'lang': lang}),
+      headers: _authHeaders(token),
+    );
+    return _decodeList(resp)
+        .map((e) => GuestResponse.fromJson((e as Map).cast<String, dynamic>()))
+        .toList();
+  }
+
+  /// Rohe CSV-Bytes für den Antworten-Export (Download/Teilen via
+  /// `share_plus`, mirroring `btn_csv`).
+  Future<List<int>> getResponsesCsv(String token) async {
+    final resp = await _http.get(
+      _uri('/api/v1/admin/responses/csv'),
+      headers: _authHeaders(token),
+    );
+    if (resp.statusCode >= 400) {
+      throw ApiException(resp.statusCode, resp.body);
+    }
+    return resp.bodyBytes;
   }
 
   void close() => _http.close();
