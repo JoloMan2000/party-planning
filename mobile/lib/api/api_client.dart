@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../models/admin_login_response.dart';
 import '../models/catalog_item.dart';
 import '../models/language_option.dart';
 import '../models/party_info.dart';
@@ -118,6 +119,17 @@ class ApiClient {
       throw ApiException(resp.statusCode, resp.body);
     }
     return resp.bodyBytes;
+  }
+
+  /// Admin-Login (`backend/app/routers/auth.py::admin_login`). Liefert bei
+  /// falschem Passwort eine [ApiException] mit statusCode 401.
+  Future<AdminLoginResponse> adminLogin(String password) async {
+    final resp = await _http.post(
+      _uri('/api/v1/auth/admin/login'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'password': password}),
+    );
+    return AdminLoginResponse.fromJson(_decodeObject(resp));
   }
 
   void close() => _http.close();

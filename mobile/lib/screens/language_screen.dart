@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/language_option.dart';
+import '../state/admin_providers.dart';
 import '../state/providers.dart';
 import '../theme/party_theme.dart';
 import '../widgets/party_hero.dart';
@@ -45,6 +46,11 @@ class LanguageScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
+              ),
+              const SizedBox(height: 24),
+              TextButton(
+                onPressed: () => ref.read(adminModeProvider.notifier).state = true,
+                child: const Text('Admin'),
               ),
             ],
           ),
