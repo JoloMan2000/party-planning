@@ -81,7 +81,12 @@ class WizardScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: () {
-                      ref.read(wizardProvider.notifier).reset();
+                      // Mirroring render_guest_form()'s "change_language"-Button
+                      // (Party Planning.py:924-926): nur die Sprache wird
+                      // zurückgesetzt, die bisherigen Wizard-Antworten (Name,
+                      // Zeit, Getränke, Essen, Songs) bleiben erhalten -
+                      // Streamlits `st.session_state` verhält sich über den
+                      // Sprachwechsel hinweg identisch.
                       ref.read(languageProvider.notifier).state = null;
                     },
                     child: Text(t('change_language')),

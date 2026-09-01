@@ -103,10 +103,6 @@ class WizardNotifier extends Notifier<WizardState> {
 
   void markSubmitError(String message) =>
       state = state.copyWith(submitting: false, submitError: message);
-
-  /// Setzt den kompletten Formular-Zustand zurück (mirroring das erneute
-  /// Initialisieren von `st.session_state` bei einem frischen Wizard-Start).
-  void reset() => state = const WizardState();
 }
 
 final wizardProvider = NotifierProvider<WizardNotifier, WizardState>(WizardNotifier.new);
