@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../api/api_client.dart';
+import '../models/admin_recommendation.dart';
 import '../models/event_type.dart';
 import '../models/derived_party_context.dart';
 import '../models/party_context.dart';
@@ -160,3 +161,10 @@ final partyContextOverridesProvider =
     AsyncNotifierProvider<PartyContextOverridesNotifier, List<PartyContextOverride>>(
   PartyContextOverridesNotifier.new,
 );
+
+/// Admin-Sortiment-Empfehlungen (mirroring `render_recommendations_section`)
+/// - rein informativ, erzeugt keine Demand/Preference.
+final adminRecommendationsProvider = FutureProvider<AdminRecommendationsResponse>((ref) {
+  final token = ref.watch(_requiredAdminTokenProvider);
+  return ref.watch(apiClientProvider).getAdminRecommendations(token);
+});

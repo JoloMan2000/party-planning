@@ -12,7 +12,7 @@ from backend.app.core.deps import get_catalog, get_db_path, get_occasions
 from backend.app.core.security import get_current_admin
 from party_context import learning_storage
 from party_engine.domain import PartyCatalog
-from party_engine.recommendation import recommend_for_admin, resolve_occasion_for_scoring
+from party_engine.recommendation import format_score_explanation, recommend_for_admin, resolve_occasion_for_scoring
 from party_engine.recommendation_domain import RecommendationContext
 
 router = APIRouter(prefix="/api/v1/admin/recommendations", tags=["admin"], dependencies=[Depends(get_current_admin)])
@@ -23,7 +23,7 @@ def get_admin_recommendations(
     catalog: PartyCatalog = Depends(get_catalog),
     occasions=Depends(get_occasions),
     db_path=Depends(get_db_path),
-) -> list[dict]:
+) -> dict:
     settings = event_theme.get_party_settings(db_path)
     responses = response_storage.load_responses(db_path)
 
@@ -47,4 +47,14 @@ def get_admin_recommendations(
         derived_context=derived_context,
         learning_history=learning_history,
     )
-    return [{"item": to_jsonable(item), "score": to_jsonable(score)} for item, score in recommended]
+    return {
+        "occasion_label": occasion_profile.label_de,
+        "items": [
+            {
+                "item": to_jsonable(item),
+                "score": to_jsonable(score),
+                "explanation": format_score_explanation(score, lang="de"),
+            }
+            for item, score in recommended
+        ],
+    }
