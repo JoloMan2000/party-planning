@@ -29,11 +29,14 @@ _DRINK_DEMAND_GROUPS = {"alcoholic_beverage", "non_alcoholic_beverage", "energy"
 _FOOD_DEMAND_GROUPS = {"main", "side", "snack", "dessert", "condiment", "salad"}
 
 
-def _selectable(catalog: PartyCatalog, demand_groups: set[str], db_path, lang: str) -> list[dict]:
+def _selectable(
+    catalog: PartyCatalog, demand_groups: set[str], db_path, lang: str, apply_curation: bool = True
+) -> list[dict]:
     items = list(catalog.direct_consumables.values()) + list(catalog.recipes.values())
     items = [i for i in items if i.demand_group in demand_groups]
-    curation_settings = get_catalog_curation_settings(db_path)
-    items = filter_items_by_curation(items, curation_settings)
+    if apply_curation:
+        curation_settings = get_catalog_curation_settings(db_path)
+        items = filter_items_by_curation(items, curation_settings)
     result = []
     for item in items:
         data = to_jsonable(item)

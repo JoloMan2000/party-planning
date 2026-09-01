@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 
 import '../models/admin_login_response.dart';
 import '../models/admin_recommendation.dart';
+import '../models/catalog_curation_settings.dart';
 import '../models/catalog_item.dart';
 import '../models/derived_party_context.dart';
 import '../models/event_type.dart';
@@ -233,6 +234,33 @@ class ApiClient {
       headers: _authHeaders(token),
     );
     return MusicPlanningResult.fromJson(_decodeObject(resp));
+  }
+
+  Future<CatalogCurationSettings> getCatalogCurationSettings(String token) async {
+    final resp = await _http.get(
+      _uri('/api/v1/admin/catalog-curation'),
+      headers: _authHeaders(token),
+    );
+    return CatalogCurationSettings.fromJson(_decodeObject(resp));
+  }
+
+  Future<void> saveCatalogCurationSettings(String token, bool enabled, List<String> curatedItemIds) async {
+    final resp = await _http.post(
+      _uri('/api/v1/admin/catalog-curation'),
+      headers: _authHeaders(token),
+      body: jsonEncode({'enabled': enabled, 'curated_item_ids': curatedItemIds}),
+    );
+    if (resp.statusCode >= 400) {
+      throw ApiException(resp.statusCode, resp.body);
+    }
+  }
+
+  Future<CuratableCatalog> getCuratableCatalog(String token, {String lang = 'de'}) async {
+    final resp = await _http.get(
+      _uri('/api/v1/admin/catalog-curation/items', {'lang': lang}),
+      headers: _authHeaders(token),
+    );
+    return CuratableCatalog.fromJson(_decodeObject(resp));
   }
 
   Future<AdminRecommendationsResponse> getAdminRecommendations(String token) async {

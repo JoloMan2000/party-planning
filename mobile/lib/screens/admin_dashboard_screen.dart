@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../state/admin_providers.dart';
 import '../state/providers.dart';
 import '../theme/party_theme.dart';
+import '../widgets/admin/catalog_curation_section.dart';
 import '../widgets/admin/party_context_dashboard_section.dart';
 import '../widgets/admin/party_context_overrides_section.dart';
 import '../widgets/admin/party_context_section.dart';
@@ -16,9 +17,9 @@ import '../widgets/party_hero.dart';
 
 /// Admin-Dashboard-Shell (mirroring `render_admin_view()`, Sektionsreihenfolge
 /// aus `"Party Planning.py"`: Party-Settings -> Party-Context -> Overrides ->
-/// Context-Dashboard -> Empfehlungen -> Musik-Playlist -> Antworten/CSV ->
-/// Einkaufsliste). Catalog-Curation-Sektion und Spotify-Export sind bewusst
-/// nicht Teil dieses Dashboards (deferred, siehe Phase-3-Plan).
+/// Catalog-Curation -> Context-Dashboard -> Empfehlungen -> Musik-Playlist ->
+/// Antworten/CSV -> Einkaufsliste). Spotify-Export ist bewusst nicht Teil
+/// dieses Dashboards (deferred, siehe Phase-3-Plan).
 class AdminDashboardScreen extends ConsumerWidget {
   const AdminDashboardScreen({super.key});
 
@@ -64,6 +65,8 @@ class AdminDashboardScreen extends ConsumerWidget {
               const PartyContextSection(),
               const SizedBox(height: 16),
               const PartyContextOverridesSection(),
+              const SizedBox(height: 16),
+              const CatalogCurationSection(),
               const SizedBox(height: 16),
               const PartyContextDashboardSection(),
               const SizedBox(height: 16),

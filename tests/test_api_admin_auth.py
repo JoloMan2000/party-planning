@@ -26,6 +26,7 @@ ADMIN_ROUTES = [
     ("DELETE", "/api/v1/admin/party-context/overrides/some_key"),
     ("GET", "/api/v1/admin/catalog-curation"),
     ("POST", "/api/v1/admin/catalog-curation"),
+    ("GET", "/api/v1/admin/catalog-curation/items"),
     ("GET", "/api/v1/admin/recommendations"),
     ("GET", "/api/v1/admin/music/settings"),
     ("POST", "/api/v1/admin/music/settings"),

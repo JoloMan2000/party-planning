@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../api/api_client.dart';
 import '../models/admin_recommendation.dart';
+import '../models/catalog_curation_settings.dart';
 import '../models/event_type.dart';
 import '../models/derived_party_context.dart';
 import '../models/guest_response.dart';
@@ -164,6 +165,34 @@ class PartyContextOverridesNotifier extends AsyncNotifier<List<PartyContextOverr
 final partyContextOverridesProvider =
     AsyncNotifierProvider<PartyContextOverridesNotifier, List<PartyContextOverride>>(
   PartyContextOverridesNotifier.new,
+);
+
+/// Der vollständige, ungefilterte Getränke-/Speisenkatalog fürs Kurations-
+/// Formular (mirroring `_drink_items(catalog, apply_curation=False)`/
+/// `_food_items(..., apply_curation=False)`).
+final curatableCatalogProvider = FutureProvider<CuratableCatalog>((ref) {
+  final token = ref.watch(_requiredAdminTokenProvider);
+  return ref.watch(apiClientProvider).getCuratableCatalog(token);
+});
+
+/// Aktuelle Catalog-Curation-Settings + Speichern-Aktion (mirroring
+/// `render_catalog_curation_section`'s Formular + Save-Button-Handler).
+class CatalogCurationNotifier extends AsyncNotifier<CatalogCurationSettings> {
+  @override
+  Future<CatalogCurationSettings> build() async {
+    final token = ref.watch(_requiredAdminTokenProvider);
+    return ref.watch(apiClientProvider).getCatalogCurationSettings(token);
+  }
+
+  Future<void> save(bool enabled, List<String> curatedItemIds) async {
+    final token = ref.read(_requiredAdminTokenProvider);
+    await ref.read(apiClientProvider).saveCatalogCurationSettings(token, enabled, curatedItemIds);
+    state = AsyncData(await ref.read(apiClientProvider).getCatalogCurationSettings(token));
+  }
+}
+
+final catalogCurationProvider = AsyncNotifierProvider<CatalogCurationNotifier, CatalogCurationSettings>(
+  CatalogCurationNotifier.new,
 );
 
 /// Admin-Sortiment-Empfehlungen (mirroring `render_recommendations_section`)
