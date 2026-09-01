@@ -7,6 +7,7 @@ import '../models/catalog_item.dart';
 import '../models/event_type.dart';
 import '../models/language_option.dart';
 import '../models/party_context.dart';
+import '../models/party_context_override.dart';
 import '../models/party_info.dart';
 import '../models/party_settings.dart';
 import '../models/guest_response_draft.dart';
@@ -195,6 +196,37 @@ class ApiClient {
       _uri('/api/v1/admin/party-context'),
       headers: _authHeaders(token),
       body: jsonEncode(context.toJson()),
+    );
+    if (resp.statusCode >= 400) {
+      throw ApiException(resp.statusCode, resp.body);
+    }
+  }
+
+  Future<List<PartyContextOverride>> getPartyContextOverrides(String token) async {
+    final resp = await _http.get(
+      _uri('/api/v1/admin/party-context/overrides'),
+      headers: _authHeaders(token),
+    );
+    return _decodeList(resp)
+        .map((e) => PartyContextOverride.fromJson((e as Map).cast<String, dynamic>()))
+        .toList();
+  }
+
+  Future<void> addPartyContextOverride(String token, String key, String value, String? reason) async {
+    final resp = await _http.post(
+      _uri('/api/v1/admin/party-context/overrides'),
+      headers: _authHeaders(token),
+      body: jsonEncode({'key': key, 'value': value, 'reason': reason}),
+    );
+    if (resp.statusCode >= 400) {
+      throw ApiException(resp.statusCode, resp.body);
+    }
+  }
+
+  Future<void> deletePartyContextOverride(String token, String key) async {
+    final resp = await _http.delete(
+      _uri('/api/v1/admin/party-context/overrides/$key'),
+      headers: _authHeaders(token),
     );
     if (resp.statusCode >= 400) {
       throw ApiException(resp.statusCode, resp.body);

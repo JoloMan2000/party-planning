@@ -49,3 +49,21 @@ def test_save_party_context_persistiert_und_gibt_status_ok(api_client, admin_hea
     assert saved["has_grill"] is True
     assert saved["seating_ratio"] == 0.4
     assert saved["weather_condition"] == "sunny"
+
+
+def test_override_add_list_delete_roundtrip(api_client, admin_headers):
+    payload = {"key": "temperature_class", "value": "warm", "reason": "Zelt mit Heizung"}
+    add_resp = api_client.post("/api/v1/admin/party-context/overrides", json=payload, headers=admin_headers)
+    assert add_resp.status_code == 201
+
+    list_resp = api_client.get("/api/v1/admin/party-context/overrides", headers=admin_headers)
+    overrides = list_resp.json()
+    assert any(o["key"] == "temperature_class" and o["value"] == "warm" for o in overrides)
+
+    delete_resp = api_client.delete(
+        "/api/v1/admin/party-context/overrides/temperature_class", headers=admin_headers
+    )
+    assert delete_resp.status_code == 200
+
+    list_resp_after = api_client.get("/api/v1/admin/party-context/overrides", headers=admin_headers)
+    assert not any(o["key"] == "temperature_class" for o in list_resp_after.json())

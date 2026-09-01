@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../api/api_client.dart';
 import '../models/event_type.dart';
 import '../models/party_context.dart';
+import '../models/party_context_override.dart';
 import '../models/party_settings.dart';
 import 'providers.dart';
 
@@ -119,4 +120,31 @@ class PartyContextNotifier extends AsyncNotifier<PartyContext> {
 
 final partyContextProvider = AsyncNotifierProvider<PartyContextNotifier, PartyContext>(
   PartyContextNotifier.new,
+);
+
+/// Bestehende Context-Overrides + Hinzufügen-/Entfernen-Aktionen (mirroring
+/// `render_party_context_overrides_section`).
+class PartyContextOverridesNotifier extends AsyncNotifier<List<PartyContextOverride>> {
+  @override
+  Future<List<PartyContextOverride>> build() async {
+    final token = ref.watch(_requiredAdminTokenProvider);
+    return ref.watch(apiClientProvider).getPartyContextOverrides(token);
+  }
+
+  Future<void> add(String key, String value, String? reason) async {
+    final token = ref.read(_requiredAdminTokenProvider);
+    await ref.read(apiClientProvider).addPartyContextOverride(token, key, value, reason);
+    state = AsyncData(await ref.read(apiClientProvider).getPartyContextOverrides(token));
+  }
+
+  Future<void> remove(String key) async {
+    final token = ref.read(_requiredAdminTokenProvider);
+    await ref.read(apiClientProvider).deletePartyContextOverride(token, key);
+    state = AsyncData(await ref.read(apiClientProvider).getPartyContextOverrides(token));
+  }
+}
+
+final partyContextOverridesProvider =
+    AsyncNotifierProvider<PartyContextOverridesNotifier, List<PartyContextOverride>>(
+  PartyContextOverridesNotifier.new,
 );
