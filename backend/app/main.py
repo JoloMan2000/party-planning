@@ -13,6 +13,9 @@ import sqlite3
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+import accounts.invitation_storage as invitation_storage
+import accounts.party_storage as party_storage
+import accounts.user_storage as user_storage
 import event_theme
 import music_engine.admin_settings as music_admin_settings
 import party_engine.response_storage as response_storage
@@ -28,6 +31,9 @@ from backend.app.routers import (
     auth,
     catalog,
     guest,
+    invitations,
+    me,
+    parties,
     translations,
 )
 from party_context import learning_storage
@@ -46,6 +52,9 @@ app.add_middleware(
 
 for router in (
     auth.router,
+    me.router,
+    parties.router,
+    invitations.router,
     catalog.router,
     guest.router,
     translations.router,
@@ -66,6 +75,9 @@ def on_startup() -> None:
     ``"Party Planning.py"``, sicher parallel zum Streamlit-Prozess gegen
     dieselbe ``responses.db`` aufrufbar."""
     db_path = settings.db_path
+    user_storage.init_user_storage(db_path)
+    party_storage.init_party_storage(db_path)
+    invitation_storage.init_invitation_storage(db_path)
     event_theme.init_party_settings(db_path)
     music_admin_settings.init_music_admin_settings(db_path)
     party_context_storage.init_party_context_storage(db_path)

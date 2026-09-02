@@ -6,6 +6,8 @@ AUFGABE §43) genau einmal pro Testsession.
 
 from __future__ import annotations
 
+import uuid
+
 import pytest
 
 from party_engine.catalog import load_catalog
@@ -43,16 +45,42 @@ def api_client(tmp_path, monkeypatch):
 
 
 @pytest.fixture()
-def admin_token(api_client):
-    """Gültiges Admin-JWT via echten Login-Endpunkt (mirroring des
-    Passwort-Login-Flows, kein direktes Token-Forging)."""
-    from backend.app.core.config import settings
-
-    resp = api_client.post("/api/v1/auth/admin/login", json={"password": settings.admin_password})
-    assert resp.status_code == 200
-    return resp.json()["access_token"]
+def admin_headers():
+    """Die 7 Legacy-``admin_*``-Router sind seit dem Account-basierten Pivot
+    (Phase 1, Entscheidung #2 "clean break") absichtlich unauthentifiziert -
+    ``get_current_admin``/``settings.admin_password`` existieren nicht mehr.
+    Diese Fixture liefert daher bewusst leere Headers, bis eine spätere Phase
+    Admin-Zugriff auf dem neuen Rollenmodell neu aufbaut."""
+    return {}
 
 
 @pytest.fixture()
-def admin_headers(admin_token):
-    return {"Authorization": f"Bearer {admin_token}"}
+def user_factory(api_client):
+    """Legt einen echten User via ``POST /auth/signup`` an (kein direktes
+    DB-Seeding/Token-Forging) und liefert die volle Token-Response
+    (``access_token``, ``refresh_token``, ``user``)."""
+
+    def _make_user(email: str | None = None, display_name: str = "Test User", password: str = "testpassword123") -> dict:
+        email = email or f"user-{uuid.uuid4().hex}@example.com"
+        resp = api_client.post(
+            "/api/v1/auth/signup", json={"email": email, "password": password, "display_name": display_name}
+        )
+        assert resp.status_code == 201, resp.text
+        return resp.json()
+
+    return _make_user
+
+
+@pytest.fixture()
+def auth_headers_factory(user_factory):
+    """Liefert ``(headers, user, refresh_token)`` für einen frisch angelegten
+    User - der übliche Fall in API-Tests, die nur die Auth-Headers brauchen."""
+
+    def _make_headers(
+        email: str | None = None, display_name: str = "Test User", password: str = "testpassword123"
+    ) -> tuple[dict, dict, str]:
+        token_response = user_factory(email=email, display_name=display_name, password=password)
+        headers = {"Authorization": f"Bearer {token_response['access_token']}"}
+        return headers, token_response["user"], token_response["refresh_token"]
+
+    return _make_headers

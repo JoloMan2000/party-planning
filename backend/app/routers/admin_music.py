@@ -8,14 +8,13 @@ import party_engine.context_orchestration as context_orchestration
 import party_engine.response_storage as response_storage
 from backend.app.core.dataclass_json import to_jsonable
 from backend.app.core.deps import get_db_path, get_music_catalog, get_music_occasions
-from backend.app.core.security import get_current_admin
 from backend.app.schemas.admin import ArtistOverrideCreate, MusicSettingsUpdate, TrackOverrideCreate
 from music_engine.domain import MusicCatalog, MusicOccasionProfile
 from music_engine.engine import plan_party_music
 from music_engine.legacy_adapter import raw_song_requests_from_responses
 from music_engine.occasions import get_music_occasion
 
-router = APIRouter(prefix="/api/v1/admin/music", tags=["admin"], dependencies=[Depends(get_current_admin)])
+router = APIRouter(prefix="/api/v1/admin/music", tags=["admin"])
 
 
 @router.get("/settings")

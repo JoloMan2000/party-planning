@@ -4,3 +4,4 @@ pydantic-settings>=2.2
 python-jose[cryptography]>=3.3
 httpx>=0.27
 eval_type_backport>=0.2  # nötig für "X | Y"-Typannotationen unter Python <3.10 (siehe Pydantic v2)
+argon2-cffi>=23.1  # OWASP-empfohlenes Passwort-Hashing (Argon2id) für echte User-Accounts

@@ -8,11 +8,10 @@ from fastapi import APIRouter, Depends, Response
 
 import party_engine.response_storage as response_storage
 from backend.app.core.deps import get_catalog, get_db_path
-from backend.app.core.security import get_current_admin
 from party_engine.domain import PartyCatalog
 from translations import catalog_item_name
 
-router = APIRouter(prefix="/api/v1/admin/responses", tags=["admin"], dependencies=[Depends(get_current_admin)])
+router = APIRouter(prefix="/api/v1/admin/responses", tags=["admin"])
 
 
 def _display_name_for_selection(value: str, catalog: PartyCatalog, lang: str = "de") -> str:

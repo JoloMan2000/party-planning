@@ -9,13 +9,12 @@ import party_engine.context_orchestration as context_orchestration
 import party_engine.response_storage as response_storage
 from backend.app.core.dataclass_json import to_jsonable
 from backend.app.core.deps import get_catalog, get_db_path, get_occasions
-from backend.app.core.security import get_current_admin
 from party_context import learning_storage
 from party_engine.domain import PartyCatalog
 from party_engine.recommendation import format_score_explanation, recommend_for_admin, resolve_occasion_for_scoring
 from party_engine.recommendation_domain import RecommendationContext
 
-router = APIRouter(prefix="/api/v1/admin/recommendations", tags=["admin"], dependencies=[Depends(get_current_admin)])
+router = APIRouter(prefix="/api/v1/admin/recommendations", tags=["admin"])
 
 
 @router.get("")

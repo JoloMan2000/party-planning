@@ -7,14 +7,13 @@ import party_engine.context_orchestration as context_orchestration
 import party_engine.response_storage as response_storage
 from backend.app.core.dataclass_json import to_jsonable
 from backend.app.core.deps import get_db_path
-from backend.app.core.security import get_current_admin
 from backend.app.schemas.admin import PartyContextOverrideCreate, PartyContextUpdate
 from party_context import storage as party_context_storage
 from party_context.countries import ISO_COUNTRIES
 from party_context.domain import PartyContextOverride
 from party_context.locations import LOCATION_LABELS, LOCATION_TYPES
 
-router = APIRouter(prefix="/api/v1/admin/party-context", tags=["admin"], dependencies=[Depends(get_current_admin)])
+router = APIRouter(prefix="/api/v1/admin/party-context", tags=["admin"])
 
 
 @router.get("/metadata")

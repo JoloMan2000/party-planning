@@ -5,11 +5,10 @@ from fastapi import APIRouter, Depends
 import event_theme
 import party_engine.context_orchestration as context_orchestration
 from backend.app.core.deps import get_catalog, get_db_path
-from backend.app.core.security import get_current_admin
 from backend.app.schemas.admin import PartySettingsUpdate
 from party_engine.domain import PartyCatalog
 
-router = APIRouter(prefix="/api/v1/admin/party-settings", tags=["admin"], dependencies=[Depends(get_current_admin)])
+router = APIRouter(prefix="/api/v1/admin/party-settings", tags=["admin"])
 
 
 @router.get("")

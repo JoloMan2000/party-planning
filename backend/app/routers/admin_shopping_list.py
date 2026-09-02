@@ -7,12 +7,11 @@ import party_engine.context_orchestration as context_orchestration
 import party_engine.response_storage as response_storage
 from backend.app.core.dataclass_json import to_jsonable
 from backend.app.core.deps import get_catalog, get_db_path
-from backend.app.core.security import get_current_admin
 from party_engine.domain import PartyCatalog, PartyConfig
 from party_engine.engine import compute_party_demand
 from party_engine.legacy_adapter import guest_response_from_row
 
-router = APIRouter(prefix="/api/v1/admin/shopping-list", tags=["admin"], dependencies=[Depends(get_current_admin)])
+router = APIRouter(prefix="/api/v1/admin/shopping-list", tags=["admin"])
 
 
 @router.post("")

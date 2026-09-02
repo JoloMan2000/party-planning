@@ -20,10 +20,10 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=str(REPO_ROOT / ".env"), env_file_encoding="utf-8", extra="ignore")
 
     db_path: Path = REPO_ROOT / "responses.db"
-    admin_password: str = "change-me-to-a-secret-value"
     jwt_secret: str = "change-me-to-a-secret-jwt-signing-key"
     jwt_algorithm: str = "HS256"
-    jwt_expire_minutes: int = 60 * 12
+    access_token_expire_minutes: int = 15
+    refresh_token_expire_days: int = 30
     cors_origins: list[str] = ["*"]
 
 

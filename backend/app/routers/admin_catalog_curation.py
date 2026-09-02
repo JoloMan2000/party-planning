@@ -4,13 +4,12 @@ from fastapi import APIRouter, Depends
 
 from backend.app.core.dataclass_json import to_jsonable
 from backend.app.core.deps import get_catalog, get_db_path
-from backend.app.core.security import get_current_admin
 from backend.app.routers.catalog import _DRINK_DEMAND_GROUPS, _FOOD_DEMAND_GROUPS, _selectable
 from backend.app.schemas.admin import CatalogCurationUpdate
 from party_engine.catalog_curation import get_catalog_curation_settings, save_catalog_curation_settings
 from party_engine.domain import CatalogCurationSettings, PartyCatalog
 
-router = APIRouter(prefix="/api/v1/admin/catalog-curation", tags=["admin"], dependencies=[Depends(get_current_admin)])
+router = APIRouter(prefix="/api/v1/admin/catalog-curation", tags=["admin"])
 
 
 @router.get("")
