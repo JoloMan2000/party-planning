@@ -4,20 +4,26 @@ import 'package:http/http.dart' as http;
 
 import '../models/admin_login_response.dart';
 import '../models/admin_recommendation.dart';
+import '../models/auth_token_response.dart';
 import '../models/catalog_curation_settings.dart';
 import '../models/catalog_item.dart';
 import '../models/derived_party_context.dart';
 import '../models/event_type.dart';
 import '../models/guest_response.dart';
+import '../models/invitation.dart';
 import '../models/language_option.dart';
 import '../models/music_admin_settings.dart';
 import '../models/music_planning_result.dart';
+import '../models/party.dart';
 import '../models/party_context.dart';
 import '../models/party_context_override.dart';
 import '../models/party_demand_result.dart';
+import '../models/party_guests_response.dart';
 import '../models/party_info.dart';
 import '../models/party_settings.dart';
 import '../models/guest_response_draft.dart';
+import '../models/rsvp_response.dart';
+import '../models/user_account.dart';
 import 'api_config.dart';
 
 /// Wird geworfen, wenn der Backend-Request mit einem Fehlerstatus antwortet.
@@ -26,6 +32,20 @@ class ApiException implements Exception {
   final String message;
 
   ApiException(this.statusCode, this.message);
+
+  /// Best-effort JSON-decodierter `detail`-Wert aus [message] (FastAPI packt
+  /// `HTTPException(detail=...)` immer unter diesem Key, teils als String,
+  /// teils als Objekt, z.B. `{"message": ..., "current_version": ...}` beim
+  /// RSVP-409). `null`, wenn [message] kein valides JSON ist.
+  dynamic get detail {
+    try {
+      final decoded = jsonDecode(message);
+      if (decoded is Map<String, dynamic>) return decoded['detail'];
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
 
   @override
   String toString() => 'ApiException($statusCode): $message';
@@ -342,6 +362,205 @@ class ApiClient {
       headers: _authHeaders(token),
     );
     return PartyDemandResult.fromJson(_decodeObject(resp));
+  }
+
+  // ---------------------------------------------------------------------
+  // Account-basierter Auth-/Party-/Invitation-Flow (Phase 3). `ApiClient`
+  // bleibt bewusst speicher-agnostisch (siehe Admin-Token-Handling oben) -
+  // Tokens werden vom Aufrufer (`AuthNotifier`) übergeben, nie selbst aus
+  // `flutter_secure_storage` gelesen.
+  // ---------------------------------------------------------------------
+
+  /// Führt [request] mit [accessToken] aus; bei 401 wird [onRefresh] genau
+  /// einmal aufgerufen (liefert das neue Access-Token oder `null` bei
+  /// gescheitertem Refresh), der Request dann genau einmal wiederholt.
+  /// Liefert weiterhin die 401-Antwort, wenn [onRefresh] fehlschlägt - der
+  /// Aufrufer (State-Layer) ist dafür verantwortlich, das als "muss neu
+  /// einloggen" zu behandeln (siehe `AuthNotifier.refreshAndPersist`).
+  Future<http.Response> _authorizedRequest(
+    Future<http.Response> Function(String accessToken) request,
+    String accessToken,
+    Future<String?> Function() onRefresh,
+  ) async {
+    var resp = await request(accessToken);
+    if (resp.statusCode == 401) {
+      final newToken = await onRefresh();
+      if (newToken != null) {
+        resp = await request(newToken);
+      }
+    }
+    return resp;
+  }
+
+  Future<AuthTokenResponse> signup({
+    required String email,
+    required String password,
+    required String displayName,
+  }) async {
+    final resp = await _http.post(
+      _uri('/api/v1/auth/signup'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email, 'password': password, 'display_name': displayName}),
+    );
+    return AuthTokenResponse.fromJson(_decodeObject(resp));
+  }
+
+  Future<AuthTokenResponse> login({required String email, required String password}) async {
+    final resp = await _http.post(
+      _uri('/api/v1/auth/login'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email, 'password': password}),
+    );
+    return AuthTokenResponse.fromJson(_decodeObject(resp));
+  }
+
+  /// Bewusst NICHT über [_authorizedRequest] geführt - der Refresh selbst
+  /// ist das, was bei einem 401 passiert; ihn zu wrappen wäre zirkulär.
+  Future<AuthTokenResponse> refreshTokens(String refreshToken) async {
+    final resp = await _http.post(
+      _uri('/api/v1/auth/refresh'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'refresh_token': refreshToken}),
+    );
+    return AuthTokenResponse.fromJson(_decodeObject(resp));
+  }
+
+  Future<void> logout(String refreshToken) async {
+    await _http.post(
+      _uri('/api/v1/auth/logout'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'refresh_token': refreshToken}),
+    );
+  }
+
+  Future<UserAccount> getMe(String accessToken, Future<String?> Function() onRefresh) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/me'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return UserAccount.fromJson(_decodeObject(resp));
+  }
+
+  Future<List<Party>> getMyParties(String accessToken, Future<String?> Function() onRefresh) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/me/parties'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return _decodeList(resp).map((e) => Party.fromJson((e as Map).cast<String, dynamic>())).toList();
+  }
+
+  Future<List<Invitation>> getMyInvitations(String accessToken, Future<String?> Function() onRefresh) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/me/invitations'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return _decodeList(resp).map((e) => Invitation.fromJson((e as Map).cast<String, dynamic>())).toList();
+  }
+
+  Future<Party> createParty(
+    String accessToken,
+    Future<String?> Function() onRefresh, {
+    required String name,
+    String description = '',
+    DateTime? startsAt,
+    String location = '',
+  }) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.post(
+        _uri('/api/v1/parties'),
+        headers: _authHeaders(token),
+        body: jsonEncode({
+          'name': name,
+          'description': description,
+          'starts_at': startsAt?.toIso8601String(),
+          'location': location,
+        }),
+      ),
+      accessToken,
+      onRefresh,
+    );
+    return Party.fromJson(_decodeObject(resp));
+  }
+
+  Future<Party> getParty(String accessToken, Future<String?> Function() onRefresh, String partyId) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/parties/$partyId'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return Party.fromJson(_decodeObject(resp));
+  }
+
+  Future<PartyGuestsResponse> getPartyGuests(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String partyId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/parties/$partyId/guests'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return PartyGuestsResponse.fromJson(_decodeObject(resp));
+  }
+
+  Future<Invitation> inviteGuest(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String partyId, {
+    required String invitedUserEmail,
+    String invitationMessage = '',
+  }) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.post(
+        _uri('/api/v1/parties/$partyId/invitations'),
+        headers: _authHeaders(token),
+        body: jsonEncode({'invited_user_email': invitedUserEmail, 'invitation_message': invitationMessage}),
+      ),
+      accessToken,
+      onRefresh,
+    );
+    return Invitation.fromJson(_decodeObject(resp));
+  }
+
+  Future<Invitation> getInvitation(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String invitationId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/invitations/$invitationId'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return Invitation.fromJson(_decodeObject(resp));
+  }
+
+  Future<RsvpResponse> rsvp(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String invitationId, {
+    required String status,
+    required int version,
+    String? clientRequestId,
+  }) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.put(
+        _uri('/api/v1/invitations/$invitationId/rsvp'),
+        headers: _authHeaders(token),
+        body: jsonEncode({
+          'status': status,
+          'version': version,
+          'client_request_id': ?clientRequestId,
+        }),
+      ),
+      accessToken,
+      onRefresh,
+    );
+    return RsvpResponse.fromJson(_decodeObject(resp));
   }
 
   void close() => _http.close();
