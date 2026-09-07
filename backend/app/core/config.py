@@ -36,18 +36,26 @@ class Settings(BaseSettings):
     smtp_password: str = "placeholder-app-password"
     smtp_from_email: str = "no-reply@partyplanning.local"
     password_reset_base_url: str = "partyplanning://reset"
+    email_verification_base_url: str = "partyplanning://verify"
+    account_unlock_base_url: str = "partyplanning://unlock"
     # Komma-separierte E-Mail-Liste, siehe backend/app/core/auth.py::require_admin.
     # Bewusst kein echtes Rollen-/Superuser-Modell (siehe Plan) - isoliert
     # hinter genau einer Dependency, damit ein späteres echtes System das
     # hier problemlos ersetzen kann.
     admin_emails: str = ""
     # Brute-Force-Schutz für /auth/login (siehe routers/auth.py + accounts/
-    # user_storage.py::record_failed_login). 5 Versuche / 15 Minuten Sperre
-    # ist ein gängiger Mittelweg (OWASP nennt 3-5 als üblichen Schwellwert für
-    # nutzerseitige Logins) - genug Toleranz für normale Tippfehler, aber eng
-    # genug, dass automatisiertes Passwort-Raten unpraktikabel langsam wird.
-    login_max_failed_attempts: int = 5
-    login_lockout_minutes: int = 15
+    # user_storage.py::record_failed_login) - 3-stufige Eskalation statt einer
+    # einzigen, unbegrenzt wiederholbaren Sperre: Tier 1 (5 Versuche / 15 Min)
+    # ist der bisherige, gängige OWASP-Mittelweg für normale Tippfehler; Tier 2
+    # (3 weitere Versuche / 1 Tag) und Tier 3 (5 weitere Versuche / dauerhafte
+    # Blockierung, nur per E-Mail-Unlock aufhebbar) machen automatisiertes
+    # Passwort-Raten über einen einzelnen Account hinweg unpraktikabel, statt
+    # nur zu verlangsamen.
+    login_tier1_max_attempts: int = 5
+    login_tier1_lockout_minutes: int = 15
+    login_tier2_max_attempts: int = 3
+    login_tier2_lockout_minutes: int = 60 * 24
+    login_tier3_max_attempts: int = 5
 
 
 settings = Settings()

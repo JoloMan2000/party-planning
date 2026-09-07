@@ -51,10 +51,32 @@ class PasswordResetTokenRecord:
 
 
 @dataclass
+class EmailVerificationTokenRecord:
+    id: str
+    user_id: str
+    token_hash: str
+    expires_at: datetime
+    used_at: datetime | None
+    created_at: datetime
+
+
+@dataclass
+class AccountUnlockTokenRecord:
+    id: str
+    user_id: str
+    token_hash: str
+    expires_at: datetime
+    used_at: datetime | None
+    created_at: datetime
+
+
+@dataclass
 class LoginAttemptRecord:
     email: str
     failed_count: int
+    tier: int
     locked_until: datetime | None
+    blocked_at: datetime | None
     updated_at: datetime
 
 
@@ -80,6 +102,7 @@ def init_user_storage(db_path: str | Path) -> None:
         existing_user_cols = {row[1] for row in conn.execute("PRAGMA table_info(users)")}
         user_migrations = {
             "is_verified": "ALTER TABLE users ADD COLUMN is_verified INTEGER NOT NULL DEFAULT 0",
+            "email_verified": "ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0",
         }
         for column, ddl in user_migrations.items():
             if column not in existing_user_cols:
@@ -115,11 +138,46 @@ def init_user_storage(db_path: str | Path) -> None:
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user ON password_reset_tokens(user_id)"
         )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS email_verification_tokens (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                token_hash TEXT NOT NULL,
+                expires_at TEXT NOT NULL,
+                used_at TEXT,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_email_verification_tokens_user ON email_verification_tokens(user_id)"
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS account_unlock_tokens (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                token_hash TEXT NOT NULL,
+                expires_at TEXT NOT NULL,
+                used_at TEXT,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_account_unlock_tokens_user ON account_unlock_tokens(user_id)"
+        )
         # Brute-Force-Schutz für `/auth/login` (siehe backend/app/routers/auth.py)
         # - keyed by der eingegebenen E-Mail-Zeichenkette, nicht der User-ID,
         # damit auch Angriffe gegen nicht-registrierte Adressen gezählt/
         # gedrosselt werden (sonst wäre "wird gesperrt" selbst ein Signal
-        # dafür, dass der Account existiert).
+        # dafür, dass der Account existiert). 3-stufige Eskalation (siehe
+        # `record_failed_login`): `tier` 0/1/2/3, `locked_until` für die
+        # zeitbasierten Sperren (Tier 1/2), `blocked_at` für die dauerhafte
+        # Blockierung (Tier 3, nur per E-Mail-Unlock aufhebbar).
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS login_attempts (
@@ -130,6 +188,14 @@ def init_user_storage(db_path: str | Path) -> None:
             )
             """
         )
+        existing_login_attempt_cols = {row[1] for row in conn.execute("PRAGMA table_info(login_attempts)")}
+        login_attempt_migrations = {
+            "tier": "ALTER TABLE login_attempts ADD COLUMN tier INTEGER NOT NULL DEFAULT 0",
+            "blocked_at": "ALTER TABLE login_attempts ADD COLUMN blocked_at TEXT",
+        }
+        for column, ddl in login_attempt_migrations.items():
+            if column not in existing_login_attempt_cols:
+                conn.execute(ddl)
 
 
 def _row_to_user(row: sqlite3.Row) -> User:
@@ -139,6 +205,7 @@ def _row_to_user(row: sqlite3.Row) -> User:
         display_name=row["display_name"],
         profile_image=row["profile_image"],
         is_verified=bool(row["is_verified"]),
+        email_verified=bool(row["email_verified"]),
         created_at=datetime.fromisoformat(row["created_at"]),
     )
 
@@ -164,7 +231,8 @@ def get_user_by_id(db_path: str | Path, user_id: str) -> User | None:
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
         row = conn.execute(
-            "SELECT id, email, display_name, profile_image, is_verified, created_at FROM users WHERE id = ?",
+            "SELECT id, email, display_name, profile_image, is_verified, email_verified, created_at "
+            "FROM users WHERE id = ?",
             (user_id,),
         ).fetchone()
     return _row_to_user(row) if row is not None else None
@@ -175,7 +243,8 @@ def get_user_by_email(db_path: str | Path, email: str) -> User | None:
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
         row = conn.execute(
-            "SELECT id, email, display_name, profile_image, is_verified, created_at FROM users WHERE email = ?",
+            "SELECT id, email, display_name, profile_image, is_verified, email_verified, created_at "
+            "FROM users WHERE email = ?",
             (normalized_email,),
         ).fetchone()
     return _row_to_user(row) if row is not None else None
@@ -187,7 +256,7 @@ def list_users(db_path: str | Path) -> list[User]:
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
         rows = conn.execute(
-            "SELECT id, email, display_name, profile_image, is_verified, created_at "
+            "SELECT id, email, display_name, profile_image, is_verified, email_verified, created_at "
             "FROM users ORDER BY created_at"
         ).fetchall()
     return [_row_to_user(row) for row in rows]
@@ -196,6 +265,11 @@ def list_users(db_path: str | Path) -> list[User]:
 def set_user_verified(db_path: str | Path, user_id: str, is_verified: bool) -> None:
     with sqlite3.connect(db_path) as conn:
         conn.execute("UPDATE users SET is_verified = ? WHERE id = ?", (int(is_verified), user_id))
+
+
+def set_email_verified(db_path: str | Path, user_id: str, verified: bool = True) -> None:
+    with sqlite3.connect(db_path) as conn:
+        conn.execute("UPDATE users SET email_verified = ? WHERE id = ?", (int(verified), user_id))
 
 
 def get_credentials_by_email(db_path: str | Path, email: str) -> tuple[User, str] | None:
@@ -315,6 +389,94 @@ def invalidate_password_reset_tokens_for_user(db_path: str | Path, user_id: str)
         )
 
 
+def create_email_verification_token(
+    db_path: str | Path, token_id: str, user_id: str, token_hash: str, expires_at: datetime
+) -> None:
+    now = datetime.now().isoformat()
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            "INSERT INTO email_verification_tokens (id, user_id, token_hash, expires_at, created_at) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (token_id, user_id, token_hash, expires_at.isoformat(), now),
+        )
+
+
+def get_email_verification_token(db_path: str | Path, token_id: str) -> EmailVerificationTokenRecord | None:
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        row = conn.execute("SELECT * FROM email_verification_tokens WHERE id = ?", (token_id,)).fetchone()
+    if row is None:
+        return None
+    return EmailVerificationTokenRecord(
+        id=row["id"],
+        user_id=row["user_id"],
+        token_hash=row["token_hash"],
+        expires_at=datetime.fromisoformat(row["expires_at"]),
+        used_at=datetime.fromisoformat(row["used_at"]) if row["used_at"] else None,
+        created_at=datetime.fromisoformat(row["created_at"]),
+    )
+
+
+def mark_email_verification_token_used(db_path: str | Path, token_id: str) -> None:
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            "UPDATE email_verification_tokens SET used_at = ? WHERE id = ?",
+            (datetime.now().isoformat(), token_id),
+        )
+
+
+def invalidate_email_verification_tokens_for_user(db_path: str | Path, user_id: str) -> None:
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            "UPDATE email_verification_tokens SET used_at = ? WHERE user_id = ? AND used_at IS NULL",
+            (datetime.now().isoformat(), user_id),
+        )
+
+
+def create_account_unlock_token(
+    db_path: str | Path, token_id: str, user_id: str, token_hash: str, expires_at: datetime
+) -> None:
+    now = datetime.now().isoformat()
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            "INSERT INTO account_unlock_tokens (id, user_id, token_hash, expires_at, created_at) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (token_id, user_id, token_hash, expires_at.isoformat(), now),
+        )
+
+
+def get_account_unlock_token(db_path: str | Path, token_id: str) -> AccountUnlockTokenRecord | None:
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        row = conn.execute("SELECT * FROM account_unlock_tokens WHERE id = ?", (token_id,)).fetchone()
+    if row is None:
+        return None
+    return AccountUnlockTokenRecord(
+        id=row["id"],
+        user_id=row["user_id"],
+        token_hash=row["token_hash"],
+        expires_at=datetime.fromisoformat(row["expires_at"]),
+        used_at=datetime.fromisoformat(row["used_at"]) if row["used_at"] else None,
+        created_at=datetime.fromisoformat(row["created_at"]),
+    )
+
+
+def mark_account_unlock_token_used(db_path: str | Path, token_id: str) -> None:
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            "UPDATE account_unlock_tokens SET used_at = ? WHERE id = ?",
+            (datetime.now().isoformat(), token_id),
+        )
+
+
+def invalidate_account_unlock_tokens_for_user(db_path: str | Path, user_id: str) -> None:
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            "UPDATE account_unlock_tokens SET used_at = ? WHERE user_id = ? AND used_at IS NULL",
+            (datetime.now().isoformat(), user_id),
+        )
+
+
 def get_login_attempt(db_path: str | Path, email: str) -> LoginAttemptRecord | None:
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
@@ -324,38 +486,73 @@ def get_login_attempt(db_path: str | Path, email: str) -> LoginAttemptRecord | N
     return LoginAttemptRecord(
         email=row["email"],
         failed_count=row["failed_count"],
+        tier=row["tier"],
         locked_until=datetime.fromisoformat(row["locked_until"]) if row["locked_until"] else None,
+        blocked_at=datetime.fromisoformat(row["blocked_at"]) if row["blocked_at"] else None,
         updated_at=datetime.fromisoformat(row["updated_at"]),
     )
 
 
 def record_failed_login(
-    db_path: str | Path, email: str, *, max_attempts: int, lockout_minutes: int
+    db_path: str | Path,
+    email: str,
+    *,
+    tier1_max_attempts: int,
+    tier1_lockout_minutes: int,
+    tier2_max_attempts: int,
+    tier2_lockout_minutes: int,
+    tier3_max_attempts: int,
 ) -> LoginAttemptRecord:
-    """Erhöht den Fehlversuch-Zähler für ``email`` (unabhängig davon, ob ein
-    Account mit dieser Adresse existiert, siehe Doc-Kommentar auf der
-    ``login_attempts``-Tabelle in ``init_user_storage``). Setzt ``locked_until``,
-    sobald ``max_attempts`` erreicht ist - der Zähler selbst wird dabei NICHT
-    zurückgesetzt, ein weiterer Versuch während der Sperre erhöht ihn also
-    weiter (kein Reset-Trick, um die Sperre zu umgehen)."""
+    """3-stufige Eskalation: Tier 0->1 nach ``tier1_max_attempts`` Fehlversuchen
+    (``tier1_lockout_minutes`` Sperre), Tier 1->2 nach weiteren
+    ``tier2_max_attempts`` Fehlversuchen (``tier2_lockout_minutes`` Sperre),
+    Tier 2->3 nach weiteren ``tier3_max_attempts`` Fehlversuchen (dauerhafte
+    Blockierung via ``blocked_at``, nur per E-Mail-Unlock aufhebbar). Der
+    Zähler wird bei jedem Tier-Wechsel auf 0 zurückgesetzt, damit die nächste
+    Stufe wieder frisch zählt. Wird nie für einen bereits blockierten Account
+    aufgerufen (siehe ``login()`` - der Blocked-Check läuft davor)."""
     now = datetime.now(timezone.utc)
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
-        row = conn.execute("SELECT failed_count FROM login_attempts WHERE email = ?", (email,)).fetchone()
-        new_count = (row["failed_count"] if row is not None else 0) + 1
-        locked_until = now + timedelta(minutes=lockout_minutes) if new_count >= max_attempts else None
+        row = conn.execute(
+            "SELECT failed_count, tier FROM login_attempts WHERE email = ?", (email,)
+        ).fetchone()
+        failed_count = row["failed_count"] if row is not None else 0
+        tier = row["tier"] if row is not None else 0
+        new_count = failed_count + 1
+        thresholds = {0: tier1_max_attempts, 1: tier2_max_attempts, 2: tier3_max_attempts}
+        locked_until = None
+        blocked_at = None
+        if new_count >= thresholds[tier]:
+            if tier == 0:
+                locked_until = now + timedelta(minutes=tier1_lockout_minutes)
+            elif tier == 1:
+                locked_until = now + timedelta(minutes=tier2_lockout_minutes)
+            else:
+                blocked_at = now
+            tier += 1
+            new_count = 0
         conn.execute(
             """
-            INSERT INTO login_attempts (email, failed_count, locked_until, updated_at)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO login_attempts (email, failed_count, tier, locked_until, blocked_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?)
             ON CONFLICT(email) DO UPDATE SET
-                failed_count = excluded.failed_count,
-                locked_until = excluded.locked_until,
+                failed_count = excluded.failed_count, tier = excluded.tier,
+                locked_until = excluded.locked_until, blocked_at = excluded.blocked_at,
                 updated_at = excluded.updated_at
             """,
-            (email, new_count, locked_until.isoformat() if locked_until else None, now.isoformat()),
+            (
+                email,
+                new_count,
+                tier,
+                locked_until.isoformat() if locked_until else None,
+                blocked_at.isoformat() if blocked_at else None,
+                now.isoformat(),
+            ),
         )
-    return LoginAttemptRecord(email=email, failed_count=new_count, locked_until=locked_until, updated_at=now)
+    return LoginAttemptRecord(
+        email=email, failed_count=new_count, tier=tier, locked_until=locked_until, blocked_at=blocked_at, updated_at=now
+    )
 
 
 def reset_login_attempts(db_path: str | Path, email: str) -> None:

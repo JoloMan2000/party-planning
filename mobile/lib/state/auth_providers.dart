@@ -381,6 +381,13 @@ final showForgotPasswordProvider = StateProvider<bool>((ref) => false);
 /// Gesetzt vom `partyplanning://reset/{token}`-Deep-Link-Handler in
 /// `main.dart` - `null` = kein Reset-Flow aktiv.
 final passwordResetTokenProvider = StateProvider<String?>((ref) => null);
+/// Gesetzt vom `partyplanning://verify/{token}`-Deep-Link-Handler in
+/// `main.dart` - `null` = kein Verify-Flow aktiv.
+final emailVerificationTokenProvider = StateProvider<String?>((ref) => null);
+/// Gesetzt vom `partyplanning://unlock/{token}`-Deep-Link-Handler in
+/// `main.dart` - `null` = kein Unlock-Flow aktiv.
+final accountUnlockTokenProvider = StateProvider<String?>((ref) => null);
+final showAccountUnlockRequestProvider = StateProvider<bool>((ref) => false);
 final selectedPartyIdProvider = StateProvider<String?>((ref) => null);
 final selectedInvitationIdProvider = StateProvider<String?>((ref) => null);
 final creatingPartyProvider = StateProvider<bool>((ref) => false);
@@ -635,3 +642,89 @@ class ResetPasswordNotifier extends AsyncNotifier<void> {
 }
 
 final resetPasswordProvider = AsyncNotifierProvider<ResetPasswordNotifier, void>(ResetPasswordNotifier.new);
+
+// ---------------------------------------------------------------------
+// Email-Verification + Account-Unlock-Flow - mirroring den Forgot-Password-
+// Block oben (gleiches breites `catch (e)`-Muster).
+// ---------------------------------------------------------------------
+
+/// Bestätigt einen `verify-email`-Token. Invalidiert `currentUserProvider`
+/// bei Erfolg, damit die "E-Mail verifizieren"-Banner in `HomeShell` sofort
+/// verschwindet, ohne dass der Nutzer manuell neu laden muss.
+class VerifyEmailNotifier extends AsyncNotifier<void> {
+  @override
+  Future<void> build() async {}
+
+  Future<void> confirm(String token) async {
+    state = const AsyncLoading();
+    try {
+      await ref.read(apiClientProvider).verifyEmail(token: token);
+      state = const AsyncData(null);
+      ref.invalidate(currentUserProvider);
+    } catch (e) {
+      state = AsyncError(e, StackTrace.current);
+    }
+  }
+}
+
+final verifyEmailProvider = AsyncNotifierProvider<VerifyEmailNotifier, void>(VerifyEmailNotifier.new);
+
+/// Verlangt einen bereits eingeloggten Nutzer (`requiredAccessTokenProvider`),
+/// anders als die übrigen Notifiers in diesem Block - der "Resend"-Button
+/// lebt im eingeloggten `HomeShell`-Banner.
+class ResendVerificationEmailNotifier extends AsyncNotifier<void> {
+  @override
+  Future<void> build() async {}
+
+  Future<void> resend() async {
+    final token = ref.read(requiredAccessTokenProvider);
+    state = const AsyncLoading();
+    try {
+      await ref.read(apiClientProvider).resendVerificationEmail(token, onRefresh(ref));
+      state = const AsyncData(null);
+    } catch (e) {
+      state = AsyncError(e, StackTrace.current);
+    }
+  }
+}
+
+final resendVerificationEmailProvider =
+    AsyncNotifierProvider<ResendVerificationEmailNotifier, void>(ResendVerificationEmailNotifier.new);
+
+class RequestAccountUnlockNotifier extends AsyncNotifier<void> {
+  @override
+  Future<void> build() async {}
+
+  Future<void> request(String email) async {
+    state = const AsyncLoading();
+    try {
+      await ref.read(apiClientProvider).requestAccountUnlock(email: email);
+      state = const AsyncData(null);
+    } catch (e) {
+      state = AsyncError(e, StackTrace.current);
+    }
+  }
+}
+
+final requestAccountUnlockProvider =
+    AsyncNotifierProvider<RequestAccountUnlockNotifier, void>(RequestAccountUnlockNotifier.new);
+
+class UnlockAccountNotifier extends AsyncNotifier<void> {
+  @override
+  Future<void> build() async {}
+
+  /// Löscht `accountUnlockTokenProvider` bewusst NICHT automatisch bei
+  /// Erfolg - mirroring `ResetPasswordNotifier.reset`, damit der Screen die
+  /// Erfolgsmeldung zeigen kann, bevor der Nutzer aktiv weitergeht.
+  Future<void> confirm(String token) async {
+    state = const AsyncLoading();
+    try {
+      await ref.read(apiClientProvider).unlockAccount(token: token);
+      state = const AsyncData(null);
+    } catch (e) {
+      state = AsyncError(e, StackTrace.current);
+    }
+  }
+}
+
+final unlockAccountProvider = AsyncNotifierProvider<UnlockAccountNotifier, void>(UnlockAccountNotifier.new);

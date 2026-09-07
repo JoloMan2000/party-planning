@@ -24,6 +24,24 @@ def config():
     return PartyConfig()
 
 
+@pytest.fixture(autouse=True)
+def _no_real_email_sending(monkeypatch):
+    """Verhindert echte SMTP-Verbindungsversuche während der Testsuite -
+    ``signup()`` verschickt seit der Email-Verification-Feature jetzt bei
+    JEDEM Aufruf eine Verification-Email, auch über ``user_factory``/
+    ``auth_headers_factory``, die in fast der gesamten Suite verwendet
+    werden (ohne dieses No-Op würde jeder Test, der einen User anlegt, einen
+    echten (fehlschlagenden) SMTP-Verbindungsversuch mit bis zu 10s Timeout
+    auslösen). Einzelne Tests, die den tatsächlichen E-Mail-Versand prüfen
+    wollen, überschreiben dies gezielt per eigenem
+    ``monkeypatch.setattr(email_sender, ...)`` - der letzte ``setattr``-Aufruf
+    auf demselben ``monkeypatch``-Fixture-Objekt gewinnt."""
+    from accounts import email_sender
+
+    monkeypatch.setattr(email_sender, "send_verification_email", lambda *a, **k: None)
+    monkeypatch.setattr(email_sender, "send_account_unlock_email", lambda *a, **k: None)
+
+
 @pytest.fixture()
 def api_client(tmp_path, monkeypatch):
     """FastAPI ``TestClient`` mit ``settings.db_path`` auf eine isolierte

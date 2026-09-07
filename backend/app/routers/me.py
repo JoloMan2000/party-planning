@@ -25,7 +25,8 @@ _MAX_PROFILE_IMAGE_BYTES = 5 * 1024 * 1024  # 5 MB
 def get_me(current_user: User = Depends(get_current_user)) -> UserPublic:
     return UserPublic(
         id=current_user.id, email=current_user.email, display_name=current_user.display_name,
-        profile_image=current_user.profile_image, created_at=current_user.created_at,
+        profile_image=current_user.profile_image, email_verified=current_user.email_verified,
+        created_at=current_user.created_at,
     )
 
 
@@ -109,5 +110,6 @@ async def upload_profile_image(
     updated = user_storage.get_user_by_id(db_path, current_user.id)
     return UserPublic(
         id=updated.id, email=updated.email, display_name=updated.display_name,
-        profile_image=updated.profile_image, created_at=updated.created_at,
+        profile_image=updated.profile_image, email_verified=updated.email_verified,
+        created_at=updated.created_at,
     )

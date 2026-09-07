@@ -642,6 +642,53 @@ class ApiClient {
     }
   }
 
+  Future<void> verifyEmail({required String token}) async {
+    final resp = await _http.post(
+      _uri('/api/v1/auth/verify-email'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'token': token}),
+    );
+    if (resp.statusCode >= 400) {
+      throw ApiException(resp.statusCode, resp.body);
+    }
+  }
+
+  Future<void> resendVerificationEmail(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.post(_uri('/api/v1/auth/resend-verification-email'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    if (resp.statusCode >= 400) {
+      throw ApiException(resp.statusCode, resp.body);
+    }
+  }
+
+  /// Löst immer denselben generischen Erfolg aus, egal ob die E-Mail
+  /// existiert (siehe `backend/app/routers/auth.py::request_account_unlock`).
+  Future<void> requestAccountUnlock({required String email}) async {
+    final resp = await _http.post(
+      _uri('/api/v1/auth/request-account-unlock'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email}),
+    );
+    _decodeObject(resp);
+  }
+
+  Future<void> unlockAccount({required String token}) async {
+    final resp = await _http.post(
+      _uri('/api/v1/auth/unlock-account'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'token': token}),
+    );
+    if (resp.statusCode >= 400) {
+      throw ApiException(resp.statusCode, resp.body);
+    }
+  }
+
   Future<UserAccount> getMe(String accessToken, Future<String?> Function() onRefresh) async {
     final resp = await _authorizedRequest(
       (token) => _http.get(_uri('/api/v1/me'), headers: _authHeaders(token)),

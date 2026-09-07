@@ -69,11 +69,28 @@ class PasswordResetRequestResponse(BaseModel):
     message: str = "If that email is registered, a password reset link has been sent."
 
 
+class EmailVerificationConfirmRequest(BaseModel):
+    token: str
+
+
+class AccountUnlockRequest(BaseModel):
+    email: str
+
+
+class AccountUnlockConfirmRequest(BaseModel):
+    token: str
+
+
+class AccountUnlockRequestResponse(BaseModel):
+    message: str = "If that account exists, an unlock link has been sent to its email address."
+
+
 class UserPublic(BaseModel):
     id: str
     email: str
     display_name: str
     profile_image: str = ""
+    email_verified: bool = False
     created_at: datetime
 
 

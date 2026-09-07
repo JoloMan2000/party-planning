@@ -41,19 +41,51 @@ def test_user_dataclass_hat_kein_password_hash_feld(db_path):
     assert not hasattr(by_email, "password_hash")
 
 
+def _fail(db_path, email):
+    return user_storage.record_failed_login(
+        db_path,
+        email,
+        tier1_max_attempts=5,
+        tier1_lockout_minutes=15,
+        tier2_max_attempts=3,
+        tier2_lockout_minutes=60 * 24,
+        tier3_max_attempts=5,
+    )
+
+
 def test_record_failed_login_erhoeht_zaehler_und_sperrt_ab_max_attempts(db_path):
     for _ in range(4):
-        attempt = user_storage.record_failed_login(
-            db_path, "brute@example.com", max_attempts=5, lockout_minutes=15
-        )
+        attempt = _fail(db_path, "brute@example.com")
         assert attempt.locked_until is None
-    attempt = user_storage.record_failed_login(db_path, "brute@example.com", max_attempts=5, lockout_minutes=15)
-    assert attempt.failed_count == 5
+    attempt = _fail(db_path, "brute@example.com")
+    assert attempt.failed_count == 0  # Zähler wird bei Tier-Wechsel zurückgesetzt
+    assert attempt.tier == 1
     assert attempt.locked_until is not None
+    assert attempt.blocked_at is None
+
+
+def test_record_failed_login_eskaliert_durch_alle_3_tiers(db_path):
+    email = "escalate@example.com"
+    for _ in range(5):
+        attempt = _fail(db_path, email)
+    assert attempt.tier == 1
+    assert attempt.locked_until is not None
+    assert attempt.blocked_at is None
+
+    for _ in range(3):
+        attempt = _fail(db_path, email)
+    assert attempt.tier == 2
+    assert attempt.locked_until is not None
+    assert attempt.blocked_at is None
+
+    for _ in range(5):
+        attempt = _fail(db_path, email)
+    assert attempt.tier == 3
+    assert attempt.blocked_at is not None
 
 
 def test_reset_login_attempts_loescht_den_zaehler(db_path):
-    user_storage.record_failed_login(db_path, "reset@example.com", max_attempts=5, lockout_minutes=15)
+    _fail(db_path, "reset@example.com")
     user_storage.reset_login_attempts(db_path, "reset@example.com")
     assert user_storage.get_login_attempt(db_path, "reset@example.com") is None
 

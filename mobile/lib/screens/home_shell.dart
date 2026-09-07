@@ -51,9 +51,16 @@ class HomeShell extends ConsumerWidget {
           ),
         ],
       ),
-      body: IndexedStack(
-        index: selectedTab,
-        children: const [DiscoverScreen(), PartyListScreen(), InvitationListScreen()],
+      body: Column(
+        children: [
+          if (userAsync.value?.emailVerified == false) const _EmailVerificationBanner(),
+          Expanded(
+            child: IndexedStack(
+              index: selectedTab,
+              children: const [DiscoverScreen(), PartyListScreen(), InvitationListScreen()],
+            ),
+          ),
+        ],
       ),
       floatingActionButton: selectedTab == 1
           ? FloatingActionButton.extended(
@@ -203,6 +210,49 @@ class _ProfileAvatarButtonState extends ConsumerState<_ProfileAvatarButton> {
               onBackgroundImageError: profileImage.isNotEmpty ? (_, _) {} : null,
               child: profileImage.isEmpty ? const Icon(Icons.person, size: 16) : null,
             ),
+    );
+  }
+}
+
+/// Schlanker, nicht-blockierender Hinweis über dem `IndexedStack`, solange
+/// `email_verified` false ist (soft/nicht-blockierendes Feature, siehe Plan).
+/// Verschwindet von selbst, sobald `currentUserProvider` nach erfolgreichem
+/// Verify/Resend neu geladen wird - kein manuelles Dismiss nötig.
+class _EmailVerificationBanner extends ConsumerWidget {
+  const _EmailVerificationBanner();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final resendState = ref.watch(resendVerificationEmailProvider);
+    final isLoading = resendState.isLoading;
+
+    ref.listen(resendVerificationEmailProvider, (previous, next) {
+      if (next.hasError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to resend verification email.')),
+        );
+      } else if (previous?.isLoading == true && !next.isLoading && !next.hasError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Verification email sent.')),
+        );
+      }
+    });
+
+    return Container(
+      width: double.infinity,
+      color: Theme.of(context).colorScheme.secondaryContainer,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          const Expanded(child: Text('Please verify your email.')),
+          TextButton(
+            onPressed: isLoading ? null : () => ref.read(resendVerificationEmailProvider.notifier).resend(),
+            child: isLoading
+                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Text('Resend'),
+          ),
+        ],
+      ),
     );
   }
 }

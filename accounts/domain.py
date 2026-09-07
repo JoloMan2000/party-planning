@@ -44,6 +44,7 @@ class User:
     display_name: str
     profile_image: str = ""
     is_verified: bool = False
+    email_verified: bool = False
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 

@@ -5,6 +5,7 @@ class UserAccount {
   final String email;
   final String displayName;
   final String profileImage;
+  final bool emailVerified;
   final DateTime createdAt;
 
   const UserAccount({
@@ -12,6 +13,7 @@ class UserAccount {
     required this.email,
     required this.displayName,
     required this.profileImage,
+    required this.emailVerified,
     required this.createdAt,
   });
 
@@ -20,6 +22,7 @@ class UserAccount {
         email: json['email'] as String,
         displayName: json['display_name'] as String,
         profileImage: (json['profile_image'] as String?) ?? '',
+        emailVerified: (json['email_verified'] as bool?) ?? false,
         createdAt: DateTime.parse(json['created_at'] as String),
       );
 }

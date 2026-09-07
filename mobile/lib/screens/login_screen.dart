@@ -40,6 +40,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final isLoading = authState.isLoading;
     final error = authState.hasError ? authState.error : null;
     final isInvalidCredentials = error is ApiException && error.statusCode == 401;
+    final isBlocked = error is ApiException && error.statusCode == 423;
+    final isRateLimited = error is ApiException && error.statusCode == 429;
 
     return Scaffold(
       body: SafeArea(
@@ -91,6 +93,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: 12),
                     Text(
                       'Email or password incorrect.',
+                      style: TextStyle(color: Theme.of(context).colorScheme.error),
+                      textAlign: TextAlign.center,
+                    ),
+                  ] else if (isBlocked) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      'Your account has been blocked due to repeated failed login attempts.',
+                      style: TextStyle(color: Theme.of(context).colorScheme.error),
+                      textAlign: TextAlign.center,
+                    ),
+                    TextButton(
+                      onPressed: () => ref.read(showAccountUnlockRequestProvider.notifier).state = true,
+                      child: const Text('Request unlock email'),
+                    ),
+                  ] else if (isRateLimited) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      'Too many failed login attempts. Please try again later.',
                       style: TextStyle(color: Theme.of(context).colorScheme.error),
                       textAlign: TextAlign.center,
                     ),

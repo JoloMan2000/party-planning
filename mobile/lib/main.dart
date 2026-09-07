@@ -13,8 +13,11 @@ import 'screens/invitation_detail_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'screens/party_detail_screen.dart';
+import 'screens/request_account_unlock_screen.dart';
 import 'screens/reset_password_screen.dart';
 import 'screens/signup_screen.dart';
+import 'screens/unlock_account_screen.dart';
+import 'screens/verify_email_screen.dart';
 import 'state/auth_providers.dart';
 import 'theme/party_theme.dart';
 
@@ -84,6 +87,10 @@ class _PartyAppState extends ConsumerState<PartyApp> {
       ref.read(selectedPartyIdProvider.notifier).state = id;
     } else if (kind == 'reset') {
       ref.read(passwordResetTokenProvider.notifier).state = id;
+    } else if (kind == 'verify') {
+      ref.read(emailVerificationTokenProvider.notifier).state = id;
+    } else if (kind == 'unlock') {
+      ref.read(accountUnlockTokenProvider.notifier).state = id;
     }
   }
 
@@ -111,6 +118,9 @@ class _PartyAppState extends ConsumerState<PartyApp> {
       final showSignup = ref.watch(showSignupProvider);
       final showForgotPassword = ref.watch(showForgotPasswordProvider);
       final resetToken = ref.watch(passwordResetTokenProvider);
+      final emailVerificationToken = ref.watch(emailVerificationTokenProvider);
+      final accountUnlockToken = ref.watch(accountUnlockTokenProvider);
+      final showAccountUnlockRequest = ref.watch(showAccountUnlockRequestProvider);
       final showNotifications = ref.watch(showNotificationsProvider);
       final selectedPartyId = ref.watch(selectedPartyIdProvider);
       final selectedInvitationId = ref.watch(selectedInvitationIdProvider);
@@ -120,10 +130,16 @@ class _PartyAppState extends ConsumerState<PartyApp> {
         // Vor `tokens == null` geprüft - ein Reset-Link kann ankommen,
         // während auf diesem Gerät noch ein anderer User eingeloggt ist.
         home = ResetPasswordScreen(token: resetToken);
+      } else if (emailVerificationToken != null) {
+        home = VerifyEmailScreen(token: emailVerificationToken);
+      } else if (accountUnlockToken != null) {
+        home = UnlockAccountScreen(token: accountUnlockToken);
       } else if (tokens == null) {
         home = showForgotPassword
             ? const ForgotPasswordScreen()
-            : (showSignup ? const SignupScreen() : const LoginScreen());
+            : (showAccountUnlockRequest
+                ? const RequestAccountUnlockScreen()
+                : (showSignup ? const SignupScreen() : const LoginScreen()));
       } else if (showNotifications) {
         home = const NotificationsScreen();
       } else if (selectedPartyId != null) {
