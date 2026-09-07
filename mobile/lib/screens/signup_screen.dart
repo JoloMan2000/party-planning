@@ -87,6 +87,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     obscureText: _obscure,
                     decoration: InputDecoration(
                       labelText: 'Password',
+                      helperText: 'At least 12 characters, upper/lowercase, a number and a special character.',
+                      helperMaxLines: 2,
                       border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
                         icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
@@ -147,13 +149,33 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         _clientError = 'Please enter a display name.';
       } else if (email.isEmpty) {
         _clientError = 'Please enter an email address.';
-      } else if (password.length < 8) {
-        _clientError = 'Password must be at least 8 characters.';
       } else {
-        _clientError = null;
+        _clientError = _passwordStrengthError(password);
       }
     });
     if (_clientError != null) return;
     ref.read(authProvider.notifier).signup(email: email, password: password, displayName: displayName);
+  }
+
+  /// Mirrors the backend's strong-password policy (``SignupRequest`` in
+  /// `backend/app/schemas/auth.py`) so weak passwords are rejected locally
+  /// instead of round-tripping to the server for a generic 422.
+  String? _passwordStrengthError(String password) {
+    if (password.length < 12) {
+      return 'Password must be at least 12 characters.';
+    }
+    if (!password.contains(RegExp(r'[a-z]'))) {
+      return 'Password must contain at least one lowercase letter.';
+    }
+    if (!password.contains(RegExp(r'[A-Z]'))) {
+      return 'Password must contain at least one uppercase letter.';
+    }
+    if (!password.contains(RegExp(r'[0-9]'))) {
+      return 'Password must contain at least one digit.';
+    }
+    if (!password.contains(RegExp(r'[^A-Za-z0-9]'))) {
+      return 'Password must contain at least one special character.';
+    }
+    return null;
   }
 }

@@ -88,7 +88,7 @@ def user_factory(api_client):
     DB-Seeding/Token-Forging) und liefert die volle Token-Response
     (``access_token``, ``refresh_token``, ``user``)."""
 
-    def _make_user(email: str | None = None, display_name: str = "Test User", password: str = "testpassword123") -> dict:
+    def _make_user(email: str | None = None, display_name: str = "Test User", password: str = "TestPassw0rd!23") -> dict:
         email = email or f"user-{uuid.uuid4().hex}@example.com"
         resp = api_client.post(
             "/api/v1/auth/signup", json={"email": email, "password": password, "display_name": display_name}
@@ -105,7 +105,7 @@ def auth_headers_factory(user_factory):
     User - der übliche Fall in API-Tests, die nur die Auth-Headers brauchen."""
 
     def _make_headers(
-        email: str | None = None, display_name: str = "Test User", password: str = "testpassword123"
+        email: str | None = None, display_name: str = "Test User", password: str = "TestPassw0rd!23"
     ) -> tuple[dict, dict, str]:
         token_response = user_factory(email=email, display_name=display_name, password=password)
         headers = {"Authorization": f"Bearer {token_response['access_token']}"}

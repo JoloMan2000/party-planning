@@ -3,11 +3,13 @@ Pivot, Phase 1, AUFGABE-Spec §85-95 - Backend-relevante Szenarien)."""
 
 from __future__ import annotations
 
+import pytest
+
 
 def test_signup_gibt_201_und_token_paar(api_client):
     resp = api_client.post(
         "/api/v1/auth/signup",
-        json={"email": "newuser@example.com", "password": "supersecret1", "display_name": "New User"},
+        json={"email": "newuser@example.com", "password": "Sup3rSecret!23", "display_name": "New User"},
     )
     assert resp.status_code == 201
     body = resp.json()
@@ -19,16 +21,42 @@ def test_signup_gibt_201_und_token_paar(api_client):
     assert "password" not in body["user"]
 
 
+@pytest.mark.parametrize(
+    "password",
+    [
+        "Short1!",  # < 12 Zeichen
+        "lowercase123!",  # kein Großbuchstabe
+        "UPPERCASE123!",  # kein Kleinbuchstabe
+        "NoDigitsHere!!",  # keine Ziffer
+        "NoSpecialChar123",  # kein Sonderzeichen
+    ],
+)
+def test_signup_mit_schwachem_passwort_gibt_422(api_client, password):
+    resp = api_client.post(
+        "/api/v1/auth/signup",
+        json={"email": "weakpass@example.com", "password": password, "display_name": "Weak"},
+    )
+    assert resp.status_code == 422
+
+
+def test_signup_mit_starkem_passwort_gibt_201(api_client):
+    resp = api_client.post(
+        "/api/v1/auth/signup",
+        json={"email": "strongpass@example.com", "password": "Str0ng!Passw0rd", "display_name": "Strong"},
+    )
+    assert resp.status_code == 201
+
+
 def test_signup_mit_bereits_registrierter_email_gibt_409(api_client, user_factory):
     user_factory(email="dupe@example.com")
     resp = api_client.post(
-        "/api/v1/auth/signup", json={"email": "dupe@example.com", "password": "whatever123", "display_name": "Dupe"}
+        "/api/v1/auth/signup", json={"email": "dupe@example.com", "password": "Whatever!123", "display_name": "Dupe"}
     )
     assert resp.status_code == 409
 
 
 def test_login_mit_falschem_passwort_gibt_401(api_client, user_factory):
-    user_factory(email="loginfail@example.com", password="correct-password")
+    user_factory(email="loginfail@example.com", password="Correct-Passw0rd")
     resp = api_client.post("/api/v1/auth/login", json={"email": "loginfail@example.com", "password": "wrong"})
     assert resp.status_code == 401
 
@@ -39,8 +67,8 @@ def test_login_mit_unbekannter_email_gibt_401(api_client):
 
 
 def test_login_mit_korrekten_zugangsdaten_gibt_token_paar(api_client, user_factory):
-    user_factory(email="loginok@example.com", password="correct-password")
-    resp = api_client.post("/api/v1/auth/login", json={"email": "loginok@example.com", "password": "correct-password"})
+    user_factory(email="loginok@example.com", password="Correct-Passw0rd")
+    resp = api_client.post("/api/v1/auth/login", json={"email": "loginok@example.com", "password": "Correct-Passw0rd"})
     assert resp.status_code == 200
     body = resp.json()
     assert body["access_token"]
