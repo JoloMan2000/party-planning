@@ -53,6 +53,10 @@ class _CreatePartyScreenState extends ConsumerState<CreatePartyScreen> {
               TextField(
                 controller: _nameController,
                 autofocus: true,
+                // Spiegelt das Backend-Limit (`_NAME_MAX_LENGTH` in
+                // `backend/app/schemas/accounts.py`), damit der Nutzer sofort
+                // sieht wann Schluss ist statt erst nach einem 422-Roundtrip.
+                maxLength: 200,
                 decoration: const InputDecoration(
                   labelText: 'Party name',
                   border: OutlineInputBorder(),
@@ -62,6 +66,7 @@ class _CreatePartyScreenState extends ConsumerState<CreatePartyScreen> {
               TextField(
                 controller: _descriptionController,
                 maxLines: 3,
+                maxLength: 5000,
                 decoration: const InputDecoration(
                   labelText: 'Description (optional)',
                   border: OutlineInputBorder(),
@@ -70,6 +75,7 @@ class _CreatePartyScreenState extends ConsumerState<CreatePartyScreen> {
               const SizedBox(height: 12),
               TextField(
                 controller: _locationController,
+                maxLength: 300,
                 decoration: const InputDecoration(
                   labelText: 'Location (optional)',
                   border: OutlineInputBorder(),

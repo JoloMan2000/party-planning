@@ -105,3 +105,86 @@ def test_logout_widerruft_refresh_token(api_client, user_factory):
 
     resp = api_client.post("/api/v1/auth/refresh", json={"refresh_token": tokens["refresh_token"]})
     assert resp.status_code == 401
+
+
+def test_login_wird_nach_max_fehlversuchen_gesperrt(api_client, user_factory):
+    from backend.app.core.config import settings
+
+    user_factory(email="bruteforce@example.com", password="Correct-Passw0rd")
+    for _ in range(settings.login_max_failed_attempts):
+        resp = api_client.post(
+            "/api/v1/auth/login", json={"email": "bruteforce@example.com", "password": "wrong"}
+        )
+        assert resp.status_code == 401
+
+    # Selbst mit dem KORREKTEN Passwort bleibt der Account jetzt gesperrt.
+    resp = api_client.post(
+        "/api/v1/auth/login", json={"email": "bruteforce@example.com", "password": "Correct-Passw0rd"}
+    )
+    assert resp.status_code == 429
+
+
+def test_login_sperre_gilt_identisch_fuer_unbekannte_email(api_client):
+    """Verhindert E-Mail-Enumeration über das Lockout-Verhalten: eine nie
+    registrierte Adresse wird nach den gleichen fehlgeschlagenen Versuchen
+    genauso gesperrt wie eine echte."""
+    from backend.app.core.config import settings
+
+    for _ in range(settings.login_max_failed_attempts):
+        resp = api_client.post(
+            "/api/v1/auth/login", json={"email": "never-registered@example.com", "password": "whatever123"}
+        )
+        assert resp.status_code == 401
+
+    resp = api_client.post(
+        "/api/v1/auth/login", json={"email": "never-registered@example.com", "password": "whatever123"}
+    )
+    assert resp.status_code == 429
+
+
+def test_login_erfolg_setzt_fehlversuch_zaehler_zurueck(api_client, user_factory):
+    from backend.app.core.config import settings
+
+    user_factory(email="resetcounter@example.com", password="Correct-Passw0rd")
+    for _ in range(settings.login_max_failed_attempts - 1):
+        api_client.post("/api/v1/auth/login", json={"email": "resetcounter@example.com", "password": "wrong"})
+
+    resp = api_client.post(
+        "/api/v1/auth/login", json={"email": "resetcounter@example.com", "password": "Correct-Passw0rd"}
+    )
+    assert resp.status_code == 200
+
+    # Zähler wurde zurückgesetzt - ein einzelner erneuter Fehlversuch danach
+    # löst noch keine Sperre aus.
+    resp = api_client.post(
+        "/api/v1/auth/login", json={"email": "resetcounter@example.com", "password": "wrong"}
+    )
+    assert resp.status_code == 401
+
+
+def test_login_sperre_laeuft_nach_ablauf_ab(api_client, user_factory):
+    import sqlite3
+    from datetime import datetime, timedelta, timezone
+
+    from backend.app.core.config import settings
+
+    user_factory(email="expiredlock@example.com", password="Correct-Passw0rd")
+    for _ in range(settings.login_max_failed_attempts):
+        api_client.post("/api/v1/auth/login", json={"email": "expiredlock@example.com", "password": "wrong"})
+
+    resp = api_client.post(
+        "/api/v1/auth/login", json={"email": "expiredlock@example.com", "password": "Correct-Passw0rd"}
+    )
+    assert resp.status_code == 429
+
+    expired_lock = (datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat()
+    with sqlite3.connect(api_client.db_path) as conn:
+        conn.execute(
+            "UPDATE login_attempts SET locked_until = ? WHERE email = ?",
+            (expired_lock, "expiredlock@example.com"),
+        )
+
+    resp = api_client.post(
+        "/api/v1/auth/login", json={"email": "expiredlock@example.com", "password": "Correct-Passw0rd"}
+    )
+    assert resp.status_code == 200

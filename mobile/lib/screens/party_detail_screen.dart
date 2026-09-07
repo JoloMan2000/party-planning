@@ -343,6 +343,10 @@ class _PublishToDiscoverSectionState extends ConsumerState<_PublishToDiscoverSec
                       ? DecorationImage(
                           image: NetworkImage('${ApiConfig.baseUrl}/media/${widget.party.coverImage}'),
                           fit: BoxFit.cover,
+                          // Ohne diesen Handler wirft ein 404/kaputtes Cover-Bild
+                          // einen ungefangenen Bildfehler bei jedem Repaint statt
+                          // sauber auf die leere Container-Farbe zurückzufallen.
+                          onError: (_, _) {},
                         )
                       : null,
                 ),

@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import sqlite3
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from accounts.domain import User
@@ -48,6 +48,14 @@ class PasswordResetTokenRecord:
     expires_at: datetime
     used_at: datetime | None
     created_at: datetime
+
+
+@dataclass
+class LoginAttemptRecord:
+    email: str
+    failed_count: int
+    locked_until: datetime | None
+    updated_at: datetime
 
 
 def init_user_storage(db_path: str | Path) -> None:
@@ -106,6 +114,21 @@ def init_user_storage(db_path: str | Path) -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user ON password_reset_tokens(user_id)"
+        )
+        # Brute-Force-Schutz für `/auth/login` (siehe backend/app/routers/auth.py)
+        # - keyed by der eingegebenen E-Mail-Zeichenkette, nicht der User-ID,
+        # damit auch Angriffe gegen nicht-registrierte Adressen gezählt/
+        # gedrosselt werden (sonst wäre "wird gesperrt" selbst ein Signal
+        # dafür, dass der Account existiert).
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS login_attempts (
+                email TEXT PRIMARY KEY COLLATE NOCASE,
+                failed_count INTEGER NOT NULL DEFAULT 0,
+                locked_until TEXT,
+                updated_at TEXT NOT NULL
+            )
+            """
         )
 
 
@@ -290,6 +313,54 @@ def invalidate_password_reset_tokens_for_user(db_path: str | Path, user_id: str)
             "UPDATE password_reset_tokens SET used_at = ? WHERE user_id = ? AND used_at IS NULL",
             (datetime.now().isoformat(), user_id),
         )
+
+
+def get_login_attempt(db_path: str | Path, email: str) -> LoginAttemptRecord | None:
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        row = conn.execute("SELECT * FROM login_attempts WHERE email = ?", (email,)).fetchone()
+    if row is None:
+        return None
+    return LoginAttemptRecord(
+        email=row["email"],
+        failed_count=row["failed_count"],
+        locked_until=datetime.fromisoformat(row["locked_until"]) if row["locked_until"] else None,
+        updated_at=datetime.fromisoformat(row["updated_at"]),
+    )
+
+
+def record_failed_login(
+    db_path: str | Path, email: str, *, max_attempts: int, lockout_minutes: int
+) -> LoginAttemptRecord:
+    """Erhöht den Fehlversuch-Zähler für ``email`` (unabhängig davon, ob ein
+    Account mit dieser Adresse existiert, siehe Doc-Kommentar auf der
+    ``login_attempts``-Tabelle in ``init_user_storage``). Setzt ``locked_until``,
+    sobald ``max_attempts`` erreicht ist - der Zähler selbst wird dabei NICHT
+    zurückgesetzt, ein weiterer Versuch während der Sperre erhöht ihn also
+    weiter (kein Reset-Trick, um die Sperre zu umgehen)."""
+    now = datetime.now(timezone.utc)
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        row = conn.execute("SELECT failed_count FROM login_attempts WHERE email = ?", (email,)).fetchone()
+        new_count = (row["failed_count"] if row is not None else 0) + 1
+        locked_until = now + timedelta(minutes=lockout_minutes) if new_count >= max_attempts else None
+        conn.execute(
+            """
+            INSERT INTO login_attempts (email, failed_count, locked_until, updated_at)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(email) DO UPDATE SET
+                failed_count = excluded.failed_count,
+                locked_until = excluded.locked_until,
+                updated_at = excluded.updated_at
+            """,
+            (email, new_count, locked_until.isoformat() if locked_until else None, now.isoformat()),
+        )
+    return LoginAttemptRecord(email=email, failed_count=new_count, locked_until=locked_until, updated_at=now)
+
+
+def reset_login_attempts(db_path: str | Path, email: str) -> None:
+    with sqlite3.connect(db_path) as conn:
+        conn.execute("DELETE FROM login_attempts WHERE email = ?", (email,))
 
 
 if __name__ == "__main__":

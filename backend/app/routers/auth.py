@@ -70,12 +70,37 @@ def signup(payload: SignupRequest, db_path: Path = Depends(get_db_path)) -> Auth
 @router.post("/login", response_model=AuthTokenResponse)
 def login(payload: LoginRequest, db_path: Path = Depends(get_db_path)) -> AuthTokenResponse:
     unauthorized = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="E-Mail oder Passwort falsch.")
-    creds = user_storage.get_credentials_by_email(db_path, payload.email)
-    if creds is None:
+    locked = HTTPException(
+        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        detail="Too many failed login attempts. Please try again later.",
+    )
+    email = payload.email.strip().lower()
+
+    # Lockout-Check läuft VOR dem Credential-Lookup und hängt ausschließlich
+    # von der eingegebenen E-Mail-Zeichenkette ab, nicht davon, ob dahinter
+    # ein echter Account steckt - sonst würde das Lockout-Verhalten selbst zu
+    # einem E-Mail-Enumeration-Kanal (registrierte vs. unregistrierte
+    # Adressen würden sich nach mehreren Versuchen unterschiedlich verhalten).
+    attempt = user_storage.get_login_attempt(db_path, email)
+    if attempt is not None and attempt.locked_until is not None:
+        locked_until = (
+            attempt.locked_until if attempt.locked_until.tzinfo else attempt.locked_until.replace(tzinfo=timezone.utc)
+        )
+        if datetime.now(timezone.utc) < locked_until:
+            raise locked
+
+    creds = user_storage.get_credentials_by_email(db_path, email)
+    if creds is None or not verify_password(payload.password, creds[1]):
+        user_storage.record_failed_login(
+            db_path,
+            email,
+            max_attempts=settings.login_max_failed_attempts,
+            lockout_minutes=settings.login_lockout_minutes,
+        )
         raise unauthorized
-    user, password_hash = creds
-    if not verify_password(payload.password, password_hash):
-        raise unauthorized
+
+    user_storage.reset_login_attempts(db_path, email)
+    user, _password_hash = creds
     return _token_response(db_path, user)
 
 

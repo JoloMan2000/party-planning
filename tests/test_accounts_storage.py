@@ -41,6 +41,31 @@ def test_user_dataclass_hat_kein_password_hash_feld(db_path):
     assert not hasattr(by_email, "password_hash")
 
 
+def test_record_failed_login_erhoeht_zaehler_und_sperrt_ab_max_attempts(db_path):
+    for _ in range(4):
+        attempt = user_storage.record_failed_login(
+            db_path, "brute@example.com", max_attempts=5, lockout_minutes=15
+        )
+        assert attempt.locked_until is None
+    attempt = user_storage.record_failed_login(db_path, "brute@example.com", max_attempts=5, lockout_minutes=15)
+    assert attempt.failed_count == 5
+    assert attempt.locked_until is not None
+
+
+def test_reset_login_attempts_loescht_den_zaehler(db_path):
+    user_storage.record_failed_login(db_path, "reset@example.com", max_attempts=5, lockout_minutes=15)
+    user_storage.reset_login_attempts(db_path, "reset@example.com")
+    assert user_storage.get_login_attempt(db_path, "reset@example.com") is None
+
+
+def test_reset_login_attempts_ohne_bestehenden_eintrag_ist_no_op(db_path):
+    user_storage.reset_login_attempts(db_path, "never-existed@example.com")
+
+
+def test_get_login_attempt_unbekannte_email_gibt_none(db_path):
+    assert user_storage.get_login_attempt(db_path, "unknown@example.com") is None
+
+
 def test_create_party_legt_atomisch_host_membership_an(db_path):
     host = user_storage.create_user(db_path, uuid.uuid4().hex, "host@example.com", "hash", "Host")
     party = party_storage.create_party(db_path, uuid.uuid4().hex, host.id, "Party")

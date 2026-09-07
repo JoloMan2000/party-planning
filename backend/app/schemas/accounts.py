@@ -2,21 +2,30 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+# Grosszügige, aber endliche Obergrenzen - schützen DB/UI vor unbeabsichtigt
+# riesigen Payloads (kein Angriffsschutz per se, eher Robustheit gegen Bugs/
+# Copy-Paste-Unfälle auf Client-Seite). `min_length=1` auf `name` verhindert
+# zusätzlich einen leeren Partynamen sowohl beim Erstellen als auch beim
+# nachträglichen Umbenennen.
+_NAME_MAX_LENGTH = 200
+_DESCRIPTION_MAX_LENGTH = 5000
+_LOCATION_MAX_LENGTH = 300
 
 
 class PartyCreate(BaseModel):
-    name: str
-    description: str = ""
+    name: str = Field(min_length=1, max_length=_NAME_MAX_LENGTH)
+    description: str = Field("", max_length=_DESCRIPTION_MAX_LENGTH)
     starts_at: datetime | None = None
-    location: str = ""
+    location: str = Field("", max_length=_LOCATION_MAX_LENGTH)
 
 
 class PartyUpdate(BaseModel):
-    name: str | None = None
-    description: str | None = None
+    name: str | None = Field(None, min_length=1, max_length=_NAME_MAX_LENGTH)
+    description: str | None = Field(None, max_length=_DESCRIPTION_MAX_LENGTH)
     starts_at: datetime | None = None
-    location: str | None = None
+    location: str | None = Field(None, max_length=_LOCATION_MAX_LENGTH)
 
 
 class PartyPublic(BaseModel):

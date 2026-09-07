@@ -197,6 +197,10 @@ class _ProfileAvatarButtonState extends ConsumerState<_ProfileAvatarButton> {
               radius: 14,
               backgroundImage:
                   profileImage.isNotEmpty ? NetworkImage('${ApiConfig.baseUrl}/media/$profileImage') : null,
+              // Ohne diesen Handler wirft ein 404/kaputtes Profilbild einen
+              // ungefangenen Bildfehler bei jedem Repaint statt sauber auf das
+              // Personen-Icon zurückzufallen.
+              onBackgroundImageError: profileImage.isNotEmpty ? (_, _) {} : null,
               child: profileImage.isEmpty ? const Icon(Icons.person, size: 16) : null,
             ),
     );

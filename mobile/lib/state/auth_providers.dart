@@ -39,10 +39,22 @@ class AuthNotifier extends AsyncNotifier<TokenPair?> {
   @override
   Future<TokenPair?> build() async {
     final storage = ref.read(_secureStorageProvider);
-    final access = await storage.read(key: _accessTokenKey);
-    final refresh = await storage.read(key: _refreshTokenKey);
-    if (access == null || refresh == null) return null;
-    return TokenPair(access, refresh);
+    try {
+      final access = await storage.read(key: _accessTokenKey);
+      final refresh = await storage.read(key: _refreshTokenKey);
+      if (access == null || refresh == null) return null;
+      return TokenPair(access, refresh);
+    } catch (_) {
+      // Ein beschädigter Keychain-/Keystore-Eintrag (z.B. nach einem
+      // Geräte-Restore/Reinstall mit verwaisten Schlüsseln - ein bekanntes
+      // `flutter_secure_storage`-Fehlerbild) würde hier sonst ungefangen
+      // durchschlagen. Statt dessen die kaputten Einträge löschen und den
+      // Nutzer wie "nicht eingeloggt" behandeln, damit er sich einfach neu
+      // einloggen kann statt dauerhaft auf dem Login-Screen festzuhängen.
+      await storage.delete(key: _accessTokenKey);
+      await storage.delete(key: _refreshTokenKey);
+      return null;
+    }
   }
 
   Future<void> _persist(TokenPair pair) async {

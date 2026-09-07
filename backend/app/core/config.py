@@ -41,6 +41,13 @@ class Settings(BaseSettings):
     # hinter genau einer Dependency, damit ein späteres echtes System das
     # hier problemlos ersetzen kann.
     admin_emails: str = ""
+    # Brute-Force-Schutz für /auth/login (siehe routers/auth.py + accounts/
+    # user_storage.py::record_failed_login). 5 Versuche / 15 Minuten Sperre
+    # ist ein gängiger Mittelweg (OWASP nennt 3-5 als üblichen Schwellwert für
+    # nutzerseitige Logins) - genug Toleranz für normale Tippfehler, aber eng
+    # genug, dass automatisiertes Passwort-Raten unpraktikabel langsam wird.
+    login_max_failed_attempts: int = 5
+    login_lockout_minutes: int = 15
 
 
 settings = Settings()

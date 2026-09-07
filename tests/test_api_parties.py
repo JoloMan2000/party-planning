@@ -13,6 +13,46 @@ def test_create_party_macht_ersteller_zum_host(api_client, auth_headers_factory)
     assert body["host_user_id"] == user["id"]
 
 
+def test_create_party_mit_leerem_namen_gibt_422(api_client, auth_headers_factory):
+    headers, _, _ = auth_headers_factory()
+    resp = api_client.post("/api/v1/parties", json={"name": ""}, headers=headers)
+    assert resp.status_code == 422
+
+
+def test_create_party_mit_zu_langem_namen_gibt_422(api_client, auth_headers_factory):
+    headers, _, _ = auth_headers_factory()
+    resp = api_client.post("/api/v1/parties", json={"name": "x" * 201}, headers=headers)
+    assert resp.status_code == 422
+
+
+def test_create_party_mit_zu_langer_beschreibung_gibt_422(api_client, auth_headers_factory):
+    headers, _, _ = auth_headers_factory()
+    resp = api_client.post(
+        "/api/v1/parties", json={"name": "P", "description": "x" * 5001}, headers=headers
+    )
+    assert resp.status_code == 422
+
+
+def test_create_party_mit_zu_langem_ort_gibt_422(api_client, auth_headers_factory):
+    headers, _, _ = auth_headers_factory()
+    resp = api_client.post("/api/v1/parties", json={"name": "P", "location": "x" * 301}, headers=headers)
+    assert resp.status_code == 422
+
+
+def test_patch_party_mit_leerem_namen_gibt_422(api_client, auth_headers_factory):
+    headers, _, _ = auth_headers_factory()
+    party_id = api_client.post("/api/v1/parties", json={"name": "P"}, headers=headers).json()["id"]
+    resp = api_client.patch(f"/api/v1/parties/{party_id}", json={"name": ""}, headers=headers)
+    assert resp.status_code == 422
+
+
+def test_patch_party_mit_zu_langem_namen_gibt_422(api_client, auth_headers_factory):
+    headers, _, _ = auth_headers_factory()
+    party_id = api_client.post("/api/v1/parties", json={"name": "P"}, headers=headers).json()["id"]
+    resp = api_client.patch(f"/api/v1/parties/{party_id}", json={"name": "x" * 201}, headers=headers)
+    assert resp.status_code == 422
+
+
 def test_get_party_als_host_erlaubt(api_client, auth_headers_factory):
     headers, _user, _ = auth_headers_factory()
     party_id = api_client.post("/api/v1/parties", json={"name": "P"}, headers=headers).json()["id"]

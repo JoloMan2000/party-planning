@@ -73,6 +73,10 @@ class _EditPartyScreenState extends ConsumerState<EditPartyScreen> {
               children: [
                 TextField(
                   controller: _nameController,
+                  // Spiegelt das Backend-Limit (`_NAME_MAX_LENGTH` in
+                  // `backend/app/schemas/accounts.py`), damit der Nutzer sofort
+                  // sieht wann Schluss ist statt erst nach einem 422-Roundtrip.
+                  maxLength: 200,
                   decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder()),
                 ),
                 const SizedBox(height: 12),
@@ -80,11 +84,13 @@ class _EditPartyScreenState extends ConsumerState<EditPartyScreen> {
                   controller: _descriptionController,
                   decoration: const InputDecoration(labelText: 'Description', border: OutlineInputBorder()),
                   maxLines: 3,
+                  maxLength: 5000,
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: _locationController,
                   decoration: const InputDecoration(labelText: 'Location', border: OutlineInputBorder()),
+                  maxLength: 300,
                 ),
                 const SizedBox(height: 12),
                 ListTile(
