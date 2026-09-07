@@ -27,12 +27,24 @@ class PartyListScreen extends ConsumerWidget {
       ),
       data: (parties) {
         if (parties.isEmpty) {
-          return const Center(child: Text('No parties yet. Create one!'));
+          return RefreshIndicator(
+            onRefresh: () => ref.refresh(myPartiesProvider.future),
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: const [
+                SizedBox(height: 200),
+                Center(child: Text('No parties yet. Create one!')),
+              ],
+            ),
+          );
         }
-        return ListView.builder(
-          padding: const EdgeInsets.all(12),
-          itemCount: parties.length,
-          itemBuilder: (context, i) => _PartyTile(party: parties[i]),
+        return RefreshIndicator(
+          onRefresh: () => ref.refresh(myPartiesProvider.future),
+          child: ListView.builder(
+            padding: const EdgeInsets.all(12),
+            itemCount: parties.length,
+            itemBuilder: (context, i) => _PartyTile(party: parties[i]),
+          ),
         );
       },
     );

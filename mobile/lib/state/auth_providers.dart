@@ -100,13 +100,25 @@ class AuthNotifier extends AsyncNotifier<TokenPair?> {
     ref.invalidate(currentUserProvider);
   }
 
-  /// `onRefresh`-Callback für `ApiClient._authorizedRequest`. Liest das
-  /// Refresh-Token aus dem aktuellen State (nicht direkt aus dem Storage, um
-  /// ein Race gegen einen parallelen Rotations-Aufruf zu vermeiden), rotiert
+  /// In-flight Refresh-Future, damit mehrere gleichzeitig ablaufende Requests
+  /// (z.B. beim Home-Load: `getMe`+`getMyParties`+`getMyInvitations` fast
+  /// zeitgleich) nicht jeweils ihren eigenen `/auth/refresh`-Call auslösen.
+  /// Da Refresh-Tokens serverseitig rotiert/single-use sind, würde der
+  /// zweite Aufruf mit dem bereits verbrauchten alten Token sonst 401
+  /// zurückbekommen und fälschlich einen kompletten Logout auslösen, obwohl
+  /// die Session eigentlich gültig war.
+  Future<String?>? _refreshInFlight;
+
+  /// `onRefresh`-Callback für `ApiClient._authorizedRequest`. Bündelt
+  /// gleichzeitige Aufrufe auf ein einziges In-Flight-Future (s.o.), rotiert
   /// bei Erfolg das Token-Paar (persistiert + aktualisiert `state`), und
   /// erzwingt bei einem gescheiterten Refresh (401 - ungültig/widerrufen/
   /// wiederverwendet, siehe Backend-Reuse-Detection) einen lokalen Logout.
-  Future<String?> refreshAndPersist() async {
+  Future<String?> refreshAndPersist() {
+    return _refreshInFlight ??= _doRefresh().whenComplete(() => _refreshInFlight = null);
+  }
+
+  Future<String?> _doRefresh() async {
     final current = state.value;
     if (current == null) return null;
     try {

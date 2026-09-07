@@ -149,6 +149,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         _clientError = 'Please enter a display name.';
       } else if (email.isEmpty) {
         _clientError = 'Please enter an email address.';
+      } else if (!_isValidEmail(email)) {
+        _clientError = 'Please enter a valid email address.';
       } else {
         _clientError = _passwordStrengthError(password);
       }
@@ -156,6 +158,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     if (_clientError != null) return;
     ref.read(authProvider.notifier).signup(email: email, password: password, displayName: displayName);
   }
+
+  /// Simple format check to catch typos before round-tripping to the server
+  /// for a generic 422 (not a full RFC 5322 validator - just "has an @ and a
+  /// dot in the domain part").
+  bool _isValidEmail(String email) => RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
 
   /// Mirrors the backend's strong-password policy (``SignupRequest`` in
   /// `backend/app/schemas/auth.py`) so weak passwords are rejected locally

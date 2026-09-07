@@ -214,8 +214,21 @@ class _PublishToDiscoverSectionState extends ConsumerState<_PublishToDiscoverSec
     final source = await pickImageSource(context);
     if (source == null || !mounted) return;
     final picker = ImagePicker();
-    final picked = await picker.pickImage(source: source, maxWidth: 1600, maxHeight: 1600);
-    if (picked == null) return;
+    XFile? picked;
+    try {
+      picked = await picker.pickImage(source: source, maxWidth: 1600, maxHeight: 1600);
+    } catch (_) {
+      // z.B. verweigerte Kamera-/Galerie-Berechtigung wirft eine
+      // `PlatformException` - ohne diesen Guard würde das hier uncaught
+      // durchschlagen statt eine Fehlermeldung zu zeigen.
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open image picker. Check app permissions.')),
+        );
+      }
+      return;
+    }
+    if (picked == null || !mounted) return;
     setState(() => _uploadingCover = true);
     try {
       await ref.read(uploadPartyCoverImageProvider.notifier).upload(widget.party.id, File(picked.path));

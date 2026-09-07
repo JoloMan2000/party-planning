@@ -35,12 +35,24 @@ class NotificationsScreen extends ConsumerWidget {
         ),
         data: (notifications) {
           if (notifications.isEmpty) {
-            return const Center(child: Text('No notifications yet.'));
+            return RefreshIndicator(
+              onRefresh: () => ref.refresh(notificationsProvider.future),
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: const [
+                  SizedBox(height: 200),
+                  Center(child: Text('No notifications yet.')),
+                ],
+              ),
+            );
           }
-          return ListView.builder(
-            padding: const EdgeInsets.all(12),
-            itemCount: notifications.length,
-            itemBuilder: (context, i) => _NotificationTile(notification: notifications[i]),
+          return RefreshIndicator(
+            onRefresh: () => ref.refresh(notificationsProvider.future),
+            child: ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: notifications.length,
+              itemBuilder: (context, i) => _NotificationTile(notification: notifications[i]),
+            ),
           );
         },
       ),

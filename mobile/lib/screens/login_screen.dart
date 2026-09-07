@@ -24,6 +24,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscure = true;
+  String? _clientError;
 
   @override
   void dispose() {
@@ -79,7 +80,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     onSubmitted: (_) => _submit(),
                   ),
-                  if (isInvalidCredentials) ...[
+                  if (_clientError != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      _clientError!,
+                      style: TextStyle(color: Theme.of(context).colorScheme.error),
+                      textAlign: TextAlign.center,
+                    ),
+                  ] else if (isInvalidCredentials) ...[
                     const SizedBox(height: 12),
                     Text(
                       'Email or password incorrect.',
@@ -135,9 +143,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void _submit() {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
-    if (email.isEmpty || password.isEmpty) return;
+    setState(() {
+      if (email.isEmpty) {
+        _clientError = 'Please enter an email address.';
+      } else if (!_isValidEmail(email)) {
+        _clientError = 'Please enter a valid email address.';
+      } else if (password.isEmpty) {
+        _clientError = 'Please enter a password.';
+      } else {
+        _clientError = null;
+      }
+    });
+    if (_clientError != null) return;
     ref.read(authProvider.notifier).login(email: email, password: password);
   }
+
+  /// Simple format check to catch typos before round-tripping to the server
+  /// for a generic 401 (not a full RFC 5322 validator - just "has an @ and a
+  /// dot in the domain part").
+  bool _isValidEmail(String email) => RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
 
   Future<void> _showServerOverrideDialog(BuildContext context) async {
     final controller = TextEditingController(text: ApiConfig.baseUrl);

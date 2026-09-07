@@ -27,12 +27,24 @@ class InvitationListScreen extends ConsumerWidget {
       ),
       data: (invitations) {
         if (invitations.isEmpty) {
-          return const Center(child: Text('No invitations yet.'));
+          return RefreshIndicator(
+            onRefresh: () => ref.refresh(myInvitationsProvider.future),
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: const [
+                SizedBox(height: 200),
+                Center(child: Text('No invitations yet.')),
+              ],
+            ),
+          );
         }
-        return ListView.builder(
-          padding: const EdgeInsets.all(12),
-          itemCount: invitations.length,
-          itemBuilder: (context, i) => _InvitationTile(invitation: invitations[i]),
+        return RefreshIndicator(
+          onRefresh: () => ref.refresh(myInvitationsProvider.future),
+          child: ListView.builder(
+            padding: const EdgeInsets.all(12),
+            itemCount: invitations.length,
+            itemBuilder: (context, i) => _InvitationTile(invitation: invitations[i]),
+          ),
         );
       },
     );

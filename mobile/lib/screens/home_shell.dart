@@ -146,8 +146,21 @@ class _ProfileAvatarButtonState extends ConsumerState<_ProfileAvatarButton> {
     final source = await pickImageSource(context);
     if (source == null || !mounted) return;
     final picker = ImagePicker();
-    final picked = await picker.pickImage(source: source, maxWidth: 1024, maxHeight: 1024);
-    if (picked == null) return;
+    XFile? picked;
+    try {
+      picked = await picker.pickImage(source: source, maxWidth: 1024, maxHeight: 1024);
+    } catch (_) {
+      // z.B. verweigerte Kamera-/Galerie-Berechtigung wirft eine
+      // `PlatformException` - ohne diesen Guard würde das hier uncaught
+      // durchschlagen statt eine Fehlermeldung zu zeigen.
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open image picker. Check app permissions.')),
+        );
+      }
+      return;
+    }
+    if (picked == null || !mounted) return;
     setState(() => _uploading = true);
     try {
       await ref.read(uploadProfileImageProvider.notifier).upload(File(picked.path));
