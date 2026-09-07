@@ -10,6 +10,7 @@ import '../api/api_config.dart';
 import '../models/party.dart';
 import '../models/party_guests_response.dart';
 import '../state/auth_providers.dart';
+import '../widgets/image_source_picker.dart';
 
 // TODO(i18n): English-only strings for now, deliberately deferred per Phase-3
 // scope decision (translations live in the backend-served `translations.py`
@@ -210,12 +211,22 @@ class _PublishToDiscoverSectionState extends ConsumerState<_PublishToDiscoverSec
   int get _maxGuests => int.tryParse(_maxGuestsController.text) ?? 0;
 
   Future<void> _pickAndUploadCover() async {
+    final source = await pickImageSource(context);
+    if (source == null || !mounted) return;
     final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery, maxWidth: 1600, maxHeight: 1600);
+    final picked = await picker.pickImage(source: source, maxWidth: 1600, maxHeight: 1600);
     if (picked == null) return;
     setState(() => _uploadingCover = true);
     try {
       await ref.read(uploadPartyCoverImageProvider.notifier).upload(widget.party.id, File(picked.path));
+      // Der Dateiname ist serverseitig fest ({party_id}.jpg, siehe
+      // `parties.py::upload_party_cover_image`) - ohne Cache-Eviction würde
+      // das alte Bild aus dem Flutter-`imageCache` weiterhin unter derselben
+      // URL angezeigt und ein erfolgreicher Upload sähe wie ein no-op aus.
+      final updated = ref.read(uploadPartyCoverImageProvider).value;
+      if (updated != null && updated.coverImage.isNotEmpty) {
+        imageCache.evict(NetworkImage('${ApiConfig.baseUrl}/media/${updated.coverImage}'));
+      }
     } on ApiException catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

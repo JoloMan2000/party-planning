@@ -49,6 +49,8 @@
 	</dict>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Used to select a profile picture.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Used to take a picture for your profile or party cover image.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

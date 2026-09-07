@@ -8,6 +8,7 @@ import '../api/api_client.dart';
 import '../api/api_config.dart';
 import '../models/invitation.dart';
 import '../state/auth_providers.dart';
+import '../widgets/image_source_picker.dart';
 import 'discover_screen.dart';
 import 'invitation_list_screen.dart';
 import 'party_list_screen.dart';
@@ -143,12 +144,22 @@ class _ProfileAvatarButtonState extends ConsumerState<_ProfileAvatarButton> {
   bool _uploading = false;
 
   Future<void> _pickAndUpload() async {
+    final source = await pickImageSource(context);
+    if (source == null || !mounted) return;
     final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery, maxWidth: 1024, maxHeight: 1024);
+    final picked = await picker.pickImage(source: source, maxWidth: 1024, maxHeight: 1024);
     if (picked == null) return;
     setState(() => _uploading = true);
     try {
       await ref.read(uploadProfileImageProvider.notifier).upload(File(picked.path));
+      // Der Dateiname ist serverseitig fest ({user_id}.jpg, siehe
+      // `me.py::upload_profile_image`) - ohne Cache-Eviction würde das alte
+      // Bild aus dem Flutter-`imageCache` weiterhin unter derselben URL
+      // angezeigt und ein erfolgreicher Upload sähe wie ein no-op aus.
+      final updated = ref.read(uploadProfileImageProvider).value;
+      if (updated != null && updated.profileImage.isNotEmpty) {
+        imageCache.evict(NetworkImage('${ApiConfig.baseUrl}/media/${updated.profileImage}'));
+      }
     } on ApiException catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
