@@ -208,7 +208,7 @@ class CreatePartyNotifier extends AsyncNotifier<Party?> {
       state = AsyncData(party);
       ref.invalidate(myPartiesProvider);
       return party;
-    } on ApiException catch (e) {
+    } catch (e) {
       state = AsyncError(e, StackTrace.current);
       rethrow;
     }
@@ -236,7 +236,7 @@ class InviteGuestNotifier extends AsyncNotifier<Invitation?> {
       state = AsyncData(invitation);
       ref.invalidate(partyGuestsProvider(partyId));
       return invitation;
-    } on ApiException catch (e) {
+    } catch (e) {
       state = AsyncError(e, StackTrace.current);
       rethrow;
     }
@@ -274,7 +274,7 @@ class RsvpNotifier extends AsyncNotifier<RsvpResponse?> {
       ref.invalidate(invitationDetailProvider(invitationId));
       ref.invalidate(myInvitationsProvider);
       return result;
-    } on ApiException catch (e) {
+    } catch (e) {
       state = AsyncError(e, StackTrace.current);
       rethrow;
     }
@@ -312,7 +312,7 @@ class UpdatePartyNotifier extends AsyncNotifier<Party?> {
       state = AsyncData(party);
       ref.invalidate(partyDetailProvider(partyId));
       return party;
-    } on ApiException catch (e) {
+    } catch (e) {
       state = AsyncError(e, StackTrace.current);
       rethrow;
     }
@@ -336,7 +336,7 @@ class UploadProfileImageNotifier extends AsyncNotifier<UserAccount?> {
       final user = await ref.read(apiClientProvider).uploadProfileImage(token, onRefresh(ref), imageFile);
       state = AsyncData(user);
       ref.invalidate(currentUserProvider);
-    } on ApiException catch (e) {
+    } catch (e) {
       state = AsyncError(e, StackTrace.current);
       rethrow;
     }
@@ -396,13 +396,21 @@ class MarkNotificationReadNotifier extends AsyncNotifier<AppNotification?> {
 
   Future<void> markRead(String notificationId) async {
     final token = ref.read(requiredAccessTokenProvider);
-    final notification = await ref.read(apiClientProvider).markNotificationRead(
-          token,
-          onRefresh(ref),
-          notificationId,
-        );
-    state = AsyncData(notification);
-    ref.invalidate(notificationsProvider);
+    try {
+      final notification = await ref.read(apiClientProvider).markNotificationRead(
+            token,
+            onRefresh(ref),
+            notificationId,
+          );
+      state = AsyncData(notification);
+      ref.invalidate(notificationsProvider);
+    } catch (e) {
+      // Bewusst kein `rethrow` - der einzige Aufrufer (`NotificationsScreen.
+      // _handleTap`) navigiert danach unabhängig weiter und hat kein
+      // Error-Handling; ein fehlgeschlagenes "als gelesen markieren" soll
+      // diese Navigation nicht blockieren/abstürzen lassen.
+      state = AsyncError(e, StackTrace.current);
+    }
   }
 }
 
@@ -451,7 +459,7 @@ class DiscoverActionNotifier extends AsyncNotifier<DiscoverActionResult?> {
       state = AsyncData(result);
       ref.invalidate(myPartiesProvider);
       return result;
-    } on ApiException catch (e) {
+    } catch (e) {
       state = AsyncError(e, StackTrace.current);
       rethrow;
     }
@@ -476,7 +484,7 @@ class UndoDiscoverActionNotifier extends AsyncNotifier<void> {
       await ref.read(apiClientProvider).undoDiscoverAction(token, onRefresh(ref), partyId);
       state = const AsyncData(null);
       ref.invalidate(myPartiesProvider);
-    } on ApiException catch (e) {
+    } catch (e) {
       state = AsyncError(e, StackTrace.current);
       rethrow;
     }
@@ -511,7 +519,7 @@ class PublishPartyNotifier extends AsyncNotifier<Party?> {
       state = AsyncData(party);
       ref.invalidate(partyDetailProvider(partyId));
       return party;
-    } on ApiException catch (e) {
+    } catch (e) {
       state = AsyncError(e, StackTrace.current);
       rethrow;
     }
@@ -524,7 +532,7 @@ class PublishPartyNotifier extends AsyncNotifier<Party?> {
       await ref.read(apiClientProvider).unpublishParty(token, onRefresh(ref), partyId);
       state = const AsyncData(null);
       ref.invalidate(partyDetailProvider(partyId));
-    } on ApiException catch (e) {
+    } catch (e) {
       state = AsyncError(e, StackTrace.current);
       rethrow;
     }
@@ -546,7 +554,7 @@ class UploadPartyCoverImageNotifier extends AsyncNotifier<Party?> {
       final party = await ref.read(apiClientProvider).uploadPartyCoverImage(token, onRefresh(ref), partyId, imageFile);
       state = AsyncData(party);
       ref.invalidate(partyDetailProvider(partyId));
-    } on ApiException catch (e) {
+    } catch (e) {
       state = AsyncError(e, StackTrace.current);
       rethrow;
     }

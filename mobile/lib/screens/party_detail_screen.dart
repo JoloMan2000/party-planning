@@ -112,7 +112,7 @@ class _UndoDiscoverJoinSection extends ConsumerWidget {
     try {
       await ref.read(undoDiscoverActionProvider.notifier).undo(party.id);
       ref.read(selectedPartyIdProvider.notifier).state = null; // zurück zur Liste - Membership ist weg
-    } on ApiException catch (_) {
+    } catch (_) {
       messenger.showSnackBar(const SnackBar(content: Text('Failed to undo - please try again.')));
     }
   }
@@ -227,7 +227,7 @@ class _PublishToDiscoverSectionState extends ConsumerState<_PublishToDiscoverSec
       if (updated != null && updated.coverImage.isNotEmpty) {
         imageCache.evict(NetworkImage('${ApiConfig.baseUrl}/media/${updated.coverImage}'));
       }
-    } on ApiException catch (_) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to upload cover image.')),
@@ -238,11 +238,11 @@ class _PublishToDiscoverSectionState extends ConsumerState<_PublishToDiscoverSec
     }
   }
 
-  void _showPublishError(ScaffoldMessengerState messenger, ApiException e) {
+  void _showPublishError(ScaffoldMessengerState messenger, Object e) {
     messenger.showSnackBar(
       SnackBar(
         content: Text(
-          e.statusCode == 403
+          e is ApiException && e.statusCode == 403
               ? 'Your account isn\'t verified yet - publishing is disabled until an admin verifies your account.'
               : 'Failed to update publish status.',
         ),
@@ -263,7 +263,7 @@ class _PublishToDiscoverSectionState extends ConsumerState<_PublishToDiscoverSec
       } else {
         await ref.read(publishPartyProvider.notifier).unpublish(widget.party.id);
       }
-    } on ApiException catch (e) {
+    } catch (e) {
       _showPublishError(messenger, e);
     }
   }
@@ -277,7 +277,7 @@ class _PublishToDiscoverSectionState extends ConsumerState<_PublishToDiscoverSec
             interestTags: _interestTags.toList(),
             maxGuests: _maxGuests,
           );
-    } on ApiException catch (e) {
+    } catch (e) {
       _showPublishError(messenger, e);
     }
   }
@@ -552,11 +552,11 @@ class _HostGuestsViewState extends ConsumerState<_HostGuestsView> {
       _emailController.clear();
       ref.invalidate(partyGuestsProvider(widget.partyId));
       await Share.share('You\'re invited! Open it here: partyplanning://invite/${invitation.id}');
-    } on ApiException catch (e) {
+    } catch (e) {
       setState(() {
-        if (e.statusCode == 404) {
+        if (e is ApiException && e.statusCode == 404) {
           _inviteError = 'No account found for this email.';
-        } else if (e.statusCode == 409) {
+        } else if (e is ApiException && e.statusCode == 409) {
           _inviteError = 'This person is already invited.';
         } else {
           _inviteError = 'Failed to invite. Please try again.';

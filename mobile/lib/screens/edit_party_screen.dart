@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../api/api_client.dart';
 import '../models/party.dart';
 import '../state/auth_providers.dart';
 
@@ -148,7 +147,7 @@ class _EditPartyScreenState extends ConsumerState<EditPartyScreen> {
           );
       if (!mounted) return;
       ref.read(editingPartyIdProvider.notifier).state = null;
-    } on ApiException catch (_) {
+    } catch (_) {
       setState(() => _error = 'Failed to save. Please try again.');
     }
   }

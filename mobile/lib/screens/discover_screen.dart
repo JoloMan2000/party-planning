@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../api/api_client.dart';
 import '../models/discover_card.dart';
 import '../state/auth_providers.dart';
 import '../widgets/discover_card_view.dart';
@@ -106,7 +105,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     final messenger = ScaffoldMessenger.of(context);
     try {
       await ref.read(discoverActionProvider.notifier).act(card.partyId, action: action);
-    } on ApiException catch (_) {
+    } catch (_) {
       messenger.showSnackBar(
         const SnackBar(content: Text('Failed to record your swipe. Please try again.')),
       );

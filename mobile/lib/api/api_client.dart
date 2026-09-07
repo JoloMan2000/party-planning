@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -55,6 +56,25 @@ class ApiException implements Exception {
   String toString() => 'ApiException($statusCode): $message';
 }
 
+/// Erzwingt ein Timeout auf jedem Request (`http.Client()` hat sonst KEINEN
+/// Default-Timeout - ein totes/hängendes Netzwerk würde Ladeindikatoren sonst
+/// unbegrenzt weiterlaufen lassen). Wraps [inner] statt es zu ersetzen, damit
+/// injizierte Test-`http.Client`s (z.B. `MockClient`) weiterhin funktionieren.
+class _TimeoutClient extends http.BaseClient {
+  final http.Client _inner;
+  final Duration _timeout;
+
+  _TimeoutClient(this._inner, this._timeout);
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) {
+    return _inner.send(request).timeout(_timeout);
+  }
+
+  @override
+  void close() => _inner.close();
+}
+
 /// Dünner HTTP-Client für die anonymen Gäste-Endpunkte des Phase-1-FastAPI-
 /// Backends (`backend/app/routers/{guest,catalog,translations}.py`). Reine
 /// Datenbeschaffung - keine Fachlogik, die bleibt vollständig im Backend
@@ -65,7 +85,7 @@ class ApiClient {
   final String baseUrl;
 
   ApiClient({http.Client? httpClient, String? baseUrl})
-      : _http = httpClient ?? http.Client(),
+      : _http = _TimeoutClient(httpClient ?? http.Client(), const Duration(seconds: 20)),
         baseUrl = baseUrl ?? ApiConfig.baseUrl;
 
   Uri _uri(String path, [Map<String, String>? query]) =>

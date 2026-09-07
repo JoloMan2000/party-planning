@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../api/api_client.dart';
 import '../api/api_config.dart';
 import '../models/invitation.dart';
 import '../state/auth_providers.dart';
@@ -160,7 +159,7 @@ class _ProfileAvatarButtonState extends ConsumerState<_ProfileAvatarButton> {
       if (updated != null && updated.profileImage.isNotEmpty) {
         imageCache.evict(NetworkImage('${ApiConfig.baseUrl}/media/${updated.profileImage}'));
       }
-    } on ApiException catch (_) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to upload profile picture.')),

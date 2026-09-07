@@ -146,6 +146,10 @@ class _InvitationBody extends ConsumerWidget {
           const SnackBar(content: Text('Failed to update RSVP. Please try again.')),
         );
       }
+    } catch (_) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Failed to update RSVP. Please try again.')),
+      );
     }
   }
 }
