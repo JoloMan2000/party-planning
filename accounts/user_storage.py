@@ -132,6 +132,11 @@ def get_credentials_by_email(db_path: str | Path, email: str) -> tuple[User, str
     return _row_to_user(row), row["password_hash"]
 
 
+def update_profile_image(db_path: str | Path, user_id: str, relative_path: str) -> None:
+    with sqlite3.connect(db_path) as conn:
+        conn.execute("UPDATE users SET profile_image = ? WHERE id = ?", (relative_path, user_id))
+
+
 def save_refresh_token(
     db_path: str | Path, jti: str, user_id: str, token_hash: str, issued_at: datetime, expires_at: datetime
 ) -> None:
@@ -225,5 +230,8 @@ if __name__ == "__main__":
         save_refresh_token(db_path, jti2, user.id, "tokenhash2", now, now)
         revoke_all_refresh_tokens_for_user(db_path, user.id)
         assert get_refresh_token(db_path, jti2).revoked_at is not None
+
+        update_profile_image(db_path, user.id, "profile_images/user.jpg")
+        assert get_user_by_id(db_path, user.id).profile_image == "profile_images/user.jpg"
 
         print("accounts/user_storage.py sanity check OK.")

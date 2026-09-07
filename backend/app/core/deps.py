@@ -29,6 +29,10 @@ def get_db_path() -> Path:
     return settings.db_path
 
 
+def get_media_dir() -> Path:
+    return settings.media_dir
+
+
 @lru_cache(maxsize=1)
 def get_catalog() -> PartyCatalog:
     return load_catalog()

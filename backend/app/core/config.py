@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=str(REPO_ROOT / ".env"), env_file_encoding="utf-8", extra="ignore")
 
     db_path: Path = REPO_ROOT / "responses.db"
+    media_dir: Path = REPO_ROOT / "media" / "profile_images"
     jwt_secret: str = "change-me-to-a-secret-jwt-signing-key"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 15

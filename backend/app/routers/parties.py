@@ -6,6 +6,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, status
 
 import accounts.invitation_storage as invitation_storage
+import accounts.notification_storage as notification_storage
 import accounts.party_storage as party_storage
 import accounts.user_storage as user_storage
 from accounts.domain import PartyRole, User
@@ -107,6 +108,12 @@ def invite_guest(
         )
     except invitation_storage.InvitationAlreadyExistsError:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Einladung existiert bereits.")
+    party = party_storage.get_party(db_path, party_id)
+    party_name = party.name if party is not None else party_id
+    notification_storage.create_notification(
+        db_path, uuid.uuid4().hex, invited_user.id, party_id, "invitation",
+        f"You've been invited to {party_name}.",
+    )
     return InvitationPublic(
         id=invitation.id, party_id=invitation.party_id, host_user_id=invitation.host_user_id,
         invited_user_id=invitation.invited_user_id, status=invitation.status.value,

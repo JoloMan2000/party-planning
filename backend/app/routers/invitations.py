@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import uuid
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
 import accounts.invitation_storage as invitation_storage
+import accounts.notification_storage as notification_storage
+import accounts.party_storage as party_storage
 from accounts.domain import Invitation, RsvpStatus, User
 from backend.app.core.auth import get_current_user, get_invitation_for_rsvp, get_invitation_for_viewer
 from backend.app.core.deps import get_db_path
@@ -42,7 +45,7 @@ def rsvp(
     payload: RsvpRequest,
     current_user: User = Depends(get_current_user),
     db_path: Path = Depends(get_db_path),
-    _invitation: Invitation = Depends(get_invitation_for_rsvp),
+    invitation: Invitation = Depends(get_invitation_for_rsvp),
 ) -> RsvpResponse:
     try:
         new_status = RsvpStatus(payload.status)
@@ -65,6 +68,13 @@ def rsvp(
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Ungültiger Statuswechsel.")
     except invitation_storage.IdempotencyKeyReuseError:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Idempotenzschlüssel bereits mit anderem Status verwendet.")
+
+    party = party_storage.get_party(db_path, result.party_id)
+    party_name = party.name if party is not None else result.party_id
+    notification_storage.create_notification(
+        db_path, uuid.uuid4().hex, invitation.host_user_id, result.party_id, "rsvp",
+        f"{current_user.display_name} responded {result.status.value} to {party_name}.",
+    )
 
     return RsvpResponse(
         invitation_id=result.invitation_id, party_id=result.party_id, status=result.status.value,

@@ -12,8 +12,10 @@ import sqlite3
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 import accounts.invitation_storage as invitation_storage
+import accounts.notification_storage as notification_storage
 import accounts.party_storage as party_storage
 import accounts.user_storage as user_storage
 import event_theme
@@ -33,6 +35,7 @@ from backend.app.routers import (
     guest,
     invitations,
     me,
+    notifications,
     parties,
     translations,
 )
@@ -53,6 +56,7 @@ app.add_middleware(
 for router in (
     auth.router,
     me.router,
+    notifications.router,
     parties.router,
     invitations.router,
     catalog.router,
@@ -68,6 +72,18 @@ for router in (
 ):
     app.include_router(router)
 
+# Serviert hochgeladene Profilbilder statisch (lokale Disk, kein Cloud-Storage
+# - siehe Phase-5-Plan, Teil D). Gemountet wird das ELTERN-Verzeichnis von
+# ``settings.media_dir`` (nicht ``media_dir`` selbst), da die in der DB
+# gespeicherten/an Flutter gelieferten Pfade mit dem Präfix
+# ``profile_images/...`` gebildet werden (siehe `user_storage.update_profile_image`-
+# Aufrufer in `routers/me.py`) - `/media/profile_images/{user_id}.jpg` muss
+# also exakt auf ``media_dir / "{user_id}.jpg"`` auflösen. Verzeichnis wird
+# bei Bedarf angelegt, da ``StaticFiles`` sonst beim App-Start crasht, wenn es
+# noch nicht existiert (frisches Dev-Setup ohne bisherige Uploads).
+settings.media_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/media", StaticFiles(directory=settings.media_dir.parent), name="media")
+
 
 @app.on_event("startup")
 def on_startup() -> None:
@@ -78,6 +94,7 @@ def on_startup() -> None:
     user_storage.init_user_storage(db_path)
     party_storage.init_party_storage(db_path)
     invitation_storage.init_invitation_storage(db_path)
+    notification_storage.init_notifications(db_path)
     event_theme.init_party_settings(db_path)
     music_admin_settings.init_music_admin_settings(db_path)
     party_context_storage.init_party_context_storage(db_path)

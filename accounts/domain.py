@@ -92,6 +92,24 @@ class Invitation:
 
 
 @dataclass
+class Notification:
+    """In-App-Benachrichtigung (Phase 5, Poll-basiert - siehe
+    ``backend/app/routers/notifications.py`` für den TODO zu echtem Push).
+    Bewusst getrennt von ``Invitation``: eine Invitation ist die eigentliche
+    Einladung/RSVP-Anfrage, eine Notification ist nur ein Hinweis-Datensatz
+    für die Inbox (kann mehrere pro Invitation/Party geben, z.B. auch für
+    RSVP-Antworten an den Host)."""
+
+    id: str
+    user_id: str
+    party_id: str | None
+    kind: str
+    message: str
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    read: bool = False
+
+
+@dataclass
 class RsvpHistoryEntry:
     """Auditierbare Statusänderung (AUFGABE-Spec §42)."""
 

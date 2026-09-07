@@ -1,6 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
+import '../api/api_client.dart';
+import '../api/api_config.dart';
 import '../models/invitation.dart';
 import '../models/party.dart';
 import '../state/auth_providers.dart';
@@ -29,6 +34,8 @@ class PartyListScreen extends ConsumerWidget {
             orElse: () => 'Party App',
           )),
           actions: [
+            const _ProfileAvatarButton(),
+            const _NotificationBellButton(),
             IconButton(
               icon: const Icon(Icons.logout),
               tooltip: 'Log out',
@@ -51,6 +58,99 @@ class PartyListScreen extends ConsumerWidget {
           label: const Text('Create Party'),
         ),
       ),
+    );
+  }
+}
+
+/// Glocken-Icon mit Ungelesen-Badge, öffnet `NotificationsScreen` via
+/// `showNotificationsProvider`.
+class _NotificationBellButton extends ConsumerWidget {
+  const _NotificationBellButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notificationsAsync = ref.watch(notificationsProvider);
+    final unreadCount = notificationsAsync.maybeWhen(
+      data: (notifications) => notifications.where((n) => !n.read).length,
+      orElse: () => 0,
+    );
+
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.notifications),
+          tooltip: 'Notifications',
+          onPressed: () => ref.read(showNotificationsProvider.notifier).state = true,
+        ),
+        if (unreadCount > 0)
+          Positioned(
+            right: 6,
+            top: 6,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(8)),
+              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+              child: Text(
+                '$unreadCount',
+                style: const TextStyle(color: Colors.white, fontSize: 10),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Tippbarer Avatar in der AppBar - öffnet die Galerie via `image_picker`
+/// und lädt das gewählte Foto als neues Profilbild hoch (lokales Disk-
+/// Storage auf dem Server, siehe Phase-5-Plan Teil D). Zeigt das bestehende
+/// Profilbild via `/media/...`-URL an, falls schon eines gesetzt ist.
+class _ProfileAvatarButton extends ConsumerStatefulWidget {
+  const _ProfileAvatarButton();
+
+  @override
+  ConsumerState<_ProfileAvatarButton> createState() => _ProfileAvatarButtonState();
+}
+
+class _ProfileAvatarButtonState extends ConsumerState<_ProfileAvatarButton> {
+  bool _uploading = false;
+
+  Future<void> _pickAndUpload() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery, maxWidth: 1024, maxHeight: 1024);
+    if (picked == null) return;
+    setState(() => _uploading = true);
+    try {
+      await ref.read(uploadProfileImageProvider.notifier).upload(File(picked.path));
+    } on ApiException catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to upload profile picture.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _uploading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final userAsync = ref.watch(currentUserProvider);
+    final profileImage = userAsync.maybeWhen(data: (user) => user.profileImage, orElse: () => '');
+
+    return IconButton(
+      tooltip: 'Change profile picture',
+      onPressed: _uploading ? null : _pickAndUpload,
+      icon: _uploading
+          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+          : CircleAvatar(
+              radius: 14,
+              backgroundImage:
+                  profileImage.isNotEmpty ? NetworkImage('${ApiConfig.baseUrl}/media/$profileImage') : null,
+              child: profileImage.isEmpty ? const Icon(Icons.person, size: 16) : null,
+            ),
     );
   }
 }

@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
 import '../models/admin_recommendation.dart';
+import '../models/app_notification.dart';
 import '../models/auth_token_response.dart';
 import '../models/catalog_curation_settings.dart';
 import '../models/catalog_item.dart';
@@ -654,6 +656,32 @@ class ApiClient {
     return Party.fromJson(_decodeObject(resp));
   }
 
+  Future<Party> updateParty(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String partyId, {
+    String? name,
+    String? description,
+    DateTime? startsAt,
+    String? location,
+  }) async {
+    final body = <String, dynamic>{};
+    if (name != null) body['name'] = name;
+    if (description != null) body['description'] = description;
+    if (startsAt != null) body['starts_at'] = startsAt.toIso8601String();
+    if (location != null) body['location'] = location;
+    final resp = await _authorizedRequest(
+      (token) => _http.patch(
+        _uri('/api/v1/parties/$partyId'),
+        headers: _authHeaders(token),
+        body: jsonEncode(body),
+      ),
+      accessToken,
+      onRefresh,
+    );
+    return Party.fromJson(_decodeObject(resp));
+  }
+
   Future<PartyGuestsResponse> getPartyGuests(
     String accessToken,
     Future<String?> Function() onRefresh,
@@ -721,6 +749,58 @@ class ApiClient {
       onRefresh,
     );
     return RsvpResponse.fromJson(_decodeObject(resp));
+  }
+
+  Future<List<AppNotification>> getNotifications(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/me/notifications'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return _decodeList(resp)
+        .map((e) => AppNotification.fromJson((e as Map).cast<String, dynamic>()))
+        .toList();
+  }
+
+  Future<AppNotification> markNotificationRead(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String notificationId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.post(
+        _uri('/api/v1/me/notifications/$notificationId/read'),
+        headers: _authHeaders(token),
+      ),
+      accessToken,
+      onRefresh,
+    );
+    return AppNotification.fromJson(_decodeObject(resp));
+  }
+
+  /// Multipart-Upload fürs Profilbild (`POST /me/profile-image`) - fließt
+  /// trotz abweichender Request-Bauart (`http.MultipartRequest` statt
+  /// `_http.post`) durch denselben 401-Retry-Wrapper wie jeder andere
+  /// authentifizierte Call, damit ein abgelaufenes Access-Token hier genauso
+  /// automatisch erneuert wird.
+  Future<UserAccount> uploadProfileImage(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    File imageFile,
+  ) async {
+    Future<http.Response> sendWith(String token) async {
+      final request = http.MultipartRequest('POST', _uri('/api/v1/me/profile-image'))
+        ..headers['Authorization'] = 'Bearer $token'
+        ..files.add(await http.MultipartFile.fromPath('file', imageFile.path));
+      final streamedResponse = await _http.send(request);
+      return http.Response.fromStream(streamedResponse);
+    }
+
+    final resp = await _authorizedRequest(sendWith, accessToken, onRefresh);
+    return UserAccount.fromJson(_decodeObject(resp));
   }
 
   void close() => _http.close();

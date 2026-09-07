@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../api/api_client.dart';
 import '../models/party.dart';
@@ -54,19 +55,30 @@ class PartyDetailScreen extends ConsumerWidget {
   }
 }
 
-class _PartyHeader extends StatelessWidget {
+class _PartyHeader extends ConsumerWidget {
   final Party party;
   const _PartyHeader({required this.party});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(party.name, style: Theme.of(context).textTheme.titleLarge),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(party.name, style: Theme.of(context).textTheme.titleLarge),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  onPressed: () => ref.read(editingPartyIdProvider.notifier).state = party.id,
+                ),
+              ],
+            ),
             if (party.description.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(party.description),
@@ -212,9 +224,11 @@ class _HostGuestsViewState extends ConsumerState<_HostGuestsView> {
     }
     setState(() => _inviteError = null);
     try {
-      await ref.read(inviteGuestProvider.notifier).invite(widget.partyId, invitedUserEmail: email);
+      final invitation =
+          await ref.read(inviteGuestProvider.notifier).invite(widget.partyId, invitedUserEmail: email);
       _emailController.clear();
       ref.invalidate(partyGuestsProvider(widget.partyId));
+      await Share.share('You\'re invited! Open it here: partyplanning://invite/${invitation.id}');
     } on ApiException catch (e) {
       setState(() {
         if (e.statusCode == 404) {

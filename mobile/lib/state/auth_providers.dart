@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../api/api_client.dart';
+import '../models/app_notification.dart';
 import '../models/invitation.dart';
 import '../models/party.dart';
 import '../models/party_guests_response.dart';
@@ -272,6 +275,69 @@ class RsvpNotifier extends AsyncNotifier<RsvpResponse?> {
 
 final rsvpProvider = AsyncNotifierProvider<RsvpNotifier, RsvpResponse?>(RsvpNotifier.new);
 
+/// Party-Bearbeiten als einmalige Aktion (mirroring `CreatePartyNotifier`) -
+/// speichert nur die geänderten Felder (`PartyUpdate.model_dump(exclude_unset)`
+/// serverseitig), lädt danach `partyDetailProvider` neu.
+class UpdatePartyNotifier extends AsyncNotifier<Party?> {
+  @override
+  Future<Party?> build() async => null;
+
+  Future<Party> save(
+    String partyId, {
+    String? name,
+    String? description,
+    DateTime? startsAt,
+    String? location,
+  }) async {
+    final token = ref.read(requiredAccessTokenProvider);
+    state = const AsyncLoading();
+    try {
+      final party = await ref.read(apiClientProvider).updateParty(
+            token,
+            onRefresh(ref),
+            partyId,
+            name: name,
+            description: description,
+            startsAt: startsAt,
+            location: location,
+          );
+      state = AsyncData(party);
+      ref.invalidate(partyDetailProvider(partyId));
+      return party;
+    } on ApiException catch (e) {
+      state = AsyncError(e, StackTrace.current);
+      rethrow;
+    }
+  }
+}
+
+final updatePartyProvider = AsyncNotifierProvider<UpdatePartyNotifier, Party?>(UpdatePartyNotifier.new);
+
+/// Profilbild-Upload als einmalige Aktion (lokales Disk-Storage auf dem
+/// Server, siehe Phase-5-Plan Teil D) - lädt `currentUserProvider` danach neu,
+/// damit der neue `profile_image`-Pfad überall sichtbar wird, wo er
+/// dargestellt wird.
+class UploadProfileImageNotifier extends AsyncNotifier<UserAccount?> {
+  @override
+  Future<UserAccount?> build() async => null;
+
+  Future<void> upload(File imageFile) async {
+    final token = ref.read(requiredAccessTokenProvider);
+    state = const AsyncLoading();
+    try {
+      final user = await ref.read(apiClientProvider).uploadProfileImage(token, onRefresh(ref), imageFile);
+      state = AsyncData(user);
+      ref.invalidate(currentUserProvider);
+    } on ApiException catch (e) {
+      state = AsyncError(e, StackTrace.current);
+      rethrow;
+    }
+  }
+}
+
+final uploadProfileImageProvider =
+    AsyncNotifierProvider<UploadProfileImageNotifier, UserAccount?>(UploadProfileImageNotifier.new);
+
 // ---------------------------------------------------------------------
 // Navigations-Zustand - reine `StateProvider`s statt eines Routing-Pakets,
 // mirroring den bestehenden `adminModeProvider`/`enteredIntroProvider`-Stil
@@ -288,3 +354,45 @@ final creatingPartyProvider = StateProvider<bool>((ref) => false);
 /// `PartyDetailScreen` setzt diesen Provider, statt in einen globalen
 /// Admin-Modus zu wechseln.
 final selectedAdminPartyIdProvider = StateProvider<String?>((ref) => null);
+
+/// Party-ID, die gerade im `EditPartyScreen` bearbeitet wird (`null` =
+/// geschlossen), gesetzt via Edit-Button auf `PartyDetailScreen`.
+final editingPartyIdProvider = StateProvider<String?>((ref) => null);
+
+// ---------------------------------------------------------------------
+// In-App-Notification-Inbox (Phase 5) - Poll-basiert statt echtem Push
+// (FCM/APNs), mirroring das Backend-seitige TODO in
+// `backend/app/routers/notifications.py`. Der periodische Poll-Timer selbst
+// lebt in `main.dart`'s `PartyApp` (`ConsumerStatefulWidget`), nicht hier -
+// dieser Provider liefert nur den aktuellen Snapshot je Aufruf/Invalidate.
+// ---------------------------------------------------------------------
+
+/// `true` = `NotificationsScreen` ist geöffnet (via Glocken-Icon auf
+/// `PartyListScreen`), mirroring den übrigen `StateProvider`-Navigationsstil.
+final showNotificationsProvider = StateProvider<bool>((ref) => false);
+
+final notificationsProvider = FutureProvider<List<AppNotification>>((ref) {
+  final token = ref.watch(requiredAccessTokenProvider);
+  return ref.watch(apiClientProvider).getNotifications(token, onRefresh(ref));
+});
+
+/// "Als gelesen markieren" als einmalige Aktion, lädt `notificationsProvider`
+/// danach neu (mirroring `InviteGuestNotifier`).
+class MarkNotificationReadNotifier extends AsyncNotifier<AppNotification?> {
+  @override
+  Future<AppNotification?> build() async => null;
+
+  Future<void> markRead(String notificationId) async {
+    final token = ref.read(requiredAccessTokenProvider);
+    final notification = await ref.read(apiClientProvider).markNotificationRead(
+          token,
+          onRefresh(ref),
+          notificationId,
+        );
+    state = AsyncData(notification);
+    ref.invalidate(notificationsProvider);
+  }
+}
+
+final markNotificationReadProvider =
+    AsyncNotifierProvider<MarkNotificationReadNotifier, AppNotification?>(MarkNotificationReadNotifier.new);

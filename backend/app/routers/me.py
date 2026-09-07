@@ -1,18 +1,23 @@
 from __future__ import annotations
 
+import io
 from pathlib import Path
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from PIL import Image, UnidentifiedImageError
 
 import accounts.invitation_storage as invitation_storage
 import accounts.party_storage as party_storage
+import accounts.user_storage as user_storage
 from accounts.domain import User
 from backend.app.core.auth import get_current_user
-from backend.app.core.deps import get_db_path
+from backend.app.core.deps import get_db_path, get_media_dir
 from backend.app.schemas.accounts import InvitationPublic, PartyPublic
 from backend.app.schemas.auth import UserPublic
 
 router = APIRouter(prefix="/api/v1/me", tags=["me"])
+
+_MAX_PROFILE_IMAGE_BYTES = 5 * 1024 * 1024  # 5 MB
 
 
 @router.get("", response_model=UserPublic)
@@ -51,3 +56,41 @@ def get_my_invitations(
         )
         for inv in invitations
     ]
+
+
+@router.post("/profile-image", response_model=UserPublic)
+async def upload_profile_image(
+    file: UploadFile,
+    current_user: User = Depends(get_current_user),
+    db_path: Path = Depends(get_db_path),
+    media_dir: Path = Depends(get_media_dir),
+) -> UserPublic:
+    """Nimmt ein Profilbild entgegen, re-encoded es serverseitig als JPEG unter
+    einem FESTEN, vom Server bestimmten Dateinamen (``{user_id}.jpg``) - NIE
+    der client-gelieferte Dateiname/Content-Type wird für Pfad oder Format
+    übernommen. Das verhindert sowohl Path-Traversal (kein client-Pfad landet
+    je in einem Dateisystempfad) als auch als Bild getarnte Nicht-Bild-
+    Payloads (Pillow muss die Bytes tatsächlich als Bild dekodieren können -
+    ein reines Content-Type-Vertrauen wäre hier unzureichend)."""
+    raw = await file.read()
+    if len(raw) > _MAX_PROFILE_IMAGE_BYTES:
+        raise HTTPException(status_code=413, detail="Profile image too large.")
+    try:
+        image = Image.open(io.BytesIO(raw))
+        image.verify()
+        image = Image.open(io.BytesIO(raw))  # verify() invalidiert das Image-Objekt, neu öffnen
+        image = image.convert("RGB")
+    except (UnidentifiedImageError, OSError):
+        raise HTTPException(status_code=400, detail="Uploaded file is not a valid image.")
+
+    media_dir.mkdir(parents=True, exist_ok=True)
+    destination = media_dir / f"{current_user.id}.jpg"
+    image.save(destination, format="JPEG")
+
+    relative_path = f"profile_images/{current_user.id}.jpg"
+    user_storage.update_profile_image(db_path, current_user.id, relative_path)
+    updated = user_storage.get_user_by_id(db_path, current_user.id)
+    return UserPublic(
+        id=updated.id, email=updated.email, display_name=updated.display_name,
+        profile_image=updated.profile_image, created_at=updated.created_at,
+    )

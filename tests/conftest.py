@@ -38,6 +38,7 @@ def api_client(tmp_path, monkeypatch):
 
     db_path = tmp_path / "responses.db"
     monkeypatch.setattr(settings, "db_path", db_path)
+    monkeypatch.setattr(settings, "media_dir", tmp_path / "media" / "profile_images")
 
     with TestClient(app) as client:
         client.db_path = db_path
