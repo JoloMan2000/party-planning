@@ -57,7 +57,12 @@ class AuthNotifier extends AsyncNotifier<TokenPair?> {
       final pair = TokenPair(response.accessToken, response.refreshToken);
       await _persist(pair);
       state = AsyncData(pair);
-    } on ApiException catch (e) {
+    } catch (e) {
+      // Bewusst nicht nur `on ApiException` - ein nicht erreichbarer Server
+      // (z.B. Backend nicht gestartet) wirft eine `SocketException`/
+      // `ClientException`, keine `ApiException`. Ohne diesen breiteren Catch
+      // bliebe der State für immer bei `AsyncLoading` hängen (Spinner dreht
+      // endlos), statt dem Nutzer einen Fehler anzuzeigen.
       state = AsyncError(e, StackTrace.current);
     }
   }
@@ -69,7 +74,7 @@ class AuthNotifier extends AsyncNotifier<TokenPair?> {
       final pair = TokenPair(response.accessToken, response.refreshToken);
       await _persist(pair);
       state = AsyncData(pair);
-    } on ApiException catch (e) {
+    } catch (e) {
       state = AsyncError(e, StackTrace.current);
     }
   }

@@ -45,6 +45,9 @@ def init_learning_storage(db_path: str | Path) -> None:
             )
             """
         )
+        existing_cols = {row[1] for row in conn.execute("PRAGMA table_info(party_runs)")}
+        if "host_user_id" not in existing_cols:
+            conn.execute("ALTER TABLE party_runs ADD COLUMN host_user_id TEXT NOT NULL DEFAULT ''")
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_party_runs_host_user_id ON party_runs(host_user_id)"
         )
