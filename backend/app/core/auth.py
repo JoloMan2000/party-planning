@@ -124,6 +124,20 @@ def require_party_role(allowed_roles: set[PartyRole]):
     return _dependency
 
 
+def get_existing_party(
+    party_id: str,
+    db_path: Path = Depends(get_db_path),
+) -> str:
+    """Leichtgewichtige Party-Existenzprüfung ohne Rollen-Check, für den
+    anonymen Gast-Wizard (Phase 4): 404 falls die Party unbekannt ist, sonst
+    wird ``party_id`` unverändert durchgereicht. Kein Token nötig - der
+    Gast-Flow bleibt bewusst unauthentifiziert."""
+    party = party_storage.get_party(db_path, party_id)
+    if party is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Party nicht gefunden.")
+    return party_id
+
+
 def get_invitation_for_viewer(
     invitation_id: str,
     current_user: User = Depends(get_current_user),

@@ -28,7 +28,9 @@ const _indoorOutdoorLabelKeys = {
 /// Essens-/Musik-Empfehlungen ein. Anlass/Datum/Startzeit/Dauer kommen bereits
 /// aus der Party-Settings-Sektion und werden hier NICHT erneut abgefragt.
 class PartyContextSection extends ConsumerStatefulWidget {
-  const PartyContextSection({super.key});
+  final String partyId;
+
+  const PartyContextSection({super.key, required this.partyId});
 
   @override
   ConsumerState<PartyContextSection> createState() => _PartyContextSectionState();
@@ -84,8 +86,8 @@ class _PartyContextSectionState extends ConsumerState<PartyContextSection> {
   @override
   Widget build(BuildContext context) {
     final translationsAsync = ref.watch(translationsProvider('de'));
-    final contextAsync = ref.watch(partyContextProvider);
-    final metadataAsync = ref.watch(partyContextMetadataProvider);
+    final contextAsync = ref.watch(partyContextProvider(widget.partyId));
+    final metadataAsync = ref.watch(partyContextMetadataProvider(widget.partyId));
 
     return translationsAsync.when(
       loading: () => const Padding(
@@ -333,7 +335,7 @@ class _PartyContextSectionState extends ConsumerState<PartyContextSection> {
 
     setState(() => _saving = true);
     try {
-      await ref.read(partyContextProvider.notifier).save(ctx);
+      await ref.read(partyContextProvider(widget.partyId).notifier).save(ctx);
       if (!mounted) return;
       setState(() => _saving = false);
       ScaffoldMessenger.of(context)

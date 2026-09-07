@@ -41,7 +41,7 @@ def init_catalog_curation(db_path: str | Path) -> None:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS catalog_curation_settings (
-                id INTEGER PRIMARY KEY CHECK (id = 1),
+                party_id TEXT PRIMARY KEY REFERENCES parties(id),
                 enabled INTEGER NOT NULL DEFAULT 0
             )
             """
@@ -49,22 +49,26 @@ def init_catalog_curation(db_path: str | Path) -> None:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS catalog_curated_items (
-                item_id TEXT PRIMARY KEY
+                party_id TEXT NOT NULL REFERENCES parties(id),
+                item_id TEXT NOT NULL,
+                PRIMARY KEY (party_id, item_id)
             )
             """
         )
-        conn.execute("INSERT OR IGNORE INTO catalog_curation_settings (id, enabled) VALUES (1, 0)")
 
 
-def get_catalog_curation_settings(db_path: str | Path) -> CatalogCurationSettings:
-    """Liest die aktuellen Curation-Settings. Gibt bei fehlender Zeile
-    (z.B. ``init_catalog_curation`` noch nicht aufgerufen) sicherheitshalber
-    die reinen Dataclass-Defaults zurück (enabled=False, kein Effekt) - wirft
-    nie."""
+def get_catalog_curation_settings(db_path: str | Path, party_id: str) -> CatalogCurationSettings:
+    """Liest die aktuellen Curation-Settings für ``party_id``. Gibt bei
+    fehlender Zeile (z.B. noch nie gespeichert) sicherheitshalber die reinen
+    Dataclass-Defaults zurück (enabled=False, kein Effekt) - wirft nie."""
     with sqlite3.connect(db_path) as conn:
         try:
-            row = conn.execute("SELECT enabled FROM catalog_curation_settings WHERE id = 1").fetchone()
-            item_rows = conn.execute("SELECT item_id FROM catalog_curated_items").fetchall()
+            row = conn.execute(
+                "SELECT enabled FROM catalog_curation_settings WHERE party_id = ?", (party_id,)
+            ).fetchone()
+            item_rows = conn.execute(
+                "SELECT item_id FROM catalog_curated_items WHERE party_id = ?", (party_id,)
+            ).fetchall()
         except sqlite3.OperationalError:
             # Tabellen existieren noch nicht (init_catalog_curation() nicht aufgerufen).
             return CatalogCurationSettings()
@@ -76,24 +80,26 @@ def get_catalog_curation_settings(db_path: str | Path) -> CatalogCurationSetting
     )
 
 
-def save_catalog_curation_settings(db_path: str | Path, settings: CatalogCurationSettings) -> None:
-    """Speichert die Curation-Settings (Single-Row-Upsert für ``enabled`` +
-    komplette Neu-Befüllung von ``catalog_curated_items`` - die kuratierte
-    Menge wird beim Speichern immer vollständig ersetzt, kein inkrementelles
-    Hinzufügen/Entfernen einzelner IDs nötig)."""
+def save_catalog_curation_settings(
+    db_path: str | Path, party_id: str, settings: CatalogCurationSettings
+) -> None:
+    """Speichert die Curation-Settings für ``party_id`` (Upsert für
+    ``enabled`` + komplette Neu-Befüllung von ``catalog_curated_items`` - die
+    kuratierte Menge wird beim Speichern immer vollständig ersetzt, kein
+    inkrementelles Hinzufügen/Entfernen einzelner IDs nötig)."""
     with sqlite3.connect(db_path) as conn:
         conn.execute(
             """
-            INSERT INTO catalog_curation_settings (id, enabled) VALUES (1, ?)
-            ON CONFLICT(id) DO UPDATE SET enabled = excluded.enabled
+            INSERT INTO catalog_curation_settings (party_id, enabled) VALUES (?, ?)
+            ON CONFLICT(party_id) DO UPDATE SET enabled = excluded.enabled
             """,
-            (int(settings.enabled),),
+            (party_id, int(settings.enabled)),
         )
-        conn.execute("DELETE FROM catalog_curated_items")
+        conn.execute("DELETE FROM catalog_curated_items WHERE party_id = ?", (party_id,))
         if settings.curated_item_ids:
             conn.executemany(
-                "INSERT INTO catalog_curated_items (item_id) VALUES (?)",
-                [(item_id,) for item_id in sorted(settings.curated_item_ids)],
+                "INSERT INTO catalog_curated_items (party_id, item_id) VALUES (?, ?)",
+                [(party_id, item_id) for item_id in sorted(settings.curated_item_ids)],
             )
 
 
@@ -118,10 +124,11 @@ if __name__ == "__main__":
 
     with tempfile.TemporaryDirectory() as tmp:
         db_path = Path(tmp) / "test_catalog_curation.db"
+        party_id = "test-party"
         init_catalog_curation(db_path)
         init_catalog_curation(db_path)  # idempotent, darf nicht crashen
 
-        default_settings = get_catalog_curation_settings(db_path)
+        default_settings = get_catalog_curation_settings(db_path, party_id)
         assert default_settings.enabled is False
         assert default_settings.curated_item_ids == set()
 
@@ -144,14 +151,16 @@ if __name__ == "__main__":
         assert chai not in filtered
 
         # Round-Trip über die Persistenz.
-        save_catalog_curation_settings(db_path, curated)
-        reloaded = get_catalog_curation_settings(db_path)
+        save_catalog_curation_settings(db_path, party_id, curated)
+        reloaded = get_catalog_curation_settings(db_path, party_id)
         assert reloaded.enabled is True
         assert reloaded.curated_item_ids == {"beer_pils", "pizza_margherita"}
 
         # Erneutes Speichern ersetzt die kuratierte Menge vollständig.
-        save_catalog_curation_settings(db_path, CatalogCurationSettings(enabled=False, curated_item_ids={"masala_chai"}))
-        reloaded2 = get_catalog_curation_settings(db_path)
+        save_catalog_curation_settings(
+            db_path, party_id, CatalogCurationSettings(enabled=False, curated_item_ids={"masala_chai"})
+        )
+        reloaded2 = get_catalog_curation_settings(db_path, party_id)
         assert reloaded2.enabled is False
         assert reloaded2.curated_item_ids == {"masala_chai"}
 

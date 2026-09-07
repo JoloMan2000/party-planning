@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'screens/admin_dashboard_screen.dart';
-import 'screens/admin_login_screen.dart';
 import 'screens/create_party_screen.dart';
 import 'screens/invitation_detail_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/party_detail_screen.dart';
 import 'screens/party_list_screen.dart';
 import 'screens/signup_screen.dart';
-import 'state/admin_providers.dart';
 import 'state/auth_providers.dart';
 import 'theme/party_theme.dart';
 
@@ -18,24 +16,21 @@ void main() {
 }
 
 /// Root-Widget: routet zwischen Login/Signup -> Party-Liste -> Detail-
-/// Screens (Account-basierter Flow, Phase 3). Der alte anonyme Gast-Wizard
-/// (`IntroScreen`/`LanguageScreen`/`WizardScreen`) bleibt im Code erhalten,
-/// ist aber ab hier nicht mehr erreichbar (siehe Plan-Entscheidung #1+#3) -
-/// `adminMode` bleibt als Zweig bestehen, da nichts diese Route mehr aktiv
-/// erreicht, aber der Admin-Dashboard-Code unverändert bleiben soll.
+/// Screens (Account-basierter Flow, Phase 3). Seit Phase 4 party-gescoptes
+/// Admin-Dashboard über `selectedAdminPartyIdProvider` (gesetzt via
+/// "Verwalten"-Button auf `PartyDetailScreen`) statt des alten globalen
+/// Admin-Passwort-Modus.
 class PartyApp extends ConsumerWidget {
   const PartyApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final adminMode = ref.watch(adminModeProvider);
-    final adminAuth = ref.watch(adminAuthProvider);
+    final selectedAdminPartyId = ref.watch(selectedAdminPartyIdProvider);
     final colors = PartyColors.fromThemeJson(null);
 
     Widget home;
-    if (adminMode) {
-      final token = adminAuth.asData?.value;
-      home = token == null ? const AdminLoginScreen() : const AdminDashboardScreen();
+    if (selectedAdminPartyId != null) {
+      home = AdminDashboardScreen(partyId: selectedAdminPartyId);
     } else {
       final tokens = ref.watch(authProvider).asData?.value;
       final showSignup = ref.watch(showSignupProvider);

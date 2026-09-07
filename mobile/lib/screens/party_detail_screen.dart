@@ -108,7 +108,22 @@ class _GuestsSection extends ConsumerWidget {
           ),
         );
       },
-      data: (guests) => _HostGuestsView(partyId: partyId, guests: guests),
+      data: (guests) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton.icon(
+              onPressed: () =>
+                  ref.read(selectedAdminPartyIdProvider.notifier).state = partyId,
+              icon: const Icon(Icons.settings),
+              label: const Text('Verwalten'),
+            ),
+          ),
+          const SizedBox(height: 16),
+          _HostGuestsView(partyId: partyId, guests: guests),
+        ],
+      ),
     );
   }
 }

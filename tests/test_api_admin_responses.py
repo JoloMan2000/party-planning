@@ -1,14 +1,15 @@
-"""API-Tests für `/api/v1/admin/responses` (Phase-3-Plan: Flutter-
-Admin-Responses-Sektion)."""
+"""API-Tests für `/api/v1/parties/{party_id}/admin/responses` (Phase-4-Plan:
+Multi-Tenant Admin Router)."""
 
 from __future__ import annotations
 
 import party_engine.response_storage as response_storage
 
 
-def _seed_response(api_client):
+def _seed_response(api_client, party_id):
     response_storage.save_response(
         api_client.db_path,
+        party_id,
         name="Anna",
         start_time="18:30",
         drinks=[],
@@ -19,10 +20,11 @@ def _seed_response(api_client):
     )
 
 
-def test_list_responses_liefert_vorformatierte_anzeige_felder(api_client, admin_headers):
-    _seed_response(api_client)
+def test_list_responses_liefert_vorformatierte_anzeige_felder(api_client, host_party_factory):
+    party_id, headers, _user = host_party_factory()
+    _seed_response(api_client, party_id)
 
-    resp = api_client.get("/api/v1/admin/responses", headers=admin_headers)
+    resp = api_client.get(f"/api/v1/parties/{party_id}/admin/responses", headers=headers)
     assert resp.status_code == 200
     body = resp.json()
     assert len(body) == 1
@@ -35,10 +37,11 @@ def test_list_responses_liefert_vorformatierte_anzeige_felder(api_client, admin_
     assert row["songs_display"] == "Queen – Bohemian Rhapsody"
 
 
-def test_export_responses_csv_liefert_csv_mit_seeded_response(api_client, admin_headers):
-    _seed_response(api_client)
+def test_export_responses_csv_liefert_csv_mit_seeded_response(api_client, host_party_factory):
+    party_id, headers, _user = host_party_factory()
+    _seed_response(api_client, party_id)
 
-    resp = api_client.get("/api/v1/admin/responses/csv", headers=admin_headers)
+    resp = api_client.get(f"/api/v1/parties/{party_id}/admin/responses/csv", headers=headers)
     assert resp.status_code == 200
     assert resp.headers["content-type"].startswith("text/csv")
     assert "Anna" in resp.text

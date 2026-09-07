@@ -4,7 +4,7 @@ sichtbare Auswahl auf eine selbst gewählte "engere Auswahl" zu limitieren.
 
 Nutzt den ECHTEN Katalog (kein Mocking, siehe conftest.py / AUFGABE §43) für
 die Filter-Szenarien und eine temporäre sqlite-DB (``tmp_path``) für die
-Persistenz-Tests.
+Persistenz-Tests. Party-gescoped seit dem Multi-Tenant-Pivot Phase 4.
 """
 
 from __future__ import annotations
@@ -16,6 +16,8 @@ from party_engine.catalog_curation import (
     save_catalog_curation_settings,
 )
 from party_engine.domain import CatalogCurationSettings
+
+PARTY_ID = "test-party"
 
 
 def test_disabled_gibt_alle_items_zurueck(catalog):
@@ -53,7 +55,7 @@ def test_init_ist_idempotent(tmp_path):
     init_catalog_curation(db_path)
     init_catalog_curation(db_path)  # darf nicht crashen
 
-    settings = get_catalog_curation_settings(db_path)
+    settings = get_catalog_curation_settings(db_path, PARTY_ID)
     assert settings.enabled is False
     assert settings.curated_item_ids == set()
 
@@ -63,9 +65,9 @@ def test_save_und_reload_roundtrip(tmp_path):
     init_catalog_curation(db_path)
 
     settings = CatalogCurationSettings(enabled=True, curated_item_ids={"beer_pils", "masala_chai"})
-    save_catalog_curation_settings(db_path, settings)
+    save_catalog_curation_settings(db_path, PARTY_ID, settings)
 
-    reloaded = get_catalog_curation_settings(db_path)
+    reloaded = get_catalog_curation_settings(db_path, PARTY_ID)
     assert reloaded.enabled is True
     assert reloaded.curated_item_ids == {"beer_pils", "masala_chai"}
 
@@ -75,13 +77,13 @@ def test_erneutes_speichern_ersetzt_kuratierte_menge_vollstaendig(tmp_path):
     init_catalog_curation(db_path)
 
     save_catalog_curation_settings(
-        db_path, CatalogCurationSettings(enabled=True, curated_item_ids={"beer_pils"})
+        db_path, PARTY_ID, CatalogCurationSettings(enabled=True, curated_item_ids={"beer_pils"})
     )
     save_catalog_curation_settings(
-        db_path, CatalogCurationSettings(enabled=False, curated_item_ids={"masala_chai"})
+        db_path, PARTY_ID, CatalogCurationSettings(enabled=False, curated_item_ids={"masala_chai"})
     )
 
-    reloaded = get_catalog_curation_settings(db_path)
+    reloaded = get_catalog_curation_settings(db_path, PARTY_ID)
     assert reloaded.enabled is False
     assert reloaded.curated_item_ids == {"masala_chai"}
 
@@ -89,5 +91,17 @@ def test_erneutes_speichern_ersetzt_kuratierte_menge_vollstaendig(tmp_path):
 def test_get_settings_ohne_init_wirft_nicht(tmp_path):
     db_path = tmp_path / "never_initialized.db"
     # Kein init_catalog_curation() aufgerufen -> Tabellen existieren nicht.
-    settings = get_catalog_curation_settings(db_path)
+    settings = get_catalog_curation_settings(db_path, PARTY_ID)
     assert settings == CatalogCurationSettings()
+
+
+def test_settings_sind_pro_party_isoliert(tmp_path):
+    db_path = tmp_path / "curation.db"
+    init_catalog_curation(db_path)
+
+    save_catalog_curation_settings(
+        db_path, "party-a", CatalogCurationSettings(enabled=True, curated_item_ids={"beer_pils"})
+    )
+
+    assert get_catalog_curation_settings(db_path, "party-a").enabled is True
+    assert get_catalog_curation_settings(db_path, "party-b") == CatalogCurationSettings()

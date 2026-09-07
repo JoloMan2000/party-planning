@@ -16,12 +16,14 @@ const _countrySourceLabelKeys = {
 /// zeigt WAS aus den Party-Context-Eingaben abgeleitet wurde, verändert
 /// selbst nichts.
 class PartyContextDashboardSection extends ConsumerWidget {
-  const PartyContextDashboardSection({super.key});
+  final String partyId;
+
+  const PartyContextDashboardSection({super.key, required this.partyId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final translationsAsync = ref.watch(translationsProvider('de'));
-    final derivedAsync = ref.watch(derivedPartyContextProvider);
+    final derivedAsync = ref.watch(derivedPartyContextProvider(partyId));
 
     return translationsAsync.when(
       loading: () => const Padding(

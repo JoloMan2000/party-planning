@@ -1,6 +1,6 @@
 """Äquivalenz-Test: die Generate-Playlist-API muss exakt dasselbe Ergebnis
 liefern wie ein direkter Aufruf von ``plan_party_music`` mit denselben
-Eingaben (Phase-1-Plan Schritt 7)."""
+Eingaben (Phase-1-Plan Schritt 7, party-gescoped seit Phase 4)."""
 
 from __future__ import annotations
 
@@ -15,8 +15,9 @@ from music_engine.legacy_adapter import raw_song_requests_from_responses
 from music_engine.occasions import get_music_occasion
 
 
-def test_music_settings_roundtrip(api_client, admin_headers):
-    resp = api_client.get("/api/v1/admin/music/settings", headers=admin_headers)
+def test_music_settings_roundtrip(api_client, host_party_factory):
+    party_id, headers, _user = host_party_factory()
+    resp = api_client.get(f"/api/v1/parties/{party_id}/admin/music/settings", headers=headers)
     assert resp.status_code == 200
     body = resp.json()
     assert "party_intensity" in body
@@ -29,11 +30,11 @@ def test_music_settings_roundtrip(api_client, admin_headers):
         "explicit_allowed": False,
         "max_tracks_per_artist": 2,
     }
-    save_resp = api_client.post("/api/v1/admin/music/settings", json=payload, headers=admin_headers)
+    save_resp = api_client.post(f"/api/v1/parties/{party_id}/admin/music/settings", json=payload, headers=headers)
     assert save_resp.status_code == 200
     assert save_resp.json() == {"status": "ok"}
 
-    get_resp = api_client.get("/api/v1/admin/music/settings", headers=admin_headers)
+    get_resp = api_client.get(f"/api/v1/parties/{party_id}/admin/music/settings", headers=headers)
     assert get_resp.status_code == 200
     updated = get_resp.json()
     assert updated["party_intensity"] == 0.8
@@ -41,8 +42,9 @@ def test_music_settings_roundtrip(api_client, admin_headers):
     assert updated["max_tracks_per_artist"] == 2
 
 
-def test_generate_playlist_liefert_track_title_und_artist_pro_slot(api_client, admin_headers):
-    resp = api_client.post("/api/v1/admin/music/generate-playlist", headers=admin_headers)
+def test_generate_playlist_liefert_track_title_und_artist_pro_slot(api_client, host_party_factory):
+    party_id, headers, _user = host_party_factory()
+    resp = api_client.post(f"/api/v1/parties/{party_id}/admin/music/generate-playlist", headers=headers)
     assert resp.status_code == 200
     body = resp.json()
     assert body["total_tracks"] > 0
@@ -54,9 +56,11 @@ def test_generate_playlist_liefert_track_title_und_artist_pro_slot(api_client, a
     assert {p["id"] for p in body["phases"]} >= {s["phase_id"] for s in body["playlist"]}
 
 
-def test_generate_playlist_api_entspricht_direktem_plan_party_music(api_client, admin_headers):
+def test_generate_playlist_api_entspricht_direktem_plan_party_music(api_client, host_party_factory):
+    party_id, headers, _user = host_party_factory()
     response_storage.save_response(
         api_client.db_path,
+        party_id,
         name="Anna",
         start_time="18:30",
         drinks=[],
@@ -66,19 +70,21 @@ def test_generate_playlist_api_entspricht_direktem_plan_party_music(api_client, 
         songs=[{"artist": "Queen", "title": "Bohemian Rhapsody"}],
     )
 
-    resp = api_client.post("/api/v1/admin/music/generate-playlist", headers=admin_headers)
+    resp = api_client.post(f"/api/v1/parties/{party_id}/admin/music/generate-playlist", headers=headers)
     assert resp.status_code == 200
     api_result = resp.json()
 
-    settings = event_theme.get_party_settings(api_client.db_path)
-    responses = response_storage.load_responses(api_client.db_path)
-    music_settings = music_admin_settings.get_admin_music_settings(api_client.db_path)
+    settings = event_theme.get_party_settings(api_client.db_path, party_id)
+    responses = response_storage.load_responses(api_client.db_path, party_id)
+    music_settings = music_admin_settings.get_admin_music_settings(api_client.db_path, party_id)
     occasion_id = event_theme.resolve_occasion_id(settings["event_type"])
     occasion_profile = get_music_occasion(occasion_id, get_music_occasions())
     raw_requests = raw_song_requests_from_responses(responses)
-    track_overrides = music_admin_settings.get_track_overrides(api_client.db_path)
-    artist_overrides = music_admin_settings.get_artist_overrides(api_client.db_path)
-    derived_context = context_orchestration.get_derived_party_context(api_client.db_path, settings, len(responses))
+    track_overrides = music_admin_settings.get_track_overrides(api_client.db_path, party_id)
+    artist_overrides = music_admin_settings.get_artist_overrides(api_client.db_path, party_id)
+    derived_context = context_orchestration.get_derived_party_context(
+        api_client.db_path, party_id, settings, len(responses)
+    )
 
     expected = to_jsonable(
         plan_party_music(

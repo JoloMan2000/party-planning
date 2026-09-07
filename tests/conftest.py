@@ -45,13 +45,40 @@ def api_client(tmp_path, monkeypatch):
 
 
 @pytest.fixture()
-def admin_headers():
-    """Die 7 Legacy-``admin_*``-Router sind seit dem Account-basierten Pivot
-    (Phase 1, Entscheidung #2 "clean break") absichtlich unauthentifiziert -
-    ``get_current_admin``/``settings.admin_password`` existieren nicht mehr.
-    Diese Fixture liefert daher bewusst leere Headers, bis eine spätere Phase
-    Admin-Zugriff auf dem neuen Rollenmodell neu aufbaut."""
-    return {}
+def host_party_factory(api_client, auth_headers_factory):
+    """Legt einen echten Host-User + eine echte Party über die Account-APIs
+    an (Multi-Tenant-Pivot Phase 4, ersetzt die alte ``admin_headers={}``-
+    Platzhalter-Fixture) und liefert ``(party_id, headers, user)`` - die
+    Standard-Fixture für alle party-gescopten Admin-Router-Tests."""
+
+    def _make_party(party_name: str = "Test Party") -> tuple[str, dict, dict]:
+        headers, user, _refresh_token = auth_headers_factory()
+        resp = api_client.post("/api/v1/parties", json={"name": party_name}, headers=headers)
+        assert resp.status_code == 201, resp.text
+        party = resp.json()
+        return party["id"], headers, user
+
+    return _make_party
+
+
+@pytest.fixture()
+def co_host_headers_factory(api_client, auth_headers_factory):
+    """Fügt einen zweiten, echten User als CO_HOST einer bestehenden Party
+    hinzu (direkt via ``upsert_membership`` - es gibt noch keinen HTTP-Pfad,
+    der eine Einladung direkt als Co-Host anlegt) und liefert dessen
+    Auth-Headers. Für Tests, die CO_HOST-Zugriffsparität mit HOST prüfen."""
+
+    def _make_co_host(party_id: str) -> dict:
+        import accounts.party_storage as party_storage
+        from accounts.domain import PartyRole, RsvpStatus
+
+        headers, user, _refresh_token = auth_headers_factory()
+        party_storage.upsert_membership(
+            api_client.db_path, party_id, user["id"], PartyRole.CO_HOST, RsvpStatus.ACCEPTED
+        )
+        return headers
+
+    return _make_co_host
 
 
 @pytest.fixture()

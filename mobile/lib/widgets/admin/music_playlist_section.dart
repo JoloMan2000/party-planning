@@ -14,7 +14,9 @@ import '../../state/providers.dart';
 /// und Review-Hinweisen. Spotify-Export ist bewusst nicht Teil dieser
 /// Sektion (deferred, siehe Phase-3-Plan).
 class MusicPlaylistSection extends ConsumerStatefulWidget {
-  const MusicPlaylistSection({super.key});
+  final String partyId;
+
+  const MusicPlaylistSection({super.key, required this.partyId});
 
   @override
   ConsumerState<MusicPlaylistSection> createState() => _MusicPlaylistSectionState();
@@ -40,8 +42,8 @@ class _MusicPlaylistSectionState extends ConsumerState<MusicPlaylistSection> {
   @override
   Widget build(BuildContext context) {
     final translationsAsync = ref.watch(translationsProvider('de'));
-    final settingsAsync = ref.watch(musicSettingsProvider);
-    final playlistAsync = ref.watch(musicPlaylistProvider);
+    final settingsAsync = ref.watch(musicSettingsProvider(widget.partyId));
+    final playlistAsync = ref.watch(musicPlaylistProvider(widget.partyId));
 
     return translationsAsync.when(
       loading: () => const Padding(
@@ -185,7 +187,7 @@ class _MusicPlaylistSectionState extends ConsumerState<MusicPlaylistSection> {
     );
     setState(() => _savingSettings = true);
     try {
-      await ref.read(musicSettingsProvider.notifier).save(settings);
+      await ref.read(musicSettingsProvider(widget.partyId).notifier).save(settings);
       if (!mounted) return;
       setState(() => _savingSettings = false);
       ScaffoldMessenger.of(context)
@@ -201,7 +203,7 @@ class _MusicPlaylistSectionState extends ConsumerState<MusicPlaylistSection> {
   Future<void> _generate() async {
     setState(() => _generating = true);
     try {
-      await ref.read(musicPlaylistProvider.notifier).generate();
+      await ref.read(musicPlaylistProvider(widget.partyId).notifier).generate();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)

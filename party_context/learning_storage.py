@@ -34,6 +34,7 @@ def init_learning_storage(db_path: str | Path) -> None:
             """
             CREATE TABLE IF NOT EXISTS party_runs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                host_user_id TEXT NOT NULL DEFAULT '',
                 started_at TEXT NOT NULL DEFAULT '',
                 occasion_id TEXT NOT NULL DEFAULT '',
                 country_code TEXT NOT NULL DEFAULT '',
@@ -43,6 +44,9 @@ def init_learning_storage(db_path: str | Path) -> None:
                 group_size_class TEXT NOT NULL DEFAULT ''
             )
             """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_party_runs_host_user_id ON party_runs(host_user_id)"
         )
         conn.execute(
             """
@@ -60,19 +64,26 @@ def init_learning_storage(db_path: str | Path) -> None:
         )
 
 
-def save_party_run(db_path: str | Path, snapshot: PartyRunSnapshot) -> int:
-    """Speichert einen neuen, eingefrorenen ``PartyRunSnapshot`` (immer INSERT,
-    nie UPDATE - Snapshots sind unveränderlich §7). Liefert die vergebene
-    ``id`` zurück (wird für ``save_selection_events`` benötigt)."""
+def save_party_run(db_path: str | Path, host_user_id: str, snapshot: PartyRunSnapshot) -> int:
+    """Speichert einen neuen, eingefrorenen ``PartyRunSnapshot`` für den
+    angegebenen ``host_user_id`` (immer INSERT, nie UPDATE - Snapshots sind
+    unveränderlich §7). Liefert die vergebene ``id`` zurück (wird für
+    ``save_selection_events`` benötigt).
+
+    Scope ist bewusst ``host_user_id``, NICHT ``party_id`` (Multi-Tenant-Pivot
+    Phase 4): das Cross-Party-Lernen soll über die AUFEINANDERFOLGENDEN Partys
+    dieses einen Hosts hinweg funktionieren, nicht nur innerhalb einer
+    einzelnen Party."""
     started_at = snapshot.started_at.isoformat() if snapshot.started_at else datetime.now().isoformat()
     with sqlite3.connect(db_path) as conn:
         cursor = conn.execute(
             """
             INSERT INTO party_runs
-                (started_at, occasion_id, country_code, season, temperature_class, location_type, group_size_class)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+                (host_user_id, started_at, occasion_id, country_code, season, temperature_class, location_type, group_size_class)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
+                host_user_id,
                 started_at,
                 snapshot.occasion_id,
                 snapshot.country_code,
@@ -97,15 +108,25 @@ def save_selection_events(db_path: str | Path, party_run_id: int, events: list[S
         )
 
 
-def get_learning_history(db_path: str | Path) -> LearningHistory:
+def get_learning_history(db_path: str | Path, host_user_id: str) -> LearningHistory:
     """Liefert die vollständige historische Sicht (alle ``party_runs`` +
-    ``selection_events``) für ``compute_learned_preference_score()``. Niemals
-    ``None`` - liefert eine leere ``LearningHistory`` (Kaltstart, §7 Pflicht-
-    verhalten), falls noch keine Party abgeschlossen wurde."""
+    ``selection_events``) dieses ``host_user_id`` für
+    ``compute_learned_preference_score()``. Niemals ``None`` - liefert eine
+    leere ``LearningHistory`` (Kaltstart, §7 Pflichtverhalten), falls noch
+    keine Party dieses Hosts abgeschlossen wurde."""
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
-        run_rows = conn.execute("SELECT * FROM party_runs").fetchall()
-        event_rows = conn.execute("SELECT * FROM selection_events").fetchall()
+        run_rows = conn.execute(
+            "SELECT * FROM party_runs WHERE host_user_id = ?", (host_user_id,)
+        ).fetchall()
+        run_ids = [row["id"] for row in run_rows]
+        if run_ids:
+            placeholders = ",".join("?" for _ in run_ids)
+            event_rows = conn.execute(
+                f"SELECT * FROM selection_events WHERE party_run_id IN ({placeholders})", run_ids
+            ).fetchall()
+        else:
+            event_rows = []
 
     runs = []
     for row in run_rows:
@@ -145,10 +166,11 @@ if __name__ == "__main__":
 
     with tempfile.TemporaryDirectory() as tmp:
         db_path = Path(tmp) / "test_learning.db"
+        host_user_id = "host-1"
         init_learning_storage(db_path)
         init_learning_storage(db_path)  # idempotent, darf nicht crashen
 
-        empty_history = get_learning_history(db_path)
+        empty_history = get_learning_history(db_path, host_user_id)
         assert empty_history.runs == []
         assert empty_history.events == []
 
@@ -161,7 +183,7 @@ if __name__ == "__main__":
             location_type="garden",
             group_size_class="medium_group",
         )
-        run1_id = save_party_run(db_path, run1)
+        run1_id = save_party_run(db_path, host_user_id, run1)
         assert run1_id == 1
 
         run2 = PartyRunSnapshot(
@@ -173,8 +195,21 @@ if __name__ == "__main__":
             location_type="garden",
             group_size_class="large_group",
         )
-        run2_id = save_party_run(db_path, run2)
+        run2_id = save_party_run(db_path, host_user_id, run2)
         assert run2_id == 2
+
+        # Anderer Host - darf in host_user_id's Historie NIE auftauchen.
+        other_run = PartyRunSnapshot(
+            started_at=datetime(2026, 8, 1, 18, 0),
+            occasion_id="birthday",
+            country_code="DE",
+            season="summer",
+            temperature_class="warm",
+            location_type="garden",
+            group_size_class="small_group",
+        )
+        other_run_id = save_party_run(db_path, "host-2", other_run)
+        save_selection_events(db_path, other_run_id, [SelectionEvent(item_id="bratwurst", item_type="recipe")])
 
         save_selection_events(
             db_path,
@@ -187,7 +222,7 @@ if __name__ == "__main__":
         save_selection_events(db_path, run2_id, [SelectionEvent(item_id="chicken_biryani", item_type="recipe")])
         save_selection_events(db_path, run2_id, [])  # no-op, darf nicht crashen
 
-        history = get_learning_history(db_path)
+        history = get_learning_history(db_path, host_user_id)
         assert len(history.runs) == 2
         assert len(history.events) == 3
         assert history.runs[0].country_code == "IN"
@@ -195,5 +230,10 @@ if __name__ == "__main__":
         biryani_events = [e for e in history.events if e.item_id == "chicken_biryani"]
         assert len(biryani_events) == 2
         assert {e.party_run_id for e in biryani_events} == {run1_id, run2_id}
+        assert all(e.item_id != "bratwurst" for e in history.events)
+
+        other_history = get_learning_history(db_path, "host-2")
+        assert len(other_history.runs) == 1
+        assert other_history.events[0].item_id == "bratwurst"
 
         print("party_context/learning_storage.py sanity check OK.")

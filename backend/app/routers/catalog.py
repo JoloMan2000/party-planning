@@ -18,24 +18,25 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends
 
 from backend.app.core.dataclass_json import to_jsonable
+from backend.app.core.auth import get_existing_party
 from backend.app.core.deps import get_catalog, get_db_path, get_occasions
 from party_engine.catalog_curation import filter_items_by_curation, get_catalog_curation_settings
 from party_engine.domain import PartyCatalog
 from translations import catalog_item_name
 
-router = APIRouter(prefix="/api/v1/catalog", tags=["catalog"])
+router = APIRouter(prefix="/api/v1/guest/{party_id}/catalog", tags=["catalog"])
 
 _DRINK_DEMAND_GROUPS = {"alcoholic_beverage", "non_alcoholic_beverage", "energy", "beverage_general"}
 _FOOD_DEMAND_GROUPS = {"main", "side", "snack", "dessert", "condiment", "salad"}
 
 
 def _selectable(
-    catalog: PartyCatalog, demand_groups: set[str], db_path, lang: str, apply_curation: bool = True
+    catalog: PartyCatalog, demand_groups: set[str], db_path, party_id: str, lang: str, apply_curation: bool = True
 ) -> list[dict]:
     items = list(catalog.direct_consumables.values()) + list(catalog.recipes.values())
     items = [i for i in items if i.demand_group in demand_groups]
     if apply_curation:
-        curation_settings = get_catalog_curation_settings(db_path)
+        curation_settings = get_catalog_curation_settings(db_path, party_id)
         items = filter_items_by_curation(items, curation_settings)
     result = []
     for item in items:
@@ -47,18 +48,26 @@ def _selectable(
 
 @router.get("/drinks")
 def list_drinks(
-    lang: str = "de", catalog: PartyCatalog = Depends(get_catalog), db_path=Depends(get_db_path)
+    party_id: str = Depends(get_existing_party),
+    lang: str = "de",
+    catalog: PartyCatalog = Depends(get_catalog),
+    db_path=Depends(get_db_path),
 ) -> list[dict]:
-    return _selectable(catalog, _DRINK_DEMAND_GROUPS, db_path, lang)
+    return _selectable(catalog, _DRINK_DEMAND_GROUPS, db_path, party_id, lang)
 
 
 @router.get("/food")
 def list_food(
-    lang: str = "de", catalog: PartyCatalog = Depends(get_catalog), db_path=Depends(get_db_path)
+    party_id: str = Depends(get_existing_party),
+    lang: str = "de",
+    catalog: PartyCatalog = Depends(get_catalog),
+    db_path=Depends(get_db_path),
 ) -> list[dict]:
-    return _selectable(catalog, _FOOD_DEMAND_GROUPS, db_path, lang)
+    return _selectable(catalog, _FOOD_DEMAND_GROUPS, db_path, party_id, lang)
 
 
 @router.get("/occasions")
-def list_occasions(occasions=Depends(get_occasions)) -> list[dict]:
+def list_occasions(
+    party_id: str = Depends(get_existing_party), occasions=Depends(get_occasions)
+) -> list[dict]:
     return [to_jsonable(profile) for profile in occasions.values()]

@@ -10,12 +10,14 @@ import '../../state/providers.dart';
 /// Aufbau basierend auf dem aktuell konfigurierten Event-Typ. Erzeugt
 /// garantiert keine Demand/Preference und kauft/wählt nichts automatisch.
 class RecommendationsSection extends ConsumerWidget {
-  const RecommendationsSection({super.key});
+  final String partyId;
+
+  const RecommendationsSection({super.key, required this.partyId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final translationsAsync = ref.watch(translationsProvider('de'));
-    final recommendationsAsync = ref.watch(adminRecommendationsProvider);
+    final recommendationsAsync = ref.watch(adminRecommendationsProvider(partyId));
 
     return translationsAsync.when(
       loading: () => const Padding(

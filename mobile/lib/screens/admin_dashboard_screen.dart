@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../state/admin_providers.dart';
+import '../state/auth_providers.dart';
 import '../state/providers.dart';
 import '../theme/party_theme.dart';
 import '../widgets/admin/catalog_curation_section.dart';
@@ -19,13 +19,17 @@ import '../widgets/party_hero.dart';
 /// aus `"Party Planning.py"`: Party-Settings -> Party-Context -> Overrides ->
 /// Catalog-Curation -> Context-Dashboard -> Empfehlungen -> Musik-Playlist ->
 /// Antworten/CSV -> Einkaufsliste). Spotify-Export ist bewusst nicht Teil
-/// dieses Dashboards (deferred, siehe Phase-3-Plan).
+/// dieses Dashboards (deferred, siehe Phase-3-Plan). Seit Phase 4 party-
+/// gescoped statt über einen globalen Admin-Passwort-Modus erreichbar - siehe
+/// "Verwalten"-Button auf `PartyDetailScreen`.
 class AdminDashboardScreen extends ConsumerWidget {
-  const AdminDashboardScreen({super.key});
+  final String partyId;
+
+  const AdminDashboardScreen({super.key, required this.partyId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final partyInfoAsync = ref.watch(partyInfoProvider('de'));
+    final partyInfoAsync = ref.watch(partyInfoProvider(partyId));
     final colors = partyInfoAsync.maybeWhen(
       data: (info) => PartyColors.fromThemeJson(info.theme),
       orElse: () => PartyColors.fromThemeJson(null),
@@ -44,39 +48,32 @@ class AdminDashboardScreen extends ConsumerWidget {
                 colors: colors,
               ),
               const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  TextButton.icon(
-                    onPressed: () => ref.read(adminModeProvider.notifier).state = false,
-                    icon: const Icon(Icons.arrow_back),
-                    label: const Text('Zum Gast-Bereich'),
-                  ),
-                  TextButton.icon(
-                    onPressed: () => ref.read(adminAuthProvider.notifier).logout(),
-                    icon: const Icon(Icons.logout),
-                    label: const Text('Ausloggen'),
-                  ),
-                ],
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: () => ref.read(selectedAdminPartyIdProvider.notifier).state = null,
+                  icon: const Icon(Icons.arrow_back),
+                  label: const Text('Zurück zur Party'),
+                ),
               ),
               const SizedBox(height: 12),
-              const PartySettingsSection(),
+              PartySettingsSection(partyId: partyId),
               const SizedBox(height: 16),
-              const PartyContextSection(),
+              PartyContextSection(partyId: partyId),
               const SizedBox(height: 16),
-              const PartyContextOverridesSection(),
+              PartyContextOverridesSection(partyId: partyId),
               const SizedBox(height: 16),
-              const CatalogCurationSection(),
+              CatalogCurationSection(partyId: partyId),
               const SizedBox(height: 16),
-              const PartyContextDashboardSection(),
+              PartyContextDashboardSection(partyId: partyId),
               const SizedBox(height: 16),
-              const RecommendationsSection(),
+              RecommendationsSection(partyId: partyId),
               const SizedBox(height: 16),
-              const MusicPlaylistSection(),
+              MusicPlaylistSection(partyId: partyId),
               const SizedBox(height: 16),
-              const ResponsesSection(),
+              ResponsesSection(partyId: partyId),
               const SizedBox(height: 16),
-              const ShoppingListSection(),
+              ShoppingListSection(partyId: partyId),
             ],
           ),
         ),

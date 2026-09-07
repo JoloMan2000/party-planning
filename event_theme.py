@@ -315,17 +315,18 @@ def resolve_occasion_id(event_type: str) -> str:
 
 
 def init_party_settings(db_path: str | Path) -> None:
-    """Legt die (Single-Row-)Tabelle 'party_settings' an, falls sie noch nicht
-    existiert, und fügt die Default-Zeile ein, falls noch keine vorhanden ist.
-    Sicher bei jedem App-Start aufrufbar (mirroring init_db()-Muster in
-    "Party Planning.py"). Führt außerdem ein Schema-Migration für bereits
-    bestehende Datenbanken durch (fügt fehlende Spalten für Datum/Uhrzeit/
-    Dauer/Ort per ALTER TABLE hinzu, ohne bestehende Daten zu verlieren)."""
+    """Legt die Tabelle 'party_settings' an, falls sie noch nicht existiert
+    (Phase 4: eine Zeile PRO Party, PK = ``party_id``, statt der früheren
+    Single-Row-``id = 1``-Tabelle). Sicher bei jedem App-Start aufrufbar
+    (mirroring init_db()-Muster in "Party Planning.py"). Führt außerdem ein
+    Schema-Migration für bereits bestehende Datenbanken durch (fügt fehlende
+    Spalten für Datum/Uhrzeit/Dauer/Ort per ALTER TABLE hinzu, ohne bestehende
+    Daten zu verlieren)."""
     with sqlite3.connect(db_path) as conn:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS party_settings (
-                id INTEGER PRIMARY KEY CHECK (id = 1),
+                party_id TEXT PRIMARY KEY REFERENCES parties(id),
                 event_type TEXT NOT NULL DEFAULT 'bauwagen_sommerparty',
                 party_name TEXT NOT NULL DEFAULT ''
             )
@@ -343,27 +344,21 @@ def init_party_settings(db_path: str | Path) -> None:
         for column, ddl in migrations.items():
             if column not in existing_cols:
                 conn.execute(ddl)
-        conn.execute(
-            """
-            INSERT OR IGNORE INTO party_settings (id, event_type, party_name)
-            VALUES (1, ?, '')
-            """,
-            (DEFAULT_EVENT_TYPE,),
-        )
 
 
-def get_party_settings(db_path: str | Path) -> dict:
-    """Liest die aktuellen Party-Einstellungen. Gibt bei fehlender/unbekannter
-    event_type sicherheitshalber den Default-Event-Typ zurück (z.B. falls die
-    DB manuell verändert wurde). 'party_date'/'party_start_time' sind leere
-    Strings, solange der Admin noch kein Datum festgelegt hat (siehe
-    calendar_export.py, das dies als 'Kalender-Export noch nicht verfügbar'
-    interpretiert)."""
+def get_party_settings(db_path: str | Path, party_id: str) -> dict:
+    """Liest die aktuellen Party-Einstellungen für ``party_id``. Gibt bei
+    fehlender Zeile (noch nie gespeichert) bzw. unbekannter event_type
+    sicherheitshalber den Default-Event-Typ zurück. 'party_date'/
+    'party_start_time' sind leere Strings, solange der Admin noch kein Datum
+    festgelegt hat (siehe calendar_export.py, das dies als 'Kalender-Export
+    noch nicht verfügbar' interpretiert)."""
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
         row = conn.execute(
             "SELECT event_type, party_name, party_date, party_start_time, "
-            "party_duration_hours, party_location FROM party_settings WHERE id = 1"
+            "party_duration_hours, party_location FROM party_settings WHERE party_id = ?",
+            (party_id,),
         ).fetchone()
     if row is None:
         return {
@@ -387,6 +382,7 @@ def get_party_settings(db_path: str | Path) -> dict:
 
 def save_party_settings(
     db_path: str | Path,
+    party_id: str,
     event_type: str,
     party_name: str,
     party_date: str = "",
@@ -394,21 +390,22 @@ def save_party_settings(
     party_duration_hours: float = 7.0,
     party_location: str = "",
 ) -> None:
-    """Speichert Event-Typ + Party-Name + Datum/Startzeit/Dauer/Ort
-    (Single-Row-Upsert). 'party_date' erwartet ISO-Format ('YYYY-MM-DD'),
-    'party_start_time' das Format 'HH:MM'; beide dürfen leer bleiben, falls
-    der Admin noch keinen konkreten Termin festgelegt hat."""
+    """Speichert Event-Typ + Party-Name + Datum/Startzeit/Dauer/Ort für
+    ``party_id`` (Upsert, eine Zeile pro Party). 'party_date' erwartet
+    ISO-Format ('YYYY-MM-DD'), 'party_start_time' das Format 'HH:MM'; beide
+    dürfen leer bleiben, falls der Admin noch keinen konkreten Termin
+    festgelegt hat."""
     if event_type not in EVENT_TYPES:
         event_type = DEFAULT_EVENT_TYPE
     with sqlite3.connect(db_path) as conn:
         conn.execute(
             """
             INSERT INTO party_settings (
-                id, event_type, party_name, party_date, party_start_time,
+                party_id, event_type, party_name, party_date, party_start_time,
                 party_duration_hours, party_location
             )
-            VALUES (1, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET event_type = excluded.event_type,
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(party_id) DO UPDATE SET event_type = excluded.event_type,
                                            party_name = excluded.party_name,
                                            party_date = excluded.party_date,
                                            party_start_time = excluded.party_start_time,
@@ -416,6 +413,7 @@ def save_party_settings(
                                            party_location = excluded.party_location
             """,
             (
+                party_id,
                 event_type,
                 party_name.strip(),
                 party_date.strip(),

@@ -1,11 +1,12 @@
-"""API-Tests für `/api/v1/admin/party-context` (Phase-3-Plan: Flutter-Admin-
-Party-Context-Sektion)."""
+"""API-Tests für `/api/v1/parties/{party_id}/admin/party-context` (Phase-4-
+Plan: Multi-Tenant Admin Router)."""
 
 from __future__ import annotations
 
 
-def test_get_metadata_liefert_location_types_und_countries(api_client, admin_headers):
-    resp = api_client.get("/api/v1/admin/party-context/metadata", headers=admin_headers)
+def test_get_metadata_liefert_location_types_und_countries(api_client, host_party_factory):
+    party_id, headers, _user = host_party_factory()
+    resp = api_client.get(f"/api/v1/parties/{party_id}/admin/party-context/metadata", headers=headers)
     assert resp.status_code == 200
     body = resp.json()
     assert len(body["location_types"]) == 20
@@ -16,7 +17,8 @@ def test_get_metadata_liefert_location_types_und_countries(api_client, admin_hea
     assert set(first_country.keys()) == {"code", "name"}
 
 
-def test_save_party_context_persistiert_und_gibt_status_ok(api_client, admin_headers):
+def test_save_party_context_persistiert_und_gibt_status_ok(api_client, host_party_factory):
+    party_id, headers, _user = host_party_factory()
     payload = {
         "location_type": "garden",
         "indoor_outdoor": "outdoor",
@@ -38,11 +40,11 @@ def test_save_party_context_persistiert_und_gibt_status_ok(api_client, admin_hea
         "weather_condition": "sunny",
         "expected_temperature_c": 24.0,
     }
-    resp = api_client.post("/api/v1/admin/party-context", json=payload, headers=admin_headers)
+    resp = api_client.post(f"/api/v1/parties/{party_id}/admin/party-context", json=payload, headers=headers)
     assert resp.status_code == 200
     assert resp.json()["status"] == "ok"
 
-    get_resp = api_client.get("/api/v1/admin/party-context", headers=admin_headers)
+    get_resp = api_client.get(f"/api/v1/parties/{party_id}/admin/party-context", headers=headers)
     saved = get_resp.json()
     assert saved["location_type"] == "garden"
     assert saved["country_code"] == "DE"
@@ -51,8 +53,9 @@ def test_save_party_context_persistiert_und_gibt_status_ok(api_client, admin_hea
     assert saved["weather_condition"] == "sunny"
 
 
-def test_get_derived_party_context_liefert_abgeleitete_felder(api_client, admin_headers):
-    resp = api_client.get("/api/v1/admin/party-context/derived", headers=admin_headers)
+def test_get_derived_party_context_liefert_abgeleitete_felder(api_client, host_party_factory):
+    party_id, headers, _user = host_party_factory()
+    resp = api_client.get(f"/api/v1/parties/{party_id}/admin/party-context/derived", headers=headers)
     assert resp.status_code == 200
     body = resp.json()
     assert body["season"] in {"spring", "summer", "autumn", "winter"}
@@ -63,19 +66,22 @@ def test_get_derived_party_context_liefert_abgeleitete_felder(api_client, admin_
     assert isinstance(body["explanations"], list)
 
 
-def test_override_add_list_delete_roundtrip(api_client, admin_headers):
+def test_override_add_list_delete_roundtrip(api_client, host_party_factory):
+    party_id, headers, _user = host_party_factory()
     payload = {"key": "temperature_class", "value": "warm", "reason": "Zelt mit Heizung"}
-    add_resp = api_client.post("/api/v1/admin/party-context/overrides", json=payload, headers=admin_headers)
+    add_resp = api_client.post(
+        f"/api/v1/parties/{party_id}/admin/party-context/overrides", json=payload, headers=headers
+    )
     assert add_resp.status_code == 201
 
-    list_resp = api_client.get("/api/v1/admin/party-context/overrides", headers=admin_headers)
+    list_resp = api_client.get(f"/api/v1/parties/{party_id}/admin/party-context/overrides", headers=headers)
     overrides = list_resp.json()
     assert any(o["key"] == "temperature_class" and o["value"] == "warm" for o in overrides)
 
     delete_resp = api_client.delete(
-        "/api/v1/admin/party-context/overrides/temperature_class", headers=admin_headers
+        f"/api/v1/parties/{party_id}/admin/party-context/overrides/temperature_class", headers=headers
     )
     assert delete_resp.status_code == 200
 
-    list_resp_after = api_client.get("/api/v1/admin/party-context/overrides", headers=admin_headers)
+    list_resp_after = api_client.get(f"/api/v1/parties/{party_id}/admin/party-context/overrides", headers=headers)
     assert not any(o["key"] == "temperature_class" for o in list_resp_after.json())

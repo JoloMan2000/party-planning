@@ -1,7 +1,7 @@
 """Äquivalenz-Test: die Shopping-List-API muss exakt dasselbe Ergebnis liefern
 wie ein direkter Aufruf von ``compute_party_demand`` mit denselben Eingaben
-(Phase-1-Plan Schritt 7) - die API darf die zugrundeliegende Berechnung nicht
-verändern."""
+(Phase-1-Plan Schritt 7, party-gescoped seit Phase 4) - die API darf die
+zugrundeliegende Berechnung nicht verändern."""
 
 from __future__ import annotations
 
@@ -14,9 +14,10 @@ from party_engine.engine import compute_party_demand
 from party_engine.legacy_adapter import guest_response_from_row
 
 
-def _seed_responses(db_path):
+def _seed_responses(db_path, party_id):
     response_storage.save_response(
         db_path,
+        party_id,
         name="Anna",
         start_time="18:30",
         drinks=["beer_pils"],
@@ -27,6 +28,7 @@ def _seed_responses(db_path):
     )
     response_storage.save_response(
         db_path,
+        party_id,
         name="Ben",
         start_time="19:00",
         drinks=["cola"],
@@ -37,17 +39,18 @@ def _seed_responses(db_path):
     )
 
 
-def test_shopping_list_api_entspricht_direktem_compute_party_demand(api_client, admin_headers, catalog):
-    _seed_responses(api_client.db_path)
+def test_shopping_list_api_entspricht_direktem_compute_party_demand(api_client, host_party_factory, catalog):
+    party_id, headers, _user = host_party_factory()
+    _seed_responses(api_client.db_path, party_id)
 
-    resp = api_client.post("/api/v1/admin/shopping-list", headers=admin_headers)
+    resp = api_client.post(f"/api/v1/parties/{party_id}/admin/shopping-list", headers=headers)
     assert resp.status_code == 200
     api_result = resp.json()
 
-    settings = event_theme.get_party_settings(api_client.db_path)
-    rows = response_storage.load_responses(api_client.db_path)
+    settings = event_theme.get_party_settings(api_client.db_path, party_id)
+    rows = response_storage.load_responses(api_client.db_path, party_id)
     guest_responses = [guest_response_from_row(row, catalog) for row in rows]
-    derived_context = context_orchestration.get_derived_party_context(api_client.db_path, settings, len(rows))
+    derived_context = context_orchestration.get_derived_party_context(api_client.db_path, party_id, settings, len(rows))
     expected = to_jsonable(compute_party_demand(catalog, guest_responses, PartyConfig(), derived_context=derived_context))
 
     # Router reichert jede Zutat zusätzlich um `family` an (siehe

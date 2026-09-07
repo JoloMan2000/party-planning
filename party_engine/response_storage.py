@@ -37,6 +37,7 @@ def init_db(db_path: str | Path) -> None:
             """
             CREATE TABLE IF NOT EXISTS responses (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                party_id TEXT NOT NULL DEFAULT '',
                 name TEXT NOT NULL,
                 start_time TEXT NOT NULL,
                 drinks TEXT NOT NULL,
@@ -53,10 +54,17 @@ def init_db(db_path: str | Path) -> None:
             conn.execute("ALTER TABLE responses ADD COLUMN songs TEXT NOT NULL DEFAULT '[]'")
         except sqlite3.OperationalError:
             pass  # Spalte existiert bereits
+        # Migration für Datenbanken von vor dem Multi-Tenant-Pivot (Phase 4).
+        try:
+            conn.execute("ALTER TABLE responses ADD COLUMN party_id TEXT NOT NULL DEFAULT ''")
+        except sqlite3.OperationalError:
+            pass  # Spalte existiert bereits
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_responses_party_id ON responses(party_id)")
 
 
 def save_response(
     db_path: str | Path,
+    party_id: str,
     name: str,
     start_time: str,
     drinks: list[str],
@@ -69,10 +77,11 @@ def save_response(
         conn.execute(
             """
             INSERT INTO responses
-                (name, start_time, drinks, drinks_freetext, food, food_freetext, songs, submitted_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                (party_id, name, start_time, drinks, drinks_freetext, food, food_freetext, songs, submitted_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
+                party_id,
                 name,
                 start_time,
                 json.dumps(drinks),
@@ -85,10 +94,12 @@ def save_response(
         )
 
 
-def load_responses(db_path: str | Path) -> list[dict]:
+def load_responses(db_path: str | Path, party_id: str) -> list[dict]:
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
-        rows = conn.execute("SELECT * FROM responses ORDER BY id").fetchall()
+        rows = conn.execute(
+            "SELECT * FROM responses WHERE party_id = ? ORDER BY id", (party_id,)
+        ).fetchall()
     return [dict(row) for row in rows]
 
 
@@ -108,13 +119,15 @@ if __name__ == "__main__":
 
     with tempfile.TemporaryDirectory() as tmp:
         db_path = Path(tmp) / "test_response_storage.db"
+        party_id = "test-party"
         init_db(db_path)
         init_db(db_path)  # idempotent, darf nicht crashen
 
-        assert load_responses(db_path) == []
+        assert load_responses(db_path, party_id) == []
 
         save_response(
             db_path,
+            party_id,
             name="Max",
             start_time="19:00",
             drinks=["beer_pils"],
@@ -123,7 +136,7 @@ if __name__ == "__main__":
             food_freetext="",
             songs=[{"artist": "Queen", "title": "Bohemian Rhapsody"}],
         )
-        rows = load_responses(db_path)
+        rows = load_responses(db_path, party_id)
         assert len(rows) == 1
         assert rows[0]["name"] == "Max"
         assert json.loads(rows[0]["drinks"]) == ["beer_pils"]

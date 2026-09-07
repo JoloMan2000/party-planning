@@ -46,7 +46,7 @@ def init_party_context_storage(db_path: str | Path) -> None:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS party_context (
-                id INTEGER PRIMARY KEY CHECK (id = 1),
+                party_id TEXT PRIMARY KEY REFERENCES parties(id),
                 occasion_id TEXT NOT NULL DEFAULT '',
                 start_datetime TEXT NOT NULL DEFAULT '',
                 duration_hours REAL NOT NULL DEFAULT 4.0,
@@ -82,16 +82,18 @@ def init_party_context_storage(db_path: str | Path) -> None:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS party_context_override (
-                key TEXT PRIMARY KEY,
+                party_id TEXT NOT NULL REFERENCES parties(id),
+                key TEXT NOT NULL,
                 value TEXT NOT NULL,
-                reason TEXT
+                reason TEXT,
+                PRIMARY KEY (party_id, key)
             )
             """
         )
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS weather_snapshot (
-                id INTEGER PRIMARY KEY CHECK (id = 1),
+                party_id TEXT PRIMARY KEY REFERENCES parties(id),
                 temperature_c REAL,
                 apparent_temperature_c REAL,
                 condition TEXT,
@@ -119,19 +121,15 @@ def init_party_context_storage(db_path: str | Path) -> None:
         for column, ddl in migrations.items():
             if column not in existing_cols:
                 conn.execute(ddl)
-        conn.execute(
-            "INSERT OR IGNORE INTO party_context (id, context_model_version) VALUES (1, ?)",
-            (PARTY_CONTEXT_MODEL_VERSION,),
-        )
 
 
-def get_party_context(db_path: str | Path) -> PartyContext:
-    """Liest den aktuellen ``PartyContext``. Liefert einen leeren/neutralen
-    Default, falls noch nichts gespeichert wurde - niemals None (mirrors
-    ``event_theme.get_party_settings``)."""
+def get_party_context(db_path: str | Path, party_id: str) -> PartyContext:
+    """Liest den aktuellen ``PartyContext`` für ``party_id``. Liefert einen
+    leeren/neutralen Default, falls noch nichts gespeichert wurde - niemals
+    None (mirrors ``event_theme.get_party_settings``)."""
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
-        row = conn.execute("SELECT * FROM party_context WHERE id = 1").fetchone()
+        row = conn.execute("SELECT * FROM party_context WHERE party_id = ?", (party_id,)).fetchone()
     if row is None:
         return PartyContext()
 
@@ -165,14 +163,15 @@ def get_party_context(db_path: str | Path) -> PartyContext:
     return PartyContext(**kwargs)
 
 
-def save_party_context(db_path: str | Path, party_context: PartyContext) -> None:
-    """Speichert den ``PartyContext`` (Single-Row-Upsert)."""
+def save_party_context(db_path: str | Path, party_id: str, party_context: PartyContext) -> None:
+    """Speichert den ``PartyContext`` für ``party_id`` (Upsert, eine Zeile pro
+    Party)."""
     columns = (
-        ["id", "context_model_version", "context_tags", "start_datetime"]
+        ["party_id", "context_model_version", "context_tags", "start_datetime"]
         + _TEXT_FIELDS + _REAL_FIELDS + _INT_FIELDS + _BOOL_FIELDS
     )
     values: dict = {
-        "id": 1,
+        "party_id": party_id,
         "context_model_version": PARTY_CONTEXT_MODEL_VERSION,
         "context_tags": json.dumps(sorted(party_context.context_tags)),
         "start_datetime": party_context.start_datetime.isoformat() if party_context.start_datetime else "",
@@ -185,42 +184,44 @@ def save_party_context(db_path: str | Path, party_context: PartyContext) -> None
         values[field_name] = int(bool(getattr(party_context, field_name)))
 
     placeholders = ", ".join(f":{c}" for c in columns)
-    update_clause = ", ".join(f"{c} = excluded.{c}" for c in columns if c != "id")
+    update_clause = ", ".join(f"{c} = excluded.{c}" for c in columns if c != "party_id")
     with sqlite3.connect(db_path) as conn:
         conn.execute(
             f"INSERT INTO party_context ({', '.join(columns)}) VALUES ({placeholders}) "
-            f"ON CONFLICT(id) DO UPDATE SET {update_clause}",
+            f"ON CONFLICT(party_id) DO UPDATE SET {update_clause}",
             values,
         )
 
 
-def get_party_context_overrides(db_path: str | Path) -> list[PartyContextOverride]:
+def get_party_context_overrides(db_path: str | Path, party_id: str) -> list[PartyContextOverride]:
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
-        rows = conn.execute("SELECT key, value, reason FROM party_context_override").fetchall()
+        rows = conn.execute(
+            "SELECT key, value, reason FROM party_context_override WHERE party_id = ?", (party_id,)
+        ).fetchall()
     return [PartyContextOverride(key=r["key"], value=json.loads(r["value"]), reason=r["reason"]) for r in rows]
 
 
-def save_party_context_override(db_path: str | Path, override: PartyContextOverride) -> None:
+def save_party_context_override(db_path: str | Path, party_id: str, override: PartyContextOverride) -> None:
     with sqlite3.connect(db_path) as conn:
         conn.execute(
             """
-            INSERT INTO party_context_override (key, value, reason) VALUES (?, ?, ?)
-            ON CONFLICT(key) DO UPDATE SET value = excluded.value, reason = excluded.reason
+            INSERT INTO party_context_override (party_id, key, value, reason) VALUES (?, ?, ?, ?)
+            ON CONFLICT(party_id, key) DO UPDATE SET value = excluded.value, reason = excluded.reason
             """,
-            (override.key, json.dumps(override.value), override.reason),
+            (party_id, override.key, json.dumps(override.value), override.reason),
         )
 
 
-def delete_party_context_override(db_path: str | Path, key: str) -> None:
+def delete_party_context_override(db_path: str | Path, party_id: str, key: str) -> None:
     with sqlite3.connect(db_path) as conn:
-        conn.execute("DELETE FROM party_context_override WHERE key = ?", (key,))
+        conn.execute("DELETE FROM party_context_override WHERE party_id = ? AND key = ?", (party_id, key))
 
 
-def get_weather_snapshot(db_path: str | Path) -> WeatherContext | None:
+def get_weather_snapshot(db_path: str | Path, party_id: str) -> WeatherContext | None:
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
-        row = conn.execute("SELECT * FROM weather_snapshot WHERE id = 1").fetchone()
+        row = conn.execute("SELECT * FROM weather_snapshot WHERE party_id = ?", (party_id,)).fetchone()
     if row is None or row["temperature_c"] is None:
         return None
     fetched_at = datetime.fromisoformat(row["fetched_at"]) if row["fetched_at"] else None
@@ -234,13 +235,13 @@ def get_weather_snapshot(db_path: str | Path) -> WeatherContext | None:
     )
 
 
-def save_weather_snapshot(db_path: str | Path, weather: WeatherContext) -> None:
+def save_weather_snapshot(db_path: str | Path, party_id: str, weather: WeatherContext) -> None:
     with sqlite3.connect(db_path) as conn:
         conn.execute(
             """
-            INSERT INTO weather_snapshot (id, temperature_c, apparent_temperature_c, condition, precipitation_probability, wind_speed, fetched_at)
-            VALUES (1, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET temperature_c = excluded.temperature_c,
+            INSERT INTO weather_snapshot (party_id, temperature_c, apparent_temperature_c, condition, precipitation_probability, wind_speed, fetched_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(party_id) DO UPDATE SET temperature_c = excluded.temperature_c,
                                            apparent_temperature_c = excluded.apparent_temperature_c,
                                            condition = excluded.condition,
                                            precipitation_probability = excluded.precipitation_probability,
@@ -248,6 +249,7 @@ def save_weather_snapshot(db_path: str | Path, weather: WeatherContext) -> None:
                                            fetched_at = excluded.fetched_at
             """,
             (
+                party_id,
                 weather.temperature_c,
                 weather.apparent_temperature_c,
                 weather.condition,
@@ -289,10 +291,11 @@ if __name__ == "__main__":
 
     with tempfile.TemporaryDirectory() as tmp:
         db_path = Path(tmp) / "test_party_context.db"
+        party_id = "test-party"
         init_party_context_storage(db_path)
         init_party_context_storage(db_path)  # idempotent, darf nicht crashen
 
-        default_ctx = get_party_context(db_path)
+        default_ctx = get_party_context(db_path, party_id)
         assert default_ctx.location_type == "other"
         assert default_ctx.guest_count == 1
 
@@ -309,8 +312,8 @@ if __name__ == "__main__":
             weather_condition="sunny",
             context_tags={"birthday", "outdoor"},
         )
-        save_party_context(db_path, ctx)
-        loaded = get_party_context(db_path)
+        save_party_context(db_path, party_id, ctx)
+        loaded = get_party_context(db_path, party_id)
         assert loaded.occasion_id == "birthday"
         assert loaded.start_datetime == datetime(2026, 7, 18, 15, 0)
         assert loaded.duration_hours == 8.0
@@ -321,22 +324,22 @@ if __name__ == "__main__":
         assert loaded.expected_temperature_c == 29.0
         assert loaded.context_tags == {"birthday", "outdoor"}
 
-        assert get_party_context_overrides(db_path) == []
+        assert get_party_context_overrides(db_path, party_id) == []
         override = PartyContextOverride(key="temperature_class", value="warm", reason="Zelt mit Heizung")
-        save_party_context_override(db_path, override)
-        loaded_overrides = get_party_context_overrides(db_path)
+        save_party_context_override(db_path, party_id, override)
+        loaded_overrides = get_party_context_overrides(db_path, party_id)
         assert len(loaded_overrides) == 1
         assert loaded_overrides[0].key == "temperature_class"
         assert loaded_overrides[0].value == "warm"
         assert loaded_overrides[0].reason == "Zelt mit Heizung"
 
-        delete_party_context_override(db_path, "temperature_class")
-        assert get_party_context_overrides(db_path) == []
+        delete_party_context_override(db_path, party_id, "temperature_class")
+        assert get_party_context_overrides(db_path, party_id) == []
 
-        assert get_weather_snapshot(db_path) is None
+        assert get_weather_snapshot(db_path, party_id) is None
         weather = WeatherContext(temperature_c=29.0, apparent_temperature_c=31.0, condition="sunny", precipitation_probability=0.05, wind_speed=3.0, fetched_at=datetime(2026, 7, 18, 8, 0))
-        save_weather_snapshot(db_path, weather)
-        loaded_weather = get_weather_snapshot(db_path)
+        save_weather_snapshot(db_path, party_id, weather)
+        loaded_weather = get_weather_snapshot(db_path, party_id)
         assert loaded_weather is not None
         assert loaded_weather.temperature_c == 29.0
         assert loaded_weather.fetched_at == datetime(2026, 7, 18, 8, 0)

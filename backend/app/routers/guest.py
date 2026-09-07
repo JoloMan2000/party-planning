@@ -6,11 +6,13 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Response
 
+import accounts.party_storage as party_storage
 import calendar_export
 import event_theme
 import party_engine.context_orchestration as context_orchestration
 import party_engine.response_storage as response_storage
 from backend.app.adapters.guest import guest_stub_from_query, response_create_to_kwargs
+from backend.app.core.auth import get_existing_party
 from backend.app.core.deps import get_catalog, get_db_path, get_occasions
 from backend.app.schemas.guest import GuestRecommendationsQuery, GuestResponseCreate
 from party_context import learning_storage
@@ -19,14 +21,17 @@ from party_engine.recommendation import recommend_for_guest, resolve_occasion_fo
 from party_engine.recommendation_domain import RecommendationContext
 from translations import t
 
-router = APIRouter(prefix="/api/v1/guest", tags=["guest"])
+router = APIRouter(prefix="/api/v1/guest/{party_id}", tags=["guest"])
 
 
 @router.get("/party-info")
 def get_party_info(
-    lang: str = "de", db_path=Depends(get_db_path), occasions=Depends(get_occasions)
+    party_id: str = Depends(get_existing_party),
+    lang: str = "de",
+    db_path=Depends(get_db_path),
+    occasions=Depends(get_occasions),
 ) -> dict:
-    settings = event_theme.get_party_settings(db_path)
+    settings = event_theme.get_party_settings(db_path, party_id)
     theme = event_theme.EVENT_TYPES.get(settings["event_type"], event_theme.EVENT_TYPES[event_theme.DEFAULT_EVENT_TYPE])
     title = f"{theme['emoji']} {event_theme.resolve_party_title(settings)}"
     occasion_id = event_theme.resolve_occasion_id(settings["event_type"])
@@ -46,8 +51,8 @@ def get_party_info(
 
 
 @router.get("/calendar.ics")
-def get_calendar_ics(db_path=Depends(get_db_path)) -> Response:
-    settings = event_theme.get_party_settings(db_path)
+def get_calendar_ics(party_id: str = Depends(get_existing_party), db_path=Depends(get_db_path)) -> Response:
+    settings = event_theme.get_party_settings(db_path, party_id)
     theme = event_theme.EVENT_TYPES.get(settings["event_type"], event_theme.EVENT_TYPES[event_theme.DEFAULT_EVENT_TYPE])
     title = f"{theme['emoji']} {event_theme.resolve_party_title(settings)}"
     ics = calendar_export.ics_content(settings, title)
@@ -57,29 +62,33 @@ def get_calendar_ics(db_path=Depends(get_db_path)) -> Response:
 
 
 @router.post("/responses", status_code=201)
-def submit_response(payload: GuestResponseCreate, db_path=Depends(get_db_path)) -> dict:
-    response_storage.save_response(db_path, **response_create_to_kwargs(payload))
+def submit_response(
+    payload: GuestResponseCreate, party_id: str = Depends(get_existing_party), db_path=Depends(get_db_path)
+) -> dict:
+    response_storage.save_response(db_path, party_id, **response_create_to_kwargs(payload))
     return {"status": "ok"}
 
 
 @router.post("/recommendations")
 def guest_recommendations(
     query: GuestRecommendationsQuery,
+    party_id: str = Depends(get_existing_party),
     catalog: PartyCatalog = Depends(get_catalog),
     occasions=Depends(get_occasions),
     db_path=Depends(get_db_path),
 ) -> list[str]:
     """Score-sortierte Item-IDs für die "empfohlen"-Hervorhebung im laufenden
     Wizard (mirroring ``_guest_recommended_ids``)."""
-    settings = event_theme.get_party_settings(db_path)
+    settings = event_theme.get_party_settings(db_path, party_id)
     stub_guest = guest_stub_from_query(query.name, query.drinks, query.food)
     already_selected = set(query.drinks) | set(query.food)
     occasion_id = event_theme.resolve_occasion_id(settings["event_type"])
     occasion_profile = resolve_occasion_for_scoring([occasion_id], occasions)
     recommendation_context = RecommendationContext(occasion_ids=[occasion_profile.id])
-    responses = response_storage.load_responses(db_path)
-    derived_context = context_orchestration.get_derived_party_context(db_path, settings, len(responses))
-    learning_history = learning_storage.get_learning_history(db_path)
+    responses = response_storage.load_responses(db_path, party_id)
+    derived_context = context_orchestration.get_derived_party_context(db_path, party_id, settings, len(responses))
+    party = party_storage.get_party(db_path, party_id)
+    learning_history = learning_storage.get_learning_history(db_path, party.host_user_id)
     recommended = recommend_for_guest(
         catalog,
         occasion_profile,

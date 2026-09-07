@@ -12,7 +12,9 @@ import '../../state/providers.dart';
 /// Party-Name, Datum, Startzeit, Dauer, Ort - beeinflusst nur Optik/Text,
 /// nicht den Getränke-/Essenskatalog.
 class PartySettingsSection extends ConsumerStatefulWidget {
-  const PartySettingsSection({super.key});
+  final String partyId;
+
+  const PartySettingsSection({super.key, required this.partyId});
 
   @override
   ConsumerState<PartySettingsSection> createState() => _PartySettingsSectionState();
@@ -53,8 +55,8 @@ class _PartySettingsSectionState extends ConsumerState<PartySettingsSection> {
   @override
   Widget build(BuildContext context) {
     final translationsAsync = ref.watch(translationsProvider('de'));
-    final settingsAsync = ref.watch(partySettingsProvider);
-    final eventTypesAsync = ref.watch(eventTypesProvider);
+    final settingsAsync = ref.watch(partySettingsProvider(widget.partyId));
+    final eventTypesAsync = ref.watch(eventTypesProvider(widget.partyId));
 
     return translationsAsync.when(
       loading: () => const Padding(
@@ -200,7 +202,7 @@ class _PartySettingsSectionState extends ConsumerState<PartySettingsSection> {
 
     setState(() => _saving = true);
     try {
-      final resetHappened = await ref.read(partySettingsProvider.notifier).save(settings);
+      final resetHappened = await ref.read(partySettingsProvider(widget.partyId).notifier).save(settings);
       if (!mounted) return;
       setState(() => _saving = false);
       final message = resetHappened ? t('party_settings_reset_notice') : t('party_settings_saved');

@@ -17,7 +17,9 @@ import '../catalog_picker.dart';
 /// (`GET /api/v1/admin/catalog-curation/items`) mit vorbelegter Auswahl aus
 /// den gespeicherten Settings.
 class CatalogCurationSection extends ConsumerStatefulWidget {
-  const CatalogCurationSection({super.key});
+  final String partyId;
+
+  const CatalogCurationSection({super.key, required this.partyId});
 
   @override
   ConsumerState<CatalogCurationSection> createState() => _CatalogCurationSectionState();
@@ -33,8 +35,8 @@ class _CatalogCurationSectionState extends ConsumerState<CatalogCurationSection>
   @override
   Widget build(BuildContext context) {
     final translationsAsync = ref.watch(translationsProvider('de'));
-    final settingsAsync = ref.watch(catalogCurationProvider);
-    final catalogAsync = ref.watch(curatableCatalogProvider);
+    final settingsAsync = ref.watch(catalogCurationProvider(widget.partyId));
+    final catalogAsync = ref.watch(curatableCatalogProvider(widget.partyId));
 
     return translationsAsync.when(
       loading: () => const Padding(
@@ -157,7 +159,7 @@ class _CatalogCurationSectionState extends ConsumerState<CatalogCurationSection>
     setState(() => _saving = true);
     try {
       final curatedItemIds = {..._selectedDrinks, ..._selectedFood}.toList();
-      await ref.read(catalogCurationProvider.notifier).save(_enabled, curatedItemIds);
+      await ref.read(catalogCurationProvider(widget.partyId).notifier).save(_enabled, curatedItemIds);
       if (!mounted) return;
       setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(t('catalog_curation_saved'))));

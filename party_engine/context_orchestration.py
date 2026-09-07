@@ -15,8 +15,8 @@ zu werden - daher hier als expliziter ``party_settings: dict``-Parameter.
 Verwendung ("Party Planning.py" UND backend/):
     import party_engine.context_orchestration as context_orchestration
 
-    ctx = context_orchestration.get_party_context(DB_PATH, party_settings)
-    derived = context_orchestration.get_derived_party_context(DB_PATH, party_settings, guest_count)
+    ctx = context_orchestration.get_party_context(DB_PATH, party_id, party_settings)
+    derived = context_orchestration.get_derived_party_context(DB_PATH, party_id, party_settings, guest_count)
 """
 
 from __future__ import annotations
@@ -36,12 +36,13 @@ from party_context.geocoding import CachingGeocodingProvider, NominatimGeocoding
 from party_engine.domain import PartyCatalog
 
 
-def get_party_context(db_path: str | Path, party_settings: dict) -> PartyContext:
-    """Lädt den gespeicherten (Infrastruktur-/Location-)``PartyContext`` und
-    überschreibt Anlass/Datum/Startzeit/Dauer mit den bereits an anderer
-    Stelle gepflegten, live aktuellen Werten aus ``party_settings`` (siehe
-    ``event_theme.get_party_settings(db_path)``)."""
-    ctx = party_context_storage.get_party_context(db_path)
+def get_party_context(db_path: str | Path, party_id: str, party_settings: dict) -> PartyContext:
+    """Lädt den gespeicherten (Infrastruktur-/Location-)``PartyContext`` für
+    ``party_id`` und überschreibt Anlass/Datum/Startzeit/Dauer mit den
+    bereits an anderer Stelle gepflegten, live aktuellen Werten aus
+    ``party_settings`` (siehe ``event_theme.get_party_settings(db_path,
+    party_id)``)."""
+    ctx = party_context_storage.get_party_context(db_path, party_id)
     ctx.occasion_id = event_theme.resolve_occasion_id(party_settings["event_type"])
     if party_settings["party_date"] and party_settings["party_start_time"]:
         ctx.start_datetime = datetime.fromisoformat(
@@ -58,26 +59,28 @@ def get_party_context(db_path: str | Path, party_settings: dict) -> PartyContext
 
 
 def get_derived_party_context(
-    db_path: str | Path, party_settings: dict, guest_count: int
+    db_path: str | Path, party_id: str, party_settings: dict, guest_count: int
 ) -> DerivedPartyContext:
-    """Leitet den zentralen ``DerivedPartyContext`` ab (inkl. admin-gesetzter
-    Overrides, §71/§72) - die einzige Stelle, an der ``PartyContextEngine``
-    aufgerufen wird (§10: keine nachgelagerte Engine leitet Kontext selbst ab).
+    """Leitet den zentralen ``DerivedPartyContext`` für ``party_id`` ab
+    (inkl. admin-gesetzter Overrides, §71/§72) - die einzige Stelle, an der
+    ``PartyContextEngine`` aufgerufen wird (§10: keine nachgelagerte Engine
+    leitet Kontext selbst ab).
 
     Geo-Kultur-Spec §2: übergibt einen ``CachingGeocodingProvider`` (nur bei
     vorhandener ``party_address`` UND fehlendem Admin-Override überhaupt
     genutzt, siehe ``resolve_country_code``) - Live-Geocoding via Nominatim,
     Ergebnis wird in ``geocode_cache`` persistiert (Pflicht-Cache, max. 1
-    Request/Sekunde laut Nominatim-Nutzungsrichtlinie)."""
-    ctx = get_party_context(db_path, party_settings)
+    Request/Sekunde laut Nominatim-Nutzungsrichtlinie). ``geocode_cache``
+    bleibt bewusst global (kein party_id) - reiner Adresse→Land-Cache."""
+    ctx = get_party_context(db_path, party_id, party_settings)
     ctx.guest_count = guest_count or 1
-    overrides = party_context_storage.get_party_context_overrides(db_path)
+    overrides = party_context_storage.get_party_context_overrides(db_path, party_id)
     geocoding_provider = CachingGeocodingProvider(db_path, NominatimGeocodingProvider())
     return PartyContextEngine().derive_context(ctx, overrides=overrides, geocoding_provider=geocoding_provider)
 
 
 def maybe_freeze_and_reset_party(
-    db_path: str | Path, party_settings: dict, catalog: PartyCatalog
+    db_path: str | Path, party_id: str, host_user_id: str, party_settings: dict, catalog: PartyCatalog
 ) -> bool:
     """Party-Lifecycle-Trigger (Geo-Kultur-Spec §7): automatische Erkennung,
     kein Extra-Button. MUSS vor dem Speichern eines NEUEN ``party_date``
@@ -103,11 +106,11 @@ def maybe_freeze_and_reset_party(
     if old_date >= ddate.today():
         return False
 
-    responses = response_storage.load_responses(db_path)
+    responses = response_storage.load_responses(db_path, party_id)
     if not responses:
         return False
 
-    derived_context = get_derived_party_context(db_path, party_settings, len(responses))
+    derived_context = get_derived_party_context(db_path, party_id, party_settings, len(responses))
     snapshot = PartyRunSnapshot(
         started_at=datetime.now(),
         occasion_id=event_theme.resolve_occasion_id(party_settings["event_type"]),
@@ -117,7 +120,7 @@ def maybe_freeze_and_reset_party(
         location_type=derived_context.location_type,
         group_size_class=derived_context.group_size_class,
     )
-    party_run_id = learning_storage.save_party_run(db_path, snapshot)
+    party_run_id = learning_storage.save_party_run(db_path, host_user_id, snapshot)
 
     events: list[SelectionEvent] = []
     for row in responses:
@@ -132,7 +135,7 @@ def maybe_freeze_and_reset_party(
     learning_storage.save_selection_events(db_path, party_run_id, events)
 
     with sqlite3.connect(db_path) as conn:
-        conn.execute("DELETE FROM responses")
+        conn.execute("DELETE FROM responses WHERE party_id = ?", (party_id,))
 
     return True
 
@@ -142,15 +145,16 @@ if __name__ == "__main__":
 
     with tempfile.TemporaryDirectory() as tmp:
         db_path = Path(tmp) / "test_context_orchestration.db"
+        party_id = "test-party"
         party_context_storage.init_party_context_storage(db_path)
         event_theme.init_party_settings(db_path)
 
-        settings = event_theme.get_party_settings(db_path)
-        ctx = get_party_context(db_path, settings)
+        settings = event_theme.get_party_settings(db_path, party_id)
+        ctx = get_party_context(db_path, party_id, settings)
         assert isinstance(ctx, PartyContext)
         assert ctx.occasion_id  # resolve_occasion_id never raises, always non-empty
 
-        derived = get_derived_party_context(db_path, settings, guest_count=5)
+        derived = get_derived_party_context(db_path, party_id, settings, guest_count=5)
         assert isinstance(derived, DerivedPartyContext)
         assert derived.season  # always derivable, never empty
 

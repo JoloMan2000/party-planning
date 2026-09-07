@@ -5,21 +5,30 @@ from fastapi import APIRouter, Depends
 import event_theme
 import party_engine.context_orchestration as context_orchestration
 import party_engine.response_storage as response_storage
+from accounts.domain import PartyMembership, PartyRole
+from backend.app.core.auth import require_party_role
 from backend.app.core.dataclass_json import to_jsonable
 from backend.app.core.deps import get_catalog, get_db_path
 from party_engine.domain import PartyCatalog, PartyConfig
 from party_engine.engine import compute_party_demand
 from party_engine.legacy_adapter import guest_response_from_row
 
-router = APIRouter(prefix="/api/v1/admin/shopping-list", tags=["admin"])
+router = APIRouter(prefix="/api/v1/parties/{party_id}/admin/shopping-list", tags=["admin"])
+
+_require_admin = require_party_role({PartyRole.HOST, PartyRole.CO_HOST})
 
 
 @router.post("")
-def compute_shopping_list(db_path=Depends(get_db_path), catalog: PartyCatalog = Depends(get_catalog)) -> dict:
-    settings = event_theme.get_party_settings(db_path)
-    rows = response_storage.load_responses(db_path)
+def compute_shopping_list(
+    party_id: str,
+    db_path=Depends(get_db_path),
+    catalog: PartyCatalog = Depends(get_catalog),
+    membership: PartyMembership = Depends(_require_admin),
+) -> dict:
+    settings = event_theme.get_party_settings(db_path, party_id)
+    rows = response_storage.load_responses(db_path, party_id)
     guest_responses = [guest_response_from_row(row, catalog) for row in rows]
-    derived_context = context_orchestration.get_derived_party_context(db_path, settings, len(rows))
+    derived_context = context_orchestration.get_derived_party_context(db_path, party_id, settings, len(rows))
     result = compute_party_demand(catalog, guest_responses, PartyConfig(), derived_context=derived_context)
     body = to_jsonable(result)
     # Zusatzinfo pro Zutat (Spec-Ergebnis kennt keine Herkunfts-`family`) -

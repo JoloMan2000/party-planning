@@ -4,9 +4,12 @@ import json
 
 from fastapi import APIRouter, Depends
 
+import accounts.party_storage as party_storage
 import event_theme
 import party_engine.context_orchestration as context_orchestration
 import party_engine.response_storage as response_storage
+from accounts.domain import PartyMembership, PartyRole
+from backend.app.core.auth import require_party_role
 from backend.app.core.dataclass_json import to_jsonable
 from backend.app.core.deps import get_catalog, get_db_path, get_occasions
 from party_context import learning_storage
@@ -14,17 +17,21 @@ from party_engine.domain import PartyCatalog
 from party_engine.recommendation import format_score_explanation, recommend_for_admin, resolve_occasion_for_scoring
 from party_engine.recommendation_domain import RecommendationContext
 
-router = APIRouter(prefix="/api/v1/admin/recommendations", tags=["admin"])
+router = APIRouter(prefix="/api/v1/parties/{party_id}/admin/recommendations", tags=["admin"])
+
+_require_admin = require_party_role({PartyRole.HOST, PartyRole.CO_HOST})
 
 
 @router.get("")
 def get_admin_recommendations(
+    party_id: str,
     catalog: PartyCatalog = Depends(get_catalog),
     occasions=Depends(get_occasions),
     db_path=Depends(get_db_path),
+    membership: PartyMembership = Depends(_require_admin),
 ) -> dict:
-    settings = event_theme.get_party_settings(db_path)
-    responses = response_storage.load_responses(db_path)
+    settings = event_theme.get_party_settings(db_path, party_id)
+    responses = response_storage.load_responses(db_path, party_id)
 
     already_selected_ids: set[str] = set()
     for r in responses:
@@ -34,8 +41,9 @@ def get_admin_recommendations(
     occasion_id = event_theme.resolve_occasion_id(settings["event_type"])
     occasion_profile = resolve_occasion_for_scoring([occasion_id], occasions)
     recommendation_context = RecommendationContext(occasion_ids=[occasion_profile.id], guest_count=len(responses) or None)
-    derived_context = context_orchestration.get_derived_party_context(db_path, settings, len(responses))
-    learning_history = learning_storage.get_learning_history(db_path)
+    derived_context = context_orchestration.get_derived_party_context(db_path, party_id, settings, len(responses))
+    party = party_storage.get_party(db_path, party_id)
+    learning_history = learning_storage.get_learning_history(db_path, party.host_user_id)
 
     recommended = recommend_for_admin(
         catalog,

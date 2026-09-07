@@ -12,7 +12,9 @@ import '../../state/providers.dart';
 /// (z.B. "Zelt mit Heizung -> temperature_class warm trotz Winter").
 /// Overrides sind stärker als abgeleitete Defaults.
 class PartyContextOverridesSection extends ConsumerStatefulWidget {
-  const PartyContextOverridesSection({super.key});
+  final String partyId;
+
+  const PartyContextOverridesSection({super.key, required this.partyId});
 
   @override
   ConsumerState<PartyContextOverridesSection> createState() => _PartyContextOverridesSectionState();
@@ -33,7 +35,7 @@ class _PartyContextOverridesSectionState extends ConsumerState<PartyContextOverr
   @override
   Widget build(BuildContext context) {
     final translationsAsync = ref.watch(translationsProvider('de'));
-    final overridesAsync = ref.watch(partyContextOverridesProvider);
+    final overridesAsync = ref.watch(partyContextOverridesProvider(widget.partyId));
 
     return translationsAsync.when(
       loading: () => const Padding(
@@ -86,8 +88,9 @@ class _PartyContextOverridesSectionState extends ConsumerState<PartyContextOverr
                           ),
                           trailing: IconButton(
                             icon: const Icon(Icons.delete_outline),
-                            onPressed: () =>
-                                ref.read(partyContextOverridesProvider.notifier).remove(override.key),
+                            onPressed: () => ref
+                                .read(partyContextOverridesProvider(widget.partyId).notifier)
+                                .remove(override.key),
                           ),
                         ),
                     const Divider(),
@@ -157,7 +160,7 @@ class _PartyContextOverridesSectionState extends ConsumerState<PartyContextOverr
     try {
       final reason = _reasonController.text.trim();
       await ref
-          .read(partyContextOverridesProvider.notifier)
+          .read(partyContextOverridesProvider(widget.partyId).notifier)
           .add(_chosenKey, _chosenValue, reason.isEmpty ? null : reason);
       if (!mounted) return;
       _reasonController.clear();

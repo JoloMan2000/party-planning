@@ -1,7 +1,8 @@
 """Tests für die Gäste-Antworten-Storage (``party_engine/response_storage.py``).
 
-Extrahiert aus ``"Party Planning.py"`` (Backend-Migration Phase 1, Schritt 0a).
-Nutzt eine temporäre sqlite-DB (``tmp_path``) für die Persistenz-Tests.
+Extrahiert aus ``"Party Planning.py"`` (Backend-Migration Phase 1, Schritt 0a),
+party-gescoped seit dem Multi-Tenant-Pivot Phase 4. Nutzt eine temporäre
+sqlite-DB (``tmp_path``) für die Persistenz-Tests.
 """
 
 from __future__ import annotations
@@ -15,13 +16,15 @@ from party_engine.response_storage import (
     save_response,
 )
 
+PARTY_ID = "test-party"
+
 
 def test_init_ist_idempotent(tmp_path):
     db_path = tmp_path / "responses.db"
     init_db(db_path)
     init_db(db_path)  # darf nicht crashen
 
-    assert load_responses(db_path) == []
+    assert load_responses(db_path, PARTY_ID) == []
 
 
 def test_save_und_reload_roundtrip(tmp_path):
@@ -30,6 +33,7 @@ def test_save_und_reload_roundtrip(tmp_path):
 
     save_response(
         db_path,
+        PARTY_ID,
         name="Max",
         start_time="19:00",
         drinks=["beer_pils"],
@@ -39,7 +43,7 @@ def test_save_und_reload_roundtrip(tmp_path):
         songs=[{"artist": "Queen", "title": "Bohemian Rhapsody"}],
     )
 
-    rows = load_responses(db_path)
+    rows = load_responses(db_path, PARTY_ID)
     assert len(rows) == 1
     assert rows[0]["name"] == "Max"
     assert json.loads(rows[0]["drinks"]) == ["beer_pils"]
@@ -51,11 +55,22 @@ def test_load_responses_ordnet_nach_id(tmp_path):
     db_path = tmp_path / "responses.db"
     init_db(db_path)
 
-    save_response(db_path, "Erste", "18:00", [], "", [], "", [])
-    save_response(db_path, "Zweite", "19:00", [], "", [], "", [])
+    save_response(db_path, PARTY_ID, "Erste", "18:00", [], "", [], "", [])
+    save_response(db_path, PARTY_ID, "Zweite", "19:00", [], "", [], "", [])
 
-    rows = load_responses(db_path)
+    rows = load_responses(db_path, PARTY_ID)
     assert [row["name"] for row in rows] == ["Erste", "Zweite"]
+
+
+def test_load_responses_isoliert_nach_party_id(tmp_path):
+    db_path = tmp_path / "responses.db"
+    init_db(db_path)
+
+    save_response(db_path, "party-a", "Anna", "18:00", [], "", [], "", [])
+    save_response(db_path, "party-b", "Ben", "19:00", [], "", [], "", [])
+
+    assert [row["name"] for row in load_responses(db_path, "party-a")] == ["Anna"]
+    assert [row["name"] for row in load_responses(db_path, "party-b")] == ["Ben"]
 
 
 def test_classify_item_type_erkennt_rezepte_und_direct_consumables(catalog):

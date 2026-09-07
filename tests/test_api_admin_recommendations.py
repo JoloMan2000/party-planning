@@ -1,11 +1,12 @@
-"""API-Tests für `/api/v1/admin/recommendations` (Phase-3-Plan: Flutter-
-Admin-Recommendations-Sektion)."""
+"""API-Tests für `/api/v1/parties/{party_id}/admin/recommendations` (Phase-4-
+Plan: Multi-Tenant Admin Router)."""
 
 from __future__ import annotations
 
 
-def test_get_admin_recommendations_liefert_occasion_label_und_items(api_client, admin_headers):
-    resp = api_client.get("/api/v1/admin/recommendations", headers=admin_headers)
+def test_get_admin_recommendations_liefert_occasion_label_und_items(api_client, host_party_factory):
+    party_id, headers, _user = host_party_factory()
+    resp = api_client.get(f"/api/v1/parties/{party_id}/admin/recommendations", headers=headers)
     assert resp.status_code == 200
     body = resp.json()
     assert isinstance(body["occasion_label"], str) and body["occasion_label"]

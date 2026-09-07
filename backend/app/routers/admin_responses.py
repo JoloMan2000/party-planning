@@ -7,11 +7,15 @@ import json
 from fastapi import APIRouter, Depends, Response
 
 import party_engine.response_storage as response_storage
+from accounts.domain import PartyMembership, PartyRole
+from backend.app.core.auth import require_party_role
 from backend.app.core.deps import get_catalog, get_db_path
 from party_engine.domain import PartyCatalog
 from translations import catalog_item_name
 
-router = APIRouter(prefix="/api/v1/admin/responses", tags=["admin"])
+router = APIRouter(prefix="/api/v1/parties/{party_id}/admin/responses", tags=["admin"])
+
+_require_admin = require_party_role({PartyRole.HOST, PartyRole.CO_HOST})
 
 
 def _display_name_for_selection(value: str, catalog: PartyCatalog, lang: str = "de") -> str:
@@ -29,14 +33,18 @@ def _format_songs(songs_json: str | None) -> str:
 
 @router.get("")
 def list_responses(
-    lang: str = "de", db_path=Depends(get_db_path), catalog: PartyCatalog = Depends(get_catalog)
+    party_id: str,
+    lang: str = "de",
+    db_path=Depends(get_db_path),
+    catalog: PartyCatalog = Depends(get_catalog),
+    membership: PartyMembership = Depends(_require_admin),
 ) -> list[dict]:
     """Rohantworten + zusätzliche, vorformatierte Anzeige-Felder
     (``drinks_display``/``food_display``/``songs_display``, mirroring
     ``raw_responses_expander``'s ``display_name_for_selection``/``format_songs``-
     Aufrufe) - spart der Flutter-Seite einen eigenen Katalog-Lookup, analog zu
     ``catalog.py``'s ``display_name``-Feld."""
-    responses = response_storage.load_responses(db_path)
+    responses = response_storage.load_responses(db_path, party_id)
     for r in responses:
         r["drinks_display"] = [_display_name_for_selection(v, catalog, lang) for v in json.loads(r["drinks"])]
         r["food_display"] = [_display_name_for_selection(v, catalog, lang) for v in json.loads(r["food"])]
@@ -46,9 +54,12 @@ def list_responses(
 
 @router.get("/csv")
 def export_responses_csv(
-    db_path=Depends(get_db_path), catalog: PartyCatalog = Depends(get_catalog)
+    party_id: str,
+    db_path=Depends(get_db_path),
+    catalog: PartyCatalog = Depends(get_catalog),
+    membership: PartyMembership = Depends(_require_admin),
 ) -> Response:
-    responses = response_storage.load_responses(db_path)
+    responses = response_storage.load_responses(db_path, party_id)
     buffer = io.StringIO()
     writer = csv.writer(buffer)
     writer.writerow(

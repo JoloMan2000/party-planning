@@ -118,8 +118,10 @@ final authProvider = AsyncNotifierProvider<AuthNotifier, TokenPair?>(AuthNotifie
 
 /// Aktuelles Access-Token als Nicht-Nullable-Wert - nur innerhalb des
 /// eingeloggten Bereichs verwendet, wo `main.dart`'s Routing einen gültigen
-/// Token bereits garantiert (mirroring `_requiredAdminTokenProvider`).
-final _requiredAccessTokenProvider = Provider<String>((ref) {
+/// Token bereits garantiert. Öffentlich, damit `admin_providers.dart` (seit
+/// Phase 4 party-gescoped, kein eigener Admin-Token mehr) denselben
+/// Account-Token mitbenutzen kann.
+final requiredAccessTokenProvider = Provider<String>((ref) {
   final pair = ref.watch(authProvider).value;
   if (pair == null) {
     throw StateError('Account-Home ohne gültiges Token gerendert.');
@@ -127,42 +129,45 @@ final _requiredAccessTokenProvider = Provider<String>((ref) {
   return pair.accessToken;
 });
 
-Future<String?> Function() _onRefresh(Ref ref) => () => ref.read(authProvider.notifier).refreshAndPersist();
+/// `onRefresh`-Callback für `ApiClient._authorizedRequest` - öffentlich, damit
+/// `admin_providers.dart` denselben Account-Token-Refresh-Flow mitbenutzen
+/// kann (kein separater Admin-Token-Refresh mehr seit Phase 4).
+Future<String?> Function() onRefresh(Ref ref) => () => ref.read(authProvider.notifier).refreshAndPersist();
 
 final currentUserProvider = FutureProvider<UserAccount>((ref) {
-  final token = ref.watch(_requiredAccessTokenProvider);
-  return ref.watch(apiClientProvider).getMe(token, _onRefresh(ref));
+  final token = ref.watch(requiredAccessTokenProvider);
+  return ref.watch(apiClientProvider).getMe(token, onRefresh(ref));
 });
 
 final myPartiesProvider = FutureProvider<List<Party>>((ref) {
-  final token = ref.watch(_requiredAccessTokenProvider);
-  return ref.watch(apiClientProvider).getMyParties(token, _onRefresh(ref));
+  final token = ref.watch(requiredAccessTokenProvider);
+  return ref.watch(apiClientProvider).getMyParties(token, onRefresh(ref));
 });
 
 final myInvitationsProvider = FutureProvider<List<Invitation>>((ref) {
-  final token = ref.watch(_requiredAccessTokenProvider);
-  return ref.watch(apiClientProvider).getMyInvitations(token, _onRefresh(ref));
+  final token = ref.watch(requiredAccessTokenProvider);
+  return ref.watch(apiClientProvider).getMyInvitations(token, onRefresh(ref));
 });
 
 final partyDetailProvider = FutureProvider.family<Party, String>((ref, partyId) {
-  final token = ref.watch(_requiredAccessTokenProvider);
-  return ref.watch(apiClientProvider).getParty(token, _onRefresh(ref), partyId);
+  final token = ref.watch(requiredAccessTokenProvider);
+  return ref.watch(apiClientProvider).getParty(token, onRefresh(ref), partyId);
 });
 
 /// 403 (Gast ohne Host-/Co-Host-Rolle) wird von `PartyDetailScreen` selbst
 /// abgefangen, um zwischen Gast- und Host-Ansicht zu unterscheiden - siehe
 /// dortiger `AsyncValue`-Handling-Code, nicht hier verschluckt.
 final partyGuestsProvider = FutureProvider.family<PartyGuestsResponse, String>((ref, partyId) {
-  final token = ref.watch(_requiredAccessTokenProvider);
-  return ref.watch(apiClientProvider).getPartyGuests(token, _onRefresh(ref), partyId);
+  final token = ref.watch(requiredAccessTokenProvider);
+  return ref.watch(apiClientProvider).getPartyGuests(token, onRefresh(ref), partyId);
 });
 
 /// Ruft `GET /invitations/{id}` ab - markiert serverseitig `viewed_at` als
 /// Nebeneffekt, wenn der Betrachter der eingeladene User ist (kein
 /// zusätzlicher Client-Code nötig, siehe `invitations.py::get_invitation`).
 final invitationDetailProvider = FutureProvider.family<Invitation, String>((ref, invitationId) {
-  final token = ref.watch(_requiredAccessTokenProvider);
-  return ref.watch(apiClientProvider).getInvitation(token, _onRefresh(ref), invitationId);
+  final token = ref.watch(requiredAccessTokenProvider);
+  return ref.watch(apiClientProvider).getInvitation(token, onRefresh(ref), invitationId);
 });
 
 /// Party-Erstellung als einmalige Aktion (mirroring `MusicPlaylistNotifier`/
@@ -178,12 +183,12 @@ class CreatePartyNotifier extends AsyncNotifier<Party?> {
     DateTime? startsAt,
     String location = '',
   }) async {
-    final token = ref.read(_requiredAccessTokenProvider);
+    final token = ref.read(requiredAccessTokenProvider);
     state = const AsyncLoading();
     try {
       final party = await ref.read(apiClientProvider).createParty(
             token,
-            _onRefresh(ref),
+            onRefresh(ref),
             name: name,
             description: description,
             startsAt: startsAt,
@@ -207,12 +212,12 @@ class InviteGuestNotifier extends AsyncNotifier<Invitation?> {
   Future<Invitation?> build() async => null;
 
   Future<Invitation> invite(String partyId, {required String invitedUserEmail, String invitationMessage = ''}) async {
-    final token = ref.read(_requiredAccessTokenProvider);
+    final token = ref.read(requiredAccessTokenProvider);
     state = const AsyncLoading();
     try {
       final invitation = await ref.read(apiClientProvider).inviteGuest(
             token,
-            _onRefresh(ref),
+            onRefresh(ref),
             partyId,
             invitedUserEmail: invitedUserEmail,
             invitationMessage: invitationMessage,
@@ -243,12 +248,12 @@ class RsvpNotifier extends AsyncNotifier<RsvpResponse?> {
     required int version,
     String? clientRequestId,
   }) async {
-    final token = ref.read(_requiredAccessTokenProvider);
+    final token = ref.read(requiredAccessTokenProvider);
     state = const AsyncLoading();
     try {
       final result = await ref.read(apiClientProvider).rsvp(
             token,
-            _onRefresh(ref),
+            onRefresh(ref),
             invitationId,
             status: status,
             version: version,
@@ -277,3 +282,9 @@ final showSignupProvider = StateProvider<bool>((ref) => false);
 final selectedPartyIdProvider = StateProvider<String?>((ref) => null);
 final selectedInvitationIdProvider = StateProvider<String?>((ref) => null);
 final creatingPartyProvider = StateProvider<bool>((ref) => false);
+
+/// Party-ID, für die das Admin-Dashboard geöffnet wurde (`null` = geschlossen).
+/// Ersetzt seit Phase 4 den alten `adminModeProvider` - "Verwalten" auf
+/// `PartyDetailScreen` setzt diesen Provider, statt in einen globalen
+/// Admin-Modus zu wechseln.
+final selectedAdminPartyIdProvider = StateProvider<String?>((ref) => null);

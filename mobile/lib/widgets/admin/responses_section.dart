@@ -16,12 +16,14 @@ import '../../state/providers.dart';
 /// (`ShoppingListSection`), damit beide unabhängig scrollbar/kollabierbar
 /// bleiben.
 class ResponsesSection extends ConsumerWidget {
-  const ResponsesSection({super.key});
+  final String partyId;
+
+  const ResponsesSection({super.key, required this.partyId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final translationsAsync = ref.watch(translationsProvider('de'));
-    final responsesAsync = ref.watch(adminResponsesProvider);
+    final responsesAsync = ref.watch(adminResponsesProvider(partyId));
 
     return translationsAsync.when(
       loading: () => const Padding(
@@ -95,9 +97,7 @@ class ResponsesSection extends ConsumerWidget {
   }
 
   Future<void> _exportCsv(WidgetRef ref) async {
-    final token = ref.read(adminAuthProvider).value;
-    if (token == null) return;
-    final csvBytes = await ref.read(apiClientProvider).getResponsesCsv(token);
+    final csvBytes = await downloadResponsesCsv(ref, partyId);
     await Share.shareXFiles(
       [
         XFile.fromData(

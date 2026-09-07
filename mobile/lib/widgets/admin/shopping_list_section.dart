@@ -11,7 +11,9 @@ import '../../state/providers.dart';
 /// (`compute_party_demand`), ersetzt die früheren getrennten
 /// Getränke-/Essen-Sektionen).
 class ShoppingListSection extends ConsumerStatefulWidget {
-  const ShoppingListSection({super.key});
+  final String partyId;
+
+  const ShoppingListSection({super.key, required this.partyId});
 
   @override
   ConsumerState<ShoppingListSection> createState() => _ShoppingListSectionState();
@@ -23,8 +25,8 @@ class _ShoppingListSectionState extends ConsumerState<ShoppingListSection> {
   @override
   Widget build(BuildContext context) {
     final translationsAsync = ref.watch(translationsProvider('de'));
-    final resultAsync = ref.watch(shoppingListProvider);
-    final responsesAsync = ref.watch(adminResponsesProvider);
+    final resultAsync = ref.watch(shoppingListProvider(widget.partyId));
+    final responsesAsync = ref.watch(adminResponsesProvider(widget.partyId));
 
     return translationsAsync.when(
       loading: () => const Padding(
@@ -86,7 +88,7 @@ class _ShoppingListSectionState extends ConsumerState<ShoppingListSection> {
   Future<void> _compute() async {
     setState(() => _computing = true);
     try {
-      await ref.read(shoppingListProvider.notifier).compute();
+      await ref.read(shoppingListProvider(widget.partyId).notifier).compute();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
