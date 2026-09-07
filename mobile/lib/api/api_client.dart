@@ -9,6 +9,9 @@ import '../models/auth_token_response.dart';
 import '../models/catalog_curation_settings.dart';
 import '../models/catalog_item.dart';
 import '../models/derived_party_context.dart';
+import '../models/discover_action_result.dart';
+import '../models/discover_card.dart';
+import '../models/discovery_catalog_item.dart';
 import '../models/event_type.dart';
 import '../models/guest_response.dart';
 import '../models/invitation.dart';
@@ -801,6 +804,113 @@ class ApiClient {
 
     final resp = await _authorizedRequest(sendWith, accessToken, onRefresh);
     return UserAccount.fromJson(_decodeObject(resp));
+  }
+
+  // ---------------------------------------------------------------------
+  // Discover-Events-MVP (dritter Bottom-Nav-Tab) - Swipe-Deck über bereits
+  // existierende, vom Host veröffentlichte Parties. Getrennt vom
+  // Einladungs-/RSVP-Flow oben (siehe `backend/app/routers/discover.py`).
+  // ---------------------------------------------------------------------
+
+  Future<List<DiscoverCard>> getDiscoverDeck(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/discover/deck'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    final body = _decodeObject(resp);
+    return (body['cards'] as List)
+        .map((e) => DiscoverCard.fromJson((e as Map).cast<String, dynamic>()))
+        .toList();
+  }
+
+  Future<DiscoverActionResult> postDiscoverAction(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String partyId, {
+    required String action,
+  }) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.post(
+        _uri('/api/v1/discover/$partyId/action'),
+        headers: _authHeaders(token),
+        body: jsonEncode({'action': action}),
+      ),
+      accessToken,
+      onRefresh,
+    );
+    return DiscoverActionResult.fromJson(_decodeObject(resp));
+  }
+
+  Future<Party> publishParty(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String partyId, {
+    required String eventType,
+    List<String> interestTags = const [],
+  }) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.post(
+        _uri('/api/v1/parties/$partyId/publish'),
+        headers: _authHeaders(token),
+        body: jsonEncode({'event_type': eventType, 'interest_tags': interestTags}),
+      ),
+      accessToken,
+      onRefresh,
+    );
+    return Party.fromJson(_decodeObject(resp));
+  }
+
+  Future<void> unpublishParty(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String partyId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.delete(_uri('/api/v1/parties/$partyId/publish'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    if (resp.statusCode >= 400) {
+      throw ApiException(resp.statusCode, resp.body);
+    }
+  }
+
+  /// Multipart-Upload fürs Party-Cover-Bild (mirroring `uploadProfileImage`).
+  Future<Party> uploadPartyCoverImage(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String partyId,
+    File imageFile,
+  ) async {
+    Future<http.Response> sendWith(String token) async {
+      final request = http.MultipartRequest('POST', _uri('/api/v1/parties/$partyId/cover-image'))
+        ..headers['Authorization'] = 'Bearer $token'
+        ..files.add(await http.MultipartFile.fromPath('file', imageFile.path));
+      final streamedResponse = await _http.send(request);
+      return http.Response.fromStream(streamedResponse);
+    }
+
+    final resp = await _authorizedRequest(sendWith, accessToken, onRefresh);
+    return Party.fromJson(_decodeObject(resp));
+  }
+
+  /// Öffentlicher Katalog, kein Auth nötig (`discovery_catalogs.py`).
+  Future<List<DiscoveryCatalogItem>> getEventInterestCatalog() async {
+    final resp = await _http.get(_uri('/api/v1/catalogs/event-interests'));
+    return _decodeList(resp)
+        .map((e) => DiscoveryCatalogItem.fromJson((e as Map).cast<String, dynamic>()))
+        .toList();
+  }
+
+  Future<List<DiscoveryCatalogItem>> getInterestTagCatalog() async {
+    final resp = await _http.get(_uri('/api/v1/catalogs/interest-tags'));
+    return _decodeList(resp)
+        .map((e) => DiscoveryCatalogItem.fromJson((e as Map).cast<String, dynamic>()))
+        .toList();
   }
 
   void close() => _http.close();

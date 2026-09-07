@@ -5,6 +5,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../api/api_client.dart';
 import '../models/app_notification.dart';
+import '../models/discover_action_result.dart';
+import '../models/discover_card.dart';
+import '../models/discovery_catalog_item.dart';
 import '../models/invitation.dart';
 import '../models/party.dart';
 import '../models/party_guests_response.dart';
@@ -401,3 +404,119 @@ class MarkNotificationReadNotifier extends AsyncNotifier<AppNotification?> {
 
 final markNotificationReadProvider =
     AsyncNotifierProvider<MarkNotificationReadNotifier, AppNotification?>(MarkNotificationReadNotifier.new);
+
+// ---------------------------------------------------------------------
+// Discover-Events-MVP (dritter Bottom-Nav-Tab, siehe `discover_screen.dart`).
+// ---------------------------------------------------------------------
+
+/// Index des aktuell gewählten Bottom-Nav-Tabs in `HomeShell`
+/// (0 = Discover, 1 = My Parties, 2 = My Invites).
+final selectedHomeTabProvider = StateProvider<int>((ref) => 0);
+
+final discoverDeckProvider = FutureProvider<List<DiscoverCard>>((ref) {
+  final token = ref.watch(requiredAccessTokenProvider);
+  return ref.watch(apiClientProvider).getDiscoverDeck(token, onRefresh(ref));
+});
+
+/// Öffentliche Kataloge (kein Auth nötig) - für Event-Typ-Dropdown +
+/// Interest-Tag-Chips im "Publish to Discover"-Formular auf
+/// `PartyDetailScreen`.
+final eventInterestCatalogProvider = FutureProvider<List<DiscoveryCatalogItem>>((ref) {
+  return ref.watch(apiClientProvider).getEventInterestCatalog();
+});
+
+final interestTagCatalogProvider = FutureProvider<List<DiscoveryCatalogItem>>((ref) {
+  return ref.watch(apiClientProvider).getInterestTagCatalog();
+});
+
+/// Swipe-Ergebnis als einmalige Aktion. Invalidiert bewusst NUR
+/// `myPartiesProvider` (nicht `discoverDeckProvider`) - der Deck-Re-Fetch
+/// soll erst passieren, wenn der lokale Swipe-Stack leer ist (siehe
+/// `DiscoverScreen.onDeckEmpty`), sonst würde die Karten-Stack-Animation
+/// mitten in der Bewegung neu gemountet.
+class DiscoverActionNotifier extends AsyncNotifier<DiscoverActionResult?> {
+  @override
+  Future<DiscoverActionResult?> build() async => null;
+
+  Future<DiscoverActionResult> act(String partyId, {required String action}) async {
+    final token = ref.read(requiredAccessTokenProvider);
+    state = const AsyncLoading();
+    try {
+      final result =
+          await ref.read(apiClientProvider).postDiscoverAction(token, onRefresh(ref), partyId, action: action);
+      state = AsyncData(result);
+      ref.invalidate(myPartiesProvider);
+      return result;
+    } on ApiException catch (e) {
+      state = AsyncError(e, StackTrace.current);
+      rethrow;
+    }
+  }
+}
+
+final discoverActionProvider =
+    AsyncNotifierProvider<DiscoverActionNotifier, DiscoverActionResult?>(DiscoverActionNotifier.new);
+
+/// Publish/Unpublish als einmalige Aktion, lädt `partyDetailProvider` danach neu.
+class PublishPartyNotifier extends AsyncNotifier<Party?> {
+  @override
+  Future<Party?> build() async => null;
+
+  Future<Party> publish(String partyId, {required String eventType, List<String> interestTags = const []}) async {
+    final token = ref.read(requiredAccessTokenProvider);
+    state = const AsyncLoading();
+    try {
+      final party = await ref.read(apiClientProvider).publishParty(
+            token,
+            onRefresh(ref),
+            partyId,
+            eventType: eventType,
+            interestTags: interestTags,
+          );
+      state = AsyncData(party);
+      ref.invalidate(partyDetailProvider(partyId));
+      return party;
+    } on ApiException catch (e) {
+      state = AsyncError(e, StackTrace.current);
+      rethrow;
+    }
+  }
+
+  Future<void> unpublish(String partyId) async {
+    final token = ref.read(requiredAccessTokenProvider);
+    state = const AsyncLoading();
+    try {
+      await ref.read(apiClientProvider).unpublishParty(token, onRefresh(ref), partyId);
+      state = const AsyncData(null);
+      ref.invalidate(partyDetailProvider(partyId));
+    } on ApiException catch (e) {
+      state = AsyncError(e, StackTrace.current);
+      rethrow;
+    }
+  }
+}
+
+final publishPartyProvider = AsyncNotifierProvider<PublishPartyNotifier, Party?>(PublishPartyNotifier.new);
+
+/// Party-Cover-Bild-Upload als einmalige Aktion (mirroring
+/// `UploadProfileImageNotifier`), lädt `partyDetailProvider` danach neu.
+class UploadPartyCoverImageNotifier extends AsyncNotifier<Party?> {
+  @override
+  Future<Party?> build() async => null;
+
+  Future<void> upload(String partyId, File imageFile) async {
+    final token = ref.read(requiredAccessTokenProvider);
+    state = const AsyncLoading();
+    try {
+      final party = await ref.read(apiClientProvider).uploadPartyCoverImage(token, onRefresh(ref), partyId, imageFile);
+      state = AsyncData(party);
+      ref.invalidate(partyDetailProvider(partyId));
+    } on ApiException catch (e) {
+      state = AsyncError(e, StackTrace.current);
+      rethrow;
+    }
+  }
+}
+
+final uploadPartyCoverImageProvider =
+    AsyncNotifierProvider<UploadPartyCoverImageNotifier, Party?>(UploadPartyCoverImageNotifier.new);

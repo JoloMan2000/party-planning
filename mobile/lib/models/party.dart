@@ -8,6 +8,10 @@ class Party {
   final String description;
   final DateTime? startsAt;
   final String location;
+  final String coverImage;
+  final bool isPublished;
+  final String eventType;
+  final List<String> interestTags;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -18,6 +22,10 @@ class Party {
     required this.description,
     required this.startsAt,
     required this.location,
+    this.coverImage = '',
+    this.isPublished = false,
+    this.eventType = '',
+    this.interestTags = const [],
     required this.createdAt,
     required this.updatedAt,
   });
@@ -29,6 +37,10 @@ class Party {
         description: (json['description'] as String?) ?? '',
         startsAt: json['starts_at'] == null ? null : DateTime.parse(json['starts_at'] as String),
         location: (json['location'] as String?) ?? '',
+        coverImage: (json['cover_image'] as String?) ?? '',
+        isPublished: (json['is_published'] as bool?) ?? false,
+        eventType: (json['event_type'] as String?) ?? '',
+        interestTags: (json['interest_tags'] as List?)?.cast<String>() ?? const [],
         createdAt: DateTime.parse(json['created_at'] as String),
         updatedAt: DateTime.parse(json['updated_at'] as String),
       );

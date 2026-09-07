@@ -14,6 +14,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+import accounts.discover_storage as discover_storage
 import accounts.discovery_storage as discovery_storage
 import accounts.invitation_storage as invitation_storage
 import accounts.notification_storage as notification_storage
@@ -35,6 +36,7 @@ from backend.app.routers import (
     admin_shopping_list,
     auth,
     catalog,
+    discover,
     discovery_catalogs,
     discovery_preferences,
     guest,
@@ -80,6 +82,7 @@ for router in (
     discovery_preferences.router,
     discovery_catalogs.router,
     spotify_connect.router,
+    discover.router,
 ):
     app.include_router(router)
 
@@ -112,6 +115,7 @@ def on_startup() -> None:
     learning_storage.init_learning_storage(db_path)
     profile_storage.init_profile_storage(db_path)
     discovery_storage.init_discovery_storage(db_path)
+    discover_storage.init_discover_storage(db_path)
     spotify_storage.init_spotify_storage(db_path)
     init_catalog_curation(db_path)
     response_storage.init_db(db_path)

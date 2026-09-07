@@ -7,11 +7,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'screens/admin_dashboard_screen.dart';
 import 'screens/create_party_screen.dart';
 import 'screens/edit_party_screen.dart';
+import 'screens/home_shell.dart';
 import 'screens/invitation_detail_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'screens/party_detail_screen.dart';
-import 'screens/party_list_screen.dart';
 import 'screens/signup_screen.dart';
 import 'state/auth_providers.dart';
 import 'theme/party_theme.dart';
@@ -121,7 +121,7 @@ class _PartyAppState extends ConsumerState<PartyApp> {
       } else if (creatingParty) {
         home = const CreatePartyScreen();
       } else {
-        home = const PartyListScreen();
+        home = const HomeShell();
       }
     }
 

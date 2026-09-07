@@ -57,6 +57,7 @@ class Party:
     description: str = ""
     starts_at: datetime | None = None
     location: str = ""
+    cover_image: str = ""
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -219,6 +220,48 @@ class BirthDateCorrection:
     previous_birth_date: date | None
     new_birth_date: date
     reason: str = ""
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class DiscoverAction(str, Enum):
+    """Ergebnis einer Swipe-Geste im Discover-Deck (MVP, siehe
+    ``discover_nearby_event_engine_full_spec.txt``). Bewusst GETRENNT von
+    ``RsvpStatus`` - Discover ist ein eigener Einstiegspfad für bereits
+    registrierte User (Swipe rechts = Sofort-Beitritt via
+    ``party_storage.upsert_membership``), nicht die bestehende Button-RSVP
+    für per E-Mail eingeladene Gäste (``invitations.py``), die unangetastet
+    bleibt."""
+
+    GOING = "going"
+    MAYBE = "maybe"
+    NOT_INTERESTED = "not_interested"
+
+
+@dataclass
+class PublicEvent:
+    """Discovery-Projektion einer bereits existierenden ``Party`` - kein
+    eigenständiges Event-/Organizer-Konzept (MVP-Scope-Entscheidung: Hosts
+    veröffentlichen bestehende private Parties, statt eines separaten
+    Event-Erstellungs-Flows). Eine Zeile pro veröffentlichter Party;
+    Unpublish löscht die Zeile (siehe ``accounts/discover_storage.py``)."""
+
+    id: str
+    party_id: str
+    event_type: str = ""
+    interest_tags: list[str] = field(default_factory=list)
+    published_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+@dataclass
+class DiscoverActionRecord:
+    """Auditierbare Swipe-Aktion eines Users auf eine ``PublicEvent`` -
+    UNIQUE(user_id, party_id), damit erneutes Swipen überschreibt statt
+    Duplikate anzuhäufen (siehe ``discover_storage.upsert_discover_action``)."""
+
+    id: str
+    user_id: str
+    party_id: str
+    action: DiscoverAction
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 

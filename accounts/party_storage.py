@@ -29,6 +29,16 @@ def init_party_storage(db_path: str | Path) -> None:
             )
             """
         )
+        # Schema-Migration für bereits bestehende Datenbanken (fügt fehlende
+        # Spalten per ALTER TABLE hinzu, ohne bestehende Daten zu verlieren -
+        # mirroring ``event_theme.py::init_party_settings``).
+        existing_cols = {row[1] for row in conn.execute("PRAGMA table_info(parties)")}
+        migrations = {
+            "cover_image": "ALTER TABLE parties ADD COLUMN cover_image TEXT NOT NULL DEFAULT ''",
+        }
+        for column, ddl in migrations.items():
+            if column not in existing_cols:
+                conn.execute(ddl)
         conn.execute("CREATE INDEX IF NOT EXISTS idx_parties_host ON parties(host_user_id)")
         conn.execute(
             """
@@ -58,6 +68,7 @@ def _row_to_party(row: sqlite3.Row) -> Party:
         description=row["description"],
         starts_at=datetime.fromisoformat(row["starts_at"]) if row["starts_at"] else None,
         location=row["location"],
+        cover_image=row["cover_image"] if "cover_image" in row.keys() else "",
         created_at=datetime.fromisoformat(row["created_at"]),
         updated_at=datetime.fromisoformat(row["updated_at"]),
     )
@@ -131,6 +142,14 @@ def update_party(db_path: str | Path, party_id: str, **fields) -> Party | None:
     with sqlite3.connect(db_path) as conn:
         conn.execute(f"UPDATE parties SET {set_clause} WHERE id = ?", (*updates.values(), party_id))
     return get_party(db_path, party_id)
+
+
+def set_cover_image(db_path: str | Path, party_id: str, relative_path: str) -> None:
+    """Setzt den Cover-Bild-Pfad (mirroring ``user_storage.update_profile_image``)
+    - bewusst NICHT über ``update_party``/PATCH erreichbar, sondern nur über
+    den Upload-Endpoint (siehe ``backend/app/routers/parties.py``)."""
+    with sqlite3.connect(db_path) as conn:
+        conn.execute("UPDATE parties SET cover_image = ? WHERE id = ?", (relative_path, party_id))
 
 
 def get_membership(db_path: str | Path, party_id: str, user_id: str) -> PartyMembership | None:

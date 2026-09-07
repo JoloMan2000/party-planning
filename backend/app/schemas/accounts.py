@@ -26,6 +26,10 @@ class PartyPublic(BaseModel):
     description: str
     starts_at: datetime | None
     location: str
+    cover_image: str = ""
+    is_published: bool = False
+    event_type: str = ""
+    interest_tags: list[str] = []
     created_at: datetime
     updated_at: datetime
 

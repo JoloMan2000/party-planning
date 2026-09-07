@@ -6,6 +6,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from PIL import Image, UnidentifiedImageError
 
+import accounts.discover_storage as discover_storage
 import accounts.invitation_storage as invitation_storage
 import accounts.party_storage as party_storage
 import accounts.user_storage as user_storage
@@ -33,14 +34,20 @@ def get_my_parties(
     current_user: User = Depends(get_current_user), db_path: Path = Depends(get_db_path)
 ) -> list[PartyPublic]:
     parties = party_storage.list_parties_for_user(db_path, current_user.id)
-    return [
-        PartyPublic(
-            id=party.id, host_user_id=party.host_user_id, name=party.name, description=party.description,
-            starts_at=party.starts_at, location=party.location, created_at=party.created_at,
-            updated_at=party.updated_at,
+    result = []
+    for party, _membership in parties:
+        publication = discover_storage.get_publication(db_path, party.id)
+        result.append(
+            PartyPublic(
+                id=party.id, host_user_id=party.host_user_id, name=party.name, description=party.description,
+                starts_at=party.starts_at, location=party.location, cover_image=party.cover_image,
+                is_published=publication is not None,
+                event_type=publication.event_type if publication is not None else "",
+                interest_tags=publication.interest_tags if publication is not None else [],
+                created_at=party.created_at, updated_at=party.updated_at,
+            )
         )
-        for party, _membership in parties
-    ]
+    return result
 
 
 @router.get("/invitations", response_model=list[InvitationPublic])

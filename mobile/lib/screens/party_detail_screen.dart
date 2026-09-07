@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../api/api_client.dart';
+import '../api/api_config.dart';
 import '../models/party.dart';
 import '../models/party_guests_response.dart';
 import '../state/auth_providers.dart';
@@ -45,6 +49,8 @@ class PartyDetailScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _PartyHeader(party: party),
+              const SizedBox(height: 20),
+              _PublishToDiscoverSection(party: party),
               const SizedBox(height: 20),
               _GuestsSection(partyId: partyId),
             ],
@@ -90,6 +96,217 @@ class _PartyHeader extends ConsumerWidget {
             if (party.location.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text('Where: ${party.location}'),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Host-only "Publish to Discover"-Sektion (siehe Discover-MVP-Plan) - nur
+/// für den echten Host sichtbar (nicht Co-Hosts), da die Backend-Endpunkte
+/// `POST/DELETE /parties/{id}/publish` und `POST /parties/{id}/cover-image`
+/// mit `require_party_role({HOST})` streng host-only sind (403 für
+/// Co-Hosts). Zeigt beim Aktivieren ein Event-Typ-Dropdown + Interest-Tag-
+/// `FilterChip`-Wrap (aus den unauthentifizierten Katalog-Endpunkten) und
+/// einen tippbaren Cover-Bild-Bereich, der den `image_picker`-Flow von
+/// `_ProfileAvatarButton` spiegelt.
+class _PublishToDiscoverSection extends ConsumerStatefulWidget {
+  final Party party;
+  const _PublishToDiscoverSection({required this.party});
+
+  @override
+  ConsumerState<_PublishToDiscoverSection> createState() => _PublishToDiscoverSectionState();
+}
+
+class _PublishToDiscoverSectionState extends ConsumerState<_PublishToDiscoverSection> {
+  String? _eventType;
+  late Set<String> _interestTags;
+  bool _uploadingCover = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _eventType = widget.party.eventType.isNotEmpty ? widget.party.eventType : null;
+    _interestTags = widget.party.interestTags.toSet();
+  }
+
+  @override
+  void didUpdateWidget(covariant _PublishToDiscoverSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.party.isPublished != widget.party.isPublished ||
+        oldWidget.party.updatedAt != widget.party.updatedAt) {
+      _eventType = widget.party.eventType.isNotEmpty ? widget.party.eventType : null;
+      _interestTags = widget.party.interestTags.toSet();
+    }
+  }
+
+  Future<void> _pickAndUploadCover() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery, maxWidth: 1600, maxHeight: 1600);
+    if (picked == null) return;
+    setState(() => _uploadingCover = true);
+    try {
+      await ref.read(uploadPartyCoverImageProvider.notifier).upload(widget.party.id, File(picked.path));
+    } on ApiException catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to upload cover image.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _uploadingCover = false);
+    }
+  }
+
+  Future<void> _togglePublished(bool value) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      if (value) {
+        await ref.read(publishPartyProvider.notifier).publish(
+              widget.party.id,
+              eventType: _eventType ?? '',
+              interestTags: _interestTags.toList(),
+            );
+      } else {
+        await ref.read(publishPartyProvider.notifier).unpublish(widget.party.id);
+      }
+    } on ApiException catch (_) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Failed to update publish status.')),
+      );
+    }
+  }
+
+  Future<void> _republish() async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(publishPartyProvider.notifier).publish(
+            widget.party.id,
+            eventType: _eventType ?? '',
+            interestTags: _interestTags.toList(),
+          );
+    } on ApiException catch (_) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Failed to update publish status.')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currentUserAsync = ref.watch(currentUserProvider);
+    final isHost = currentUserAsync.maybeWhen(
+      data: (user) => user.id == widget.party.hostUserId,
+      orElse: () => false,
+    );
+    if (!isHost) return const SizedBox.shrink();
+
+    final eventCatalogAsync = ref.watch(eventInterestCatalogProvider);
+    final tagCatalogAsync = ref.watch(interestTagCatalogProvider);
+    final publishState = ref.watch(publishPartyProvider);
+    final isPublished = widget.party.isPublished;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Publish to Discover'),
+              subtitle: const Text('Let other users find and swipe on this party.'),
+              value: isPublished,
+              onChanged: publishState.isLoading ? null : _togglePublished,
+            ),
+            GestureDetector(
+              onTap: _uploadingCover ? null : _pickAndUploadCover,
+              child: Container(
+                height: 120,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  image: widget.party.coverImage.isNotEmpty
+                      ? DecorationImage(
+                          image: NetworkImage('${ApiConfig.baseUrl}/media/${widget.party.coverImage}'),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                ),
+                child: _uploadingCover
+                    ? const Center(child: CircularProgressIndicator())
+                    : widget.party.coverImage.isEmpty
+                        ? const Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.add_photo_alternate_outlined, size: 32),
+                                SizedBox(height: 4),
+                                Text('Add cover image'),
+                              ],
+                            ),
+                          )
+                        : Align(
+                            alignment: Alignment.bottomRight,
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Icon(Icons.edit, color: Colors.white, shadows: [
+                                Shadow(color: Colors.black.withValues(alpha: 0.6), blurRadius: 4),
+                              ]),
+                            ),
+                          ),
+              ),
+            ),
+            if (isPublished) ...[
+              const SizedBox(height: 16),
+              Text('Event type', style: Theme.of(context).textTheme.titleSmall),
+              const SizedBox(height: 8),
+              eventCatalogAsync.when(
+                loading: () => const CircularProgressIndicator(),
+                error: (err, st) => const Text('Failed to load event types.'),
+                data: (catalog) => DropdownButton<String>(
+                  isExpanded: true,
+                  value: _eventType != null && catalog.any((c) => c.id == _eventType) ? _eventType : null,
+                  hint: const Text('Select event type'),
+                  items: catalog
+                      .map((c) => DropdownMenuItem(value: c.id, child: Text(c.label('en'))))
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() => _eventType = value);
+                    _republish();
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text('Interest tags', style: Theme.of(context).textTheme.titleSmall),
+              const SizedBox(height: 8),
+              tagCatalogAsync.when(
+                loading: () => const CircularProgressIndicator(),
+                error: (err, st) => const Text('Failed to load interest tags.'),
+                data: (catalog) => Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: catalog
+                      .map((tag) => FilterChip(
+                            label: Text(tag.label('en')),
+                            selected: _interestTags.contains(tag.id),
+                            onSelected: (selected) {
+                              setState(() {
+                                if (selected) {
+                                  _interestTags.add(tag.id);
+                                } else {
+                                  _interestTags.remove(tag.id);
+                                }
+                              });
+                              _republish();
+                            },
+                          ))
+                      .toList(),
+                ),
+              ),
             ],
           ],
         ),
