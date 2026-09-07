@@ -48,6 +48,15 @@ _INVALID_OR_EXPIRED_TOKEN = HTTPException(
 )
 _PASSWORD_RESET_TOKEN_EXPIRY_MINUTES = 30
 _EMAIL_VERIFICATION_TOKEN_EXPIRY_MINUTES = 60 * 24
+# Einmal beim Modul-Import berechneter, echter Argon2-Hash für ein
+# Zufallspasswort, das zu keinem echten Account gehört (Security-Hardening-
+# Pass). Ohne diesen Dummy-Hash würde `verify_password` in login() nur für
+# tatsächlich registrierte E-Mails aufgerufen - Argon2 ist absichtlich
+# langsam, also könnte ein Angreifer über die Response-Zeit unterscheiden,
+# ob eine E-Mail-Adresse einen Account hat, selbst wenn Lockout/401-Body
+# identisch aussehen. `verify_password` läuft jetzt IMMER, egal ob `creds`
+# existiert.
+_DUMMY_PASSWORD_HASH = hash_password(secrets.token_urlsafe(32))
 _ACCOUNT_UNLOCK_TOKEN_EXPIRY_MINUTES = 30
 
 
@@ -128,7 +137,9 @@ def login(payload: LoginRequest, db_path: Path = Depends(get_db_path)) -> AuthTo
                 raise locked
 
     creds = user_storage.get_credentials_by_email(db_path, email)
-    if creds is None or not verify_password(payload.password, creds[1]):
+    password_hash = creds[1] if creds is not None else _DUMMY_PASSWORD_HASH
+    password_valid = verify_password(payload.password, password_hash)
+    if creds is None or not password_valid:
         user_storage.record_failed_login(
             db_path,
             email,

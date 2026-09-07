@@ -25,7 +25,7 @@ import accounts.user_storage as user_storage
 import event_theme
 import music_engine.admin_settings as music_admin_settings
 import party_engine.response_storage as response_storage
-from backend.app.core.config import settings
+from backend.app.core.config import settings, warn_if_insecure_defaults
 from backend.app.routers import (
     admin_catalog_curation,
     admin_music,
@@ -58,7 +58,13 @@ app = FastAPI(title="Party Planning API", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
-    allow_credentials=True,
+    # Auth läuft ausschließlich über einen `Authorization: Bearer`-Header
+    # (kein Cookie-Auth irgendwo in dieser Codebase), daher wird
+    # `allow_credentials` nicht gebraucht. Zusammen mit dem Default
+    # `cors_origins=["*"]` wäre `allow_credentials=True` ohnehin
+    # spezifikationswidrig (Browser lehnen den Wildcard-Origin bei
+    # credentialed Requests ab) - Security-Hardening-Pass.
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -106,6 +112,8 @@ def on_startup() -> None:
     """Idempotenter Init-Durchlauf - identisch zu den Modul-Level-Aufrufen in
     ``"Party Planning.py"``, sicher parallel zum Streamlit-Prozess gegen
     dieselbe ``responses.db`` aufrufbar."""
+    warn_if_insecure_defaults(settings)
+
     db_path = settings.db_path
     user_storage.init_user_storage(db_path)
     party_storage.init_party_storage(db_path)

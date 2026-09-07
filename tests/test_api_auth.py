@@ -160,3 +160,28 @@ def test_login_erfolg_setzt_fehlversuch_zaehler_zurueck(api_client, user_factory
         "/api/v1/auth/login", json={"email": "resetcounter@example.com", "password": "wrong"}
     )
     assert resp.status_code == 401
+
+
+def test_login_ruft_verify_password_auch_fuer_unbekannte_email_auf(api_client, monkeypatch):
+    """Security-Hardening-Pass: verhindert Timing-basierte E-Mail-Enumeration.
+    Ohne Dummy-Hash würde `verify_password` (Argon2, absichtlich langsam) nur
+    für tatsächlich registrierte E-Mails aufgerufen - ein Angreifer könnte über
+    die Response-Zeit unterscheiden, ob ein Account existiert, selbst wenn der
+    401-Body identisch aussieht. Dieser Test stellt sicher, dass der Aufruf
+    IMMER passiert, mit dem vordefinierten Dummy-Hash als Vergleichswert."""
+    import backend.app.routers.auth as auth_router
+
+    calls = []
+    original_verify_password = auth_router.verify_password
+
+    def spy(password, password_hash):
+        calls.append(password_hash)
+        return original_verify_password(password, password_hash)
+
+    monkeypatch.setattr(auth_router, "verify_password", spy)
+
+    resp = api_client.post(
+        "/api/v1/auth/login", json={"email": "never-called-verify@example.com", "password": "whatever123"}
+    )
+    assert resp.status_code == 401
+    assert calls == [auth_router._DUMMY_PASSWORD_HASH]

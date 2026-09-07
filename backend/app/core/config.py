@@ -9,9 +9,12 @@ Konfiguration ein lauffähiges lokales Dev-Setup ergeben".
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_logger = logging.getLogger(__name__)
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -59,3 +62,35 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# Security-Hardening-Pass: diese Werte sind absichtlich unsichere, aber
+# lauffähige Platzhalter (siehe jeweilige Feld-Defaults oben) - ein
+# Deployment mit unveränderten Werten würde JWTs fälschbar bzw.
+# gespeicherte Spotify-Tokens mit einem öffentlich im Repo stehenden
+# Schlüssel "verschlüsseln" machen. Nur eine Warnung, kein harter Fail -
+# lokale Dev-/Test-Läufe (inkl. der gesamten pytest-Suite, die `TestClient`
+# ohne echte Secrets bootet) müssen weiterhin ohne jede Konfiguration
+# funktionieren; das Signal ist für den Betreiber vor einem echten
+# Deployment gedacht.
+_INSECURE_DEFAULT_SECRETS = {
+    "jwt_secret": "change-me-to-a-secret-jwt-signing-key",
+    "spotify_token_encryption_key": "Z2gwSwfJWFGkb502WXm7rf21GzM3ZhggiMtT_S1CsOI=",
+}
+
+
+def warn_if_insecure_defaults(settings_obj: Settings) -> list[str]:
+    """Loggt eine Warnung für jedes Feld in ``_INSECURE_DEFAULT_SECRETS``,
+    das noch seinen eingecheckten Platzhalter-Wert trägt, und gibt die
+    betroffenen Feldnamen zurück (für Tests - keine Notwendigkeit, Log-Output
+    zu parsen)."""
+    insecure = [
+        name for name, placeholder in _INSECURE_DEFAULT_SECRETS.items() if getattr(settings_obj, name) == placeholder
+    ]
+    for name in insecure:
+        _logger.warning(
+            "SECURITY WARNING: settings.%s is still set to its checked-in placeholder value. "
+            "Set a real secret via the %s environment variable before deploying.",
+            name,
+            name.upper(),
+        )
+    return insecure
