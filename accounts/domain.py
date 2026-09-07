@@ -192,6 +192,21 @@ class UserArtistPreference:
 
 
 @dataclass
+class SpotifyConnection:
+    """Öffentlich sichtbarer Verbindungsstatus zu Spotify (Onboarding-Spec,
+    Phase 7) - enthält NIE Rohtokens (analog zu ``User`` ohne
+    ``password_hash``). Access-/Refresh-Token leben verschlüsselt
+    ausschließlich in ``accounts.spotify_storage``, nie in dieser Dataclass
+    oder einer API-Response."""
+
+    user_id: str
+    spotify_user_id: str
+    scope: str
+    connected_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+@dataclass
 class BirthDateCorrection:
     """Audit-Eintrag für den kontrollierten Geburtsdatum-Korrektur-Flow
     (Onboarding-Spec: ``birth_date`` ist NICHT über das normale

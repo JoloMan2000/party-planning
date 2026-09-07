@@ -12,6 +12,7 @@ das FastAPI-Äquivalent für einen langlebigen Prozess ohne Rerun-Modell)."""
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
@@ -51,3 +52,20 @@ def get_music_catalog() -> MusicCatalog:
 @lru_cache(maxsize=1)
 def get_music_occasions() -> dict[str, MusicOccasionProfile]:
     return load_all_music_occasions()
+
+
+@dataclass
+class SpotifyOAuthConfig:
+    client_id: str
+    client_secret: str
+    redirect_uri: str
+    encryption_key: bytes
+
+
+def get_spotify_oauth_config() -> SpotifyOAuthConfig:
+    return SpotifyOAuthConfig(
+        client_id=settings.spotify_client_id,
+        client_secret=settings.spotify_client_secret,
+        redirect_uri=settings.spotify_redirect_uri,
+        encryption_key=settings.spotify_token_encryption_key.encode(),
+    )

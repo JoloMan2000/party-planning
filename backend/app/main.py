@@ -19,6 +19,7 @@ import accounts.invitation_storage as invitation_storage
 import accounts.notification_storage as notification_storage
 import accounts.party_storage as party_storage
 import accounts.profile_storage as profile_storage
+import accounts.spotify_storage as spotify_storage
 import accounts.user_storage as user_storage
 import event_theme
 import music_engine.admin_settings as music_admin_settings
@@ -42,6 +43,7 @@ from backend.app.routers import (
     notifications,
     parties,
     profile,
+    spotify_connect,
     translations,
 )
 from party_context import learning_storage
@@ -77,6 +79,7 @@ for router in (
     profile.router,
     discovery_preferences.router,
     discovery_catalogs.router,
+    spotify_connect.router,
 ):
     app.include_router(router)
 
@@ -109,6 +112,7 @@ def on_startup() -> None:
     learning_storage.init_learning_storage(db_path)
     profile_storage.init_profile_storage(db_path)
     discovery_storage.init_discovery_storage(db_path)
+    spotify_storage.init_spotify_storage(db_path)
     init_catalog_curation(db_path)
     response_storage.init_db(db_path)
 
