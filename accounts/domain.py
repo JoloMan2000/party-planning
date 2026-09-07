@@ -14,7 +14,7 @@ bewusst NICHT miteinander (siehe Plan, Abschnitt "Explicit deferral list").
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from enum import Enum
 
 
@@ -107,6 +107,104 @@ class Notification:
     message: str
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     read: bool = False
+
+
+@dataclass
+class UserProfile:
+    """Social-Profile-/Onboarding-Layer (Onboarding-Spec, Phase 6) - bewusst
+    GETRENNT von ``User`` (Account Identity, ``accounts/user_storage.py``):
+    ``birth_date`` ist geschützt (kein normales PATCH, siehe
+    ``apply_birth_date_correction``), ``gender`` ist optional/frei editierbar.
+    ``display_name``/``profile_image`` bleiben pragmatisch auf ``User`` (dort
+    bereits verdrahtet über den bestehenden Profile-Image-Upload-Endpoint) -
+    keine schema-brechende Migration nur für die Layer-Trennung."""
+
+    user_id: str
+    birth_date: date
+    gender: str = ""
+    bio: str = ""
+    onboarding_completed_at: datetime | None = None
+    profile_completion_version: int = 0
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+@dataclass
+class UserDiscoveryPreferences:
+    """Explicit-Discovery-Preferences-Layer (Onboarding-Spec, Phase 6) -
+    Radius/Ort/Timing/Preis/Mainstream-Slider. Musik-Genres/Artists/
+    Event-Interessen leben in eigenen Tabellen (siehe unten), da sie
+    Listen statt Skalarwerte sind."""
+
+    user_id: str
+    discovery_radius_km: float = 25.0
+    allow_major_events_outside_radius: bool = False
+    discovery_city: str = ""
+    discovery_lat: float | None = None
+    discovery_lon: float | None = None
+    preferred_days: list[str] = field(default_factory=list)
+    preferred_dayparts: list[str] = field(default_factory=list)
+    price_preference: str = ""
+    mainstream_discovery: float = 0.5
+    personalized_recommendations_enabled: bool = True
+    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+@dataclass
+class ExplicitDiscoveryPreference:
+    """Event-Typ-/Interest-Tag-Auswahl (generische Kategorie+Item-Auswahl,
+    siehe ``accounts/discovery_catalogs.py`` für die stabilen IDs). Musik-
+    Genres/Artists haben eigene, feldreichere Dataclasses (siehe unten)."""
+
+    id: str
+    user_id: str
+    category: str  # "event_type" | "interest_tag"
+    item_id: str
+    source: str = "manual"  # "manual" | "spotify_confirmed" (Phase 7)
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+@dataclass
+class UserMusicPreference:
+    """Bewusst OHNE Live-Spotify-Abhängigkeit - ``genre_id`` referenziert
+    ``accounts.discovery_catalogs.MUSIC_GENRE_CATALOG`` (App-eigene, stabile
+    IDs), niemals eine Spotify-Genre-ID direkt (Provider-Unabhängigkeit)."""
+
+    user_id: str
+    genre_id: str
+    preference_level: str  # love | like | neutral | dislike | excluded
+    source: str = "manual"
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+@dataclass
+class UserArtistPreference:
+    """``artist_reference`` ist in Phase 6 freier Text (App-eigene ID gibt es
+    noch nicht) - Phase 7 fügt Spotify-bestätigte Referenzen mit
+    ``source="spotify_confirmed"`` hinzu, ohne dieses Feld umzubauen."""
+
+    user_id: str
+    artist_reference: str
+    display_name: str
+    preference_level: str
+    source: str = "manual"
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+@dataclass
+class BirthDateCorrection:
+    """Audit-Eintrag für den kontrollierten Geburtsdatum-Korrektur-Flow
+    (Onboarding-Spec: ``birth_date`` ist NICHT über das normale
+    Profil-PATCH änderbar). Bewusst ein einfaches Audit-Log, keine
+    Admin-Review-Queue - dafür gibt es in dieser App aktuell keinen
+    Support-/Moderations-Workflow."""
+
+    id: str
+    user_id: str
+    previous_birth_date: date | None
+    new_birth_date: date
+    reason: str = ""
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass

@@ -14,9 +14,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+import accounts.discovery_storage as discovery_storage
 import accounts.invitation_storage as invitation_storage
 import accounts.notification_storage as notification_storage
 import accounts.party_storage as party_storage
+import accounts.profile_storage as profile_storage
 import accounts.user_storage as user_storage
 import event_theme
 import music_engine.admin_settings as music_admin_settings
@@ -32,11 +34,14 @@ from backend.app.routers import (
     admin_shopping_list,
     auth,
     catalog,
+    discovery_catalogs,
+    discovery_preferences,
     guest,
     invitations,
     me,
     notifications,
     parties,
+    profile,
     translations,
 )
 from party_context import learning_storage
@@ -69,6 +74,9 @@ for router in (
     admin_recommendations.router,
     admin_music.router,
     admin_shopping_list.router,
+    profile.router,
+    discovery_preferences.router,
+    discovery_catalogs.router,
 ):
     app.include_router(router)
 
@@ -99,6 +107,8 @@ def on_startup() -> None:
     music_admin_settings.init_music_admin_settings(db_path)
     party_context_storage.init_party_context_storage(db_path)
     learning_storage.init_learning_storage(db_path)
+    profile_storage.init_profile_storage(db_path)
+    discovery_storage.init_discovery_storage(db_path)
     init_catalog_curation(db_path)
     response_storage.init_db(db_path)
 
