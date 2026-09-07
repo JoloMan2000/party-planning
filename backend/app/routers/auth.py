@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+import hashlib
+import hmac
+import secrets
 import uuid
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from jose import JWTError
 
 import accounts.user_storage as user_storage
+from accounts import email_sender
 from accounts.domain import User
 from backend.app.core.auth import (
     create_access_token,
@@ -15,17 +20,27 @@ from backend.app.core.auth import (
     hash_password,
     verify_password,
 )
+from backend.app.core.config import settings
 from backend.app.core.deps import get_db_path
 from backend.app.schemas.auth import (
     AuthTokenResponse,
     LoginRequest,
     LogoutRequest,
+    PasswordResetConfirmRequest,
+    PasswordResetRequest,
+    PasswordResetRequestResponse,
     RefreshRequest,
     SignupRequest,
     UserPublic,
 )
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
+
+_GENERIC_RESET_REQUEST_RESPONSE = PasswordResetRequestResponse()
+_INVALID_OR_EXPIRED_TOKEN = HTTPException(
+    status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired token."
+)
+_PASSWORD_RESET_TOKEN_EXPIRY_MINUTES = 30
 
 
 def _token_response(db_path: Path, user: User) -> AuthTokenResponse:
@@ -109,4 +124,66 @@ def logout(payload: LogoutRequest, db_path: Path = Depends(get_db_path)) -> None
     jti = refresh_payload.get("jti")
     if jti:
         user_storage.revoke_refresh_token(db_path, jti)
+    return None
+
+
+@router.post("/request-password-reset", response_model=PasswordResetRequestResponse)
+def request_password_reset(
+    payload: PasswordResetRequest, db_path: Path = Depends(get_db_path)
+) -> PasswordResetRequestResponse:
+    """Löst immer den identischen 200-Response aus, egal ob die E-Mail
+    existiert - Account-Existenz darf niemals über Response-Unterschiede
+    oder Timing verraten werden."""
+    user = user_storage.get_user_by_email(db_path, payload.email)
+    if user is not None:
+        token_id = uuid.uuid4().hex
+        raw_token = secrets.token_urlsafe(32)
+        token_hash = hashlib.sha256(raw_token.encode("ascii")).hexdigest()
+        expires_at = datetime.now(timezone.utc) + timedelta(minutes=_PASSWORD_RESET_TOKEN_EXPIRY_MINUTES)
+
+        user_storage.invalidate_password_reset_tokens_for_user(db_path, user.id)
+        user_storage.create_password_reset_token(db_path, token_id, user.id, token_hash, expires_at)
+
+        reset_link = f"{settings.password_reset_base_url}/{token_id}:{raw_token}"
+        try:
+            email_sender.send_password_reset_email(user.email, reset_link)
+        except Exception:
+            # SMTP-Fehler dürfen weder die Response ändern noch die Account-
+            # Existenz verraten - der Token bleibt trotzdem gültig, falls die
+            # E-Mail doch ankommt oder der Link anderweitig zugestellt wird.
+            pass
+    return _GENERIC_RESET_REQUEST_RESPONSE
+
+
+@router.post("/reset-password", status_code=status.HTTP_204_NO_CONTENT)
+def reset_password(payload: PasswordResetConfirmRequest, db_path: Path = Depends(get_db_path)) -> None:
+    token_id, _, raw_token = payload.token.partition(":")
+    if not token_id or not raw_token:
+        raise _INVALID_OR_EXPIRED_TOKEN
+
+    record = user_storage.get_password_reset_token(db_path, token_id)
+    if record is None or record.used_at is not None:
+        raise _INVALID_OR_EXPIRED_TOKEN
+
+    now = datetime.now(timezone.utc)
+    expires_at = record.expires_at if record.expires_at.tzinfo else record.expires_at.replace(tzinfo=timezone.utc)
+    if now > expires_at:
+        raise _INVALID_OR_EXPIRED_TOKEN
+
+    token_hash = hashlib.sha256(raw_token.encode("ascii")).hexdigest()
+    if not hmac.compare_digest(token_hash, record.token_hash):
+        raise _INVALID_OR_EXPIRED_TOKEN
+
+    current_password_hash = user_storage.get_password_hash_by_user_id(db_path, record.user_id)
+    if current_password_hash is None:
+        raise _INVALID_OR_EXPIRED_TOKEN
+    if verify_password(payload.new_password, current_password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must differ from current password.",
+        )
+
+    user_storage.update_password_hash(db_path, record.user_id, hash_password(payload.new_password))
+    user_storage.mark_password_reset_token_used(db_path, token_id)
+    user_storage.revoke_all_refresh_tokens_for_user(db_path, record.user_id)
     return None

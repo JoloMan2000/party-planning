@@ -7,11 +7,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'screens/admin_dashboard_screen.dart';
 import 'screens/create_party_screen.dart';
 import 'screens/edit_party_screen.dart';
+import 'screens/forgot_password_screen.dart';
 import 'screens/home_shell.dart';
 import 'screens/invitation_detail_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'screens/party_detail_screen.dart';
+import 'screens/reset_password_screen.dart';
 import 'screens/signup_screen.dart';
 import 'state/auth_providers.dart';
 import 'theme/party_theme.dart';
@@ -80,6 +82,8 @@ class _PartyAppState extends ConsumerState<PartyApp> {
       ref.read(selectedInvitationIdProvider.notifier).state = id;
     } else if (kind == 'party') {
       ref.read(selectedPartyIdProvider.notifier).state = id;
+    } else if (kind == 'reset') {
+      ref.read(passwordResetTokenProvider.notifier).state = id;
     }
   }
 
@@ -105,13 +109,21 @@ class _PartyAppState extends ConsumerState<PartyApp> {
     } else {
       final tokens = ref.watch(authProvider).asData?.value;
       final showSignup = ref.watch(showSignupProvider);
+      final showForgotPassword = ref.watch(showForgotPasswordProvider);
+      final resetToken = ref.watch(passwordResetTokenProvider);
       final showNotifications = ref.watch(showNotificationsProvider);
       final selectedPartyId = ref.watch(selectedPartyIdProvider);
       final selectedInvitationId = ref.watch(selectedInvitationIdProvider);
       final creatingParty = ref.watch(creatingPartyProvider);
 
-      if (tokens == null) {
-        home = showSignup ? const SignupScreen() : const LoginScreen();
+      if (resetToken != null) {
+        // Vor `tokens == null` geprüft - ein Reset-Link kann ankommen,
+        // während auf diesem Gerät noch ein anderer User eingeloggt ist.
+        home = ResetPasswordScreen(token: resetToken);
+      } else if (tokens == null) {
+        home = showForgotPassword
+            ? const ForgotPasswordScreen()
+            : (showSignup ? const SignupScreen() : const LoginScreen());
       } else if (showNotifications) {
         home = const NotificationsScreen();
       } else if (selectedPartyId != null) {

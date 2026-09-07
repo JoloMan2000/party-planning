@@ -40,6 +40,16 @@ class RefreshTokenRecord:
     replaced_by_id: str | None
 
 
+@dataclass
+class PasswordResetTokenRecord:
+    id: str
+    user_id: str
+    token_hash: str
+    expires_at: datetime
+    used_at: datetime | None
+    created_at: datetime
+
+
 def init_user_storage(db_path: str | Path) -> None:
     """Legt ``users``/``refresh_tokens`` an, falls nicht vorhanden. Idempotent,
     sicher bei jedem App-Start aufrufbar."""
@@ -71,6 +81,22 @@ def init_user_storage(db_path: str | Path) -> None:
             """
         )
         conn.execute("CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id)")
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                token_hash TEXT NOT NULL,
+                expires_at TEXT NOT NULL,
+                used_at TEXT,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user ON password_reset_tokens(user_id)"
+        )
 
 
 def _row_to_user(row: sqlite3.Row) -> User:
@@ -180,6 +206,63 @@ def revoke_all_refresh_tokens_for_user(db_path: str | Path, user_id: str) -> Non
         )
 
 
+def get_password_hash_by_user_id(db_path: str | Path, user_id: str) -> str | None:
+    """INTERN - ausschließlich für den Auth-Code-Pfad (Password-Reset:
+    "neues Passwort != aktuelles Passwort"-Prüfung)."""
+    with sqlite3.connect(db_path) as conn:
+        row = conn.execute("SELECT password_hash FROM users WHERE id = ?", (user_id,)).fetchone()
+    return row[0] if row is not None else None
+
+
+def update_password_hash(db_path: str | Path, user_id: str, new_password_hash: str) -> None:
+    with sqlite3.connect(db_path) as conn:
+        conn.execute("UPDATE users SET password_hash = ? WHERE id = ?", (new_password_hash, user_id))
+
+
+def create_password_reset_token(
+    db_path: str | Path, token_id: str, user_id: str, token_hash: str, expires_at: datetime
+) -> None:
+    now = datetime.now().isoformat()
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            "INSERT INTO password_reset_tokens (id, user_id, token_hash, expires_at, created_at) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (token_id, user_id, token_hash, expires_at.isoformat(), now),
+        )
+
+
+def get_password_reset_token(db_path: str | Path, token_id: str) -> PasswordResetTokenRecord | None:
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        row = conn.execute("SELECT * FROM password_reset_tokens WHERE id = ?", (token_id,)).fetchone()
+    if row is None:
+        return None
+    return PasswordResetTokenRecord(
+        id=row["id"],
+        user_id=row["user_id"],
+        token_hash=row["token_hash"],
+        expires_at=datetime.fromisoformat(row["expires_at"]),
+        used_at=datetime.fromisoformat(row["used_at"]) if row["used_at"] else None,
+        created_at=datetime.fromisoformat(row["created_at"]),
+    )
+
+
+def mark_password_reset_token_used(db_path: str | Path, token_id: str) -> None:
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            "UPDATE password_reset_tokens SET used_at = ? WHERE id = ?",
+            (datetime.now().isoformat(), token_id),
+        )
+
+
+def invalidate_password_reset_tokens_for_user(db_path: str | Path, user_id: str) -> None:
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            "UPDATE password_reset_tokens SET used_at = ? WHERE user_id = ? AND used_at IS NULL",
+            (datetime.now().isoformat(), user_id),
+        )
+
+
 if __name__ == "__main__":
     import tempfile
     import uuid
@@ -233,5 +316,24 @@ if __name__ == "__main__":
 
         update_profile_image(db_path, user.id, "profile_images/user.jpg")
         assert get_user_by_id(db_path, user.id).profile_image == "profile_images/user.jpg"
+
+        assert get_password_hash_by_user_id(db_path, user.id) == "hashed-pw"
+        update_password_hash(db_path, user.id, "new-hashed-pw")
+        assert get_password_hash_by_user_id(db_path, user.id) == "new-hashed-pw"
+        assert get_password_hash_by_user_id(db_path, "unknown") is None
+
+        reset_token_id = uuid.uuid4().hex
+        create_password_reset_token(db_path, reset_token_id, user.id, "reset-hash", now)
+        reset_record = get_password_reset_token(db_path, reset_token_id)
+        assert reset_record is not None
+        assert reset_record.used_at is None
+        mark_password_reset_token_used(db_path, reset_token_id)
+        assert get_password_reset_token(db_path, reset_token_id).used_at is not None
+
+        reset_token_id2 = uuid.uuid4().hex
+        create_password_reset_token(db_path, reset_token_id2, user.id, "reset-hash-2", now)
+        invalidate_password_reset_tokens_for_user(db_path, user.id)
+        assert get_password_reset_token(db_path, reset_token_id2).used_at is not None
+        assert get_password_reset_token(db_path, "unknown") is None
 
         print("accounts/user_storage.py sanity check OK.")

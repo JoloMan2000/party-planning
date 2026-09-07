@@ -353,6 +353,10 @@ final uploadProfileImageProvider =
 // ---------------------------------------------------------------------
 
 final showSignupProvider = StateProvider<bool>((ref) => false);
+final showForgotPasswordProvider = StateProvider<bool>((ref) => false);
+/// Gesetzt vom `partyplanning://reset/{token}`-Deep-Link-Handler in
+/// `main.dart` - `null` = kein Reset-Flow aktiv.
+final passwordResetTokenProvider = StateProvider<String?>((ref) => null);
 final selectedPartyIdProvider = StateProvider<String?>((ref) => null);
 final selectedInvitationIdProvider = StateProvider<String?>((ref) => null);
 final creatingPartyProvider = StateProvider<bool>((ref) => false);
@@ -520,3 +524,51 @@ class UploadPartyCoverImageNotifier extends AsyncNotifier<Party?> {
 
 final uploadPartyCoverImageProvider =
     AsyncNotifierProvider<UploadPartyCoverImageNotifier, Party?>(UploadPartyCoverImageNotifier.new);
+
+// ---------------------------------------------------------------------
+// Forgot-Password-Flow - zwei einmalige Aktionen, mirroring `AuthNotifier.
+// signup`'s breites `catch (e)` (nicht nur `on ApiException`), damit ein
+// unerreichbarer Server den Spinner nicht endlos hängen lässt. Bewusst
+// unauthentifiziert (kein `requiredAccessTokenProvider`) - beide Endpunkte
+// sind vor dem Login erreichbar.
+// ---------------------------------------------------------------------
+
+class RequestPasswordResetNotifier extends AsyncNotifier<void> {
+  @override
+  Future<void> build() async {}
+
+  Future<void> request(String email) async {
+    state = const AsyncLoading();
+    try {
+      await ref.read(apiClientProvider).requestPasswordReset(email: email);
+      state = const AsyncData(null);
+    } catch (e) {
+      state = AsyncError(e, StackTrace.current);
+    }
+  }
+}
+
+final requestPasswordResetProvider =
+    AsyncNotifierProvider<RequestPasswordResetNotifier, void>(RequestPasswordResetNotifier.new);
+
+class ResetPasswordNotifier extends AsyncNotifier<void> {
+  @override
+  Future<void> build() async {}
+
+  /// Löscht `passwordResetTokenProvider` bewusst NICHT automatisch bei
+  /// Erfolg - `main.dart`'s Routing würde sonst sofort von
+  /// `ResetPasswordScreen` weg zurück zum Login springen, bevor die
+  /// Erfolgsmeldung überhaupt sichtbar wird. Der Screen selbst löscht den
+  /// Token erst, wenn der Nutzer aktiv "Back to login" tippt.
+  Future<void> reset(String token, String newPassword) async {
+    state = const AsyncLoading();
+    try {
+      await ref.read(apiClientProvider).resetPassword(token: token, newPassword: newPassword);
+      state = const AsyncData(null);
+    } catch (e) {
+      state = AsyncError(e, StackTrace.current);
+    }
+  }
+}
+
+final resetPasswordProvider = AsyncNotifierProvider<ResetPasswordNotifier, void>(ResetPasswordNotifier.new);

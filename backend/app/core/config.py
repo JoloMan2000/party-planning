@@ -30,6 +30,12 @@ class Settings(BaseSettings):
     spotify_client_secret: str = ""
     spotify_redirect_uri: str = "http://localhost:8000/api/v1/me/music-provider/spotify/callback"
     spotify_token_encryption_key: str = "Z2gwSwfJWFGkb502WXm7rf21GzM3ZhggiMtT_S1CsOI="
+    smtp_host: str = "smtp.example.com"
+    smtp_port: int = 587
+    smtp_username: str = "placeholder@example.com"
+    smtp_password: str = "placeholder-app-password"
+    smtp_from_email: str = "no-reply@partyplanning.local"
+    password_reset_base_url: str = "partyplanning://reset"
 
 
 settings = Settings()

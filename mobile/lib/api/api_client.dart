@@ -598,6 +598,30 @@ class ApiClient {
     );
   }
 
+  /// Löst immer denselben generischen Erfolg aus, egal ob die E-Mail
+  /// existiert (siehe `backend/app/routers/auth.py::request_password_reset`)
+  /// - der Response-Body wird bewusst verworfen, es gibt nichts Nutzbares
+  /// darin außer der immer gleichen `message`.
+  Future<void> requestPasswordReset({required String email}) async {
+    final resp = await _http.post(
+      _uri('/api/v1/auth/request-password-reset'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email}),
+    );
+    _decodeObject(resp);
+  }
+
+  Future<void> resetPassword({required String token, required String newPassword}) async {
+    final resp = await _http.post(
+      _uri('/api/v1/auth/reset-password'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'token': token, 'new_password': newPassword}),
+    );
+    if (resp.statusCode >= 400) {
+      throw ApiException(resp.statusCode, resp.body);
+    }
+  }
+
   Future<UserAccount> getMe(String accessToken, Future<String?> Function() onRefresh) async {
     final resp = await _authorizedRequest(
       (token) => _http.get(_uri('/api/v1/me'), headers: _authHeaders(token)),

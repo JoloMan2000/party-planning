@@ -108,6 +108,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           : const Text('Log in'),
                     ),
                   ),
+                  const SizedBox(height: 4),
+                  TextButton(
+                    onPressed: () => ref.read(showForgotPasswordProvider.notifier).state = true,
+                    child: const Text('Forgot password?'),
+                  ),
                   const SizedBox(height: 12),
                   TextButton(
                     onPressed: () => ref.read(showSignupProvider.notifier).state = true,
