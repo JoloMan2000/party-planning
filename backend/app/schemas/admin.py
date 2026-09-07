@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from pydantic import BaseModel, Field
 
 
@@ -69,3 +71,14 @@ class TrackOverrideCreate(BaseModel):
 class ArtistOverrideCreate(BaseModel):
     artist_id: str
     status: str
+
+
+class UserAdminPublic(BaseModel):
+    """Für den Organizer-Verification-Flow (``backend/app/routers/admin_users.py``)
+    - reencapsuliert ``User`` ohne ``password_hash``."""
+
+    id: str
+    email: str
+    display_name: str
+    is_verified: bool
+    created_at: datetime

@@ -43,6 +43,7 @@ class User:
     email: str
     display_name: str
     profile_image: str = ""
+    is_verified: bool = False
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -249,6 +250,7 @@ class PublicEvent:
     party_id: str
     event_type: str = ""
     interest_tags: list[str] = field(default_factory=list)
+    max_guests: int = 0
     published_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 

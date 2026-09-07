@@ -102,3 +102,45 @@ def test_get_discover_deck_liefert_score_pro_kandidat(db_path, guest, party):
     assert ranked_party.id == party.id
     assert publication.event_type == "club_event"
     assert 0.0 < score <= 1.0
+
+
+def test_publish_party_speichert_und_aktualisiert_max_guests(db_path, party):
+    publication = discover_storage.publish_party(db_path, party.id, max_guests=3)
+    assert publication.max_guests == 3
+
+    updated = discover_storage.publish_party(db_path, party.id, max_guests=7)
+    assert updated.max_guests == 7
+
+
+def test_list_candidate_publications_schliesst_volle_party_aus(db_path, guest, party):
+    discover_storage.publish_party(db_path, party.id, max_guests=1)
+    other_guest = user_storage.create_user(db_path, uuid.uuid4().hex, "other@example.com", "hash", "Other")
+    assert any(p.id == party.id for p, _pe in discover_storage.list_candidate_publications(db_path, other_guest.id))
+
+    party_storage.upsert_membership(db_path, party.id, guest.id, PartyRole.GUEST, RsvpStatus.ACCEPTED)
+    assert all(p.id != party.id for p, _pe in discover_storage.list_candidate_publications(db_path, other_guest.id))
+
+
+def test_list_candidate_publications_max_guests_null_bleibt_unbegrenzt(db_path, guest, party):
+    discover_storage.publish_party(db_path, party.id, max_guests=0)
+    party_storage.upsert_membership(db_path, party.id, guest.id, PartyRole.GUEST, RsvpStatus.ACCEPTED)
+    other_guest = user_storage.create_user(db_path, uuid.uuid4().hex, "other2@example.com", "hash", "Other2")
+    assert any(p.id == party.id for p, _pe in discover_storage.list_candidate_publications(db_path, other_guest.id))
+
+
+def test_is_party_full(db_path, guest, party):
+    discover_storage.publish_party(db_path, party.id, max_guests=1)
+    assert discover_storage.is_party_full(db_path, party.id) is False
+
+    party_storage.upsert_membership(db_path, party.id, guest.id, PartyRole.GUEST, RsvpStatus.ACCEPTED)
+    assert discover_storage.is_party_full(db_path, party.id) is True
+
+
+def test_is_party_full_tentative_zaehlt_nicht(db_path, guest, party):
+    discover_storage.publish_party(db_path, party.id, max_guests=1)
+    party_storage.upsert_membership(db_path, party.id, guest.id, PartyRole.GUEST, RsvpStatus.TENTATIVE)
+    assert discover_storage.is_party_full(db_path, party.id) is False
+
+
+def test_is_party_full_ohne_publikation_ist_false(db_path, party):
+    assert discover_storage.is_party_full(db_path, party.id) is False

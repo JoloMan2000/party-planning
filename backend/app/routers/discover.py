@@ -68,6 +68,8 @@ def act_on_discover_card(
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Ungültige Discover-Aktion.")
 
     membership = None
+    if action in (DiscoverAction.GOING, DiscoverAction.MAYBE) and discover_storage.is_party_full(db_path, party_id):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="This party is full.")
     if action == DiscoverAction.GOING:
         membership = party_storage.upsert_membership(db_path, party_id, current_user.id, PartyRole.GUEST, RsvpStatus.ACCEPTED)
     elif action == DiscoverAction.MAYBE:

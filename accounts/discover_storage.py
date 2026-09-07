@@ -38,6 +38,16 @@ def init_discover_storage(db_path: str | Path) -> None:
             )
             """
         )
+        # Schema-Migration (mirrors party_storage.py::init_party_storage's
+        # cover_image-Migration) - max_guests kam nach dem initialen Rollout
+        # dazu, damit bereits existierende Dev-DBs nicht brechen.
+        existing_public_event_cols = {row[1] for row in conn.execute("PRAGMA table_info(public_events)")}
+        public_event_migrations = {
+            "max_guests": "ALTER TABLE public_events ADD COLUMN max_guests INTEGER NOT NULL DEFAULT 0",
+        }
+        for column, ddl in public_event_migrations.items():
+            if column not in existing_public_event_cols:
+                conn.execute(ddl)
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS discover_actions (
@@ -69,6 +79,7 @@ def _row_to_public_event(row: sqlite3.Row) -> PublicEvent:
         party_id=row["party_id"],
         event_type=row["event_type"] or "",
         interest_tags=_decode_list(row["interest_tags"] or ""),
+        max_guests=row["max_guests"],
         published_at=datetime.fromisoformat(row["published_at"]),
     )
 
@@ -84,25 +95,31 @@ def _row_to_discover_action(row: sqlite3.Row) -> DiscoverActionRecord:
 
 
 def publish_party(
-    db_path: str | Path, party_id: str, event_type: str = "", interest_tags: list[str] | None = None
+    db_path: str | Path,
+    party_id: str,
+    event_type: str = "",
+    interest_tags: list[str] | None = None,
+    max_guests: int = 0,
 ) -> PublicEvent:
     """Veröffentlicht (oder aktualisiert, falls bereits veröffentlicht) eine
     Party fürs Discover-Deck - Upsert per ``party_id``, damit erneutes
     Publish Tags/Zeitstempel aktualisiert statt einen Duplikat-Datensatz
-    anzulegen."""
+    anzulegen. ``max_guests=0`` bedeutet unbegrenzt (siehe
+    ``list_candidate_publications``/``is_party_full``)."""
     now = datetime.now().isoformat()
     event_id = f"public_event:{party_id}"
     with sqlite3.connect(db_path) as conn:
         conn.execute(
             """
-            INSERT INTO public_events (id, party_id, event_type, interest_tags, published_at)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO public_events (id, party_id, event_type, interest_tags, max_guests, published_at)
+            VALUES (?, ?, ?, ?, ?, ?)
             ON CONFLICT(party_id) DO UPDATE SET
                 event_type = excluded.event_type,
                 interest_tags = excluded.interest_tags,
+                max_guests = excluded.max_guests,
                 published_at = excluded.published_at
             """,
-            (event_id, party_id, event_type, _encode_list(interest_tags or []), now),
+            (event_id, party_id, event_type, _encode_list(interest_tags or []), max_guests, now),
         )
     result = get_publication(db_path, party_id)
     assert result is not None
@@ -165,12 +182,20 @@ def list_candidate_publications(db_path: str | Path, user_id: str) -> list[tuple
         rows = conn.execute(
             """
             SELECT p.*, pe.id AS public_event_id, pe.event_type AS pe_event_type,
-                   pe.interest_tags AS pe_interest_tags, pe.published_at AS pe_published_at
+                   pe.interest_tags AS pe_interest_tags, pe.max_guests AS pe_max_guests,
+                   pe.published_at AS pe_published_at
             FROM parties p
             JOIN public_events pe ON pe.party_id = p.id
             WHERE p.host_user_id != ?
               AND p.id NOT IN (SELECT party_id FROM party_memberships WHERE user_id = ?)
               AND p.id NOT IN (SELECT party_id FROM discover_actions WHERE user_id = ?)
+              AND (
+                  pe.max_guests = 0
+                  OR (
+                      SELECT COUNT(*) FROM party_memberships pm
+                      WHERE pm.party_id = p.id AND pm.role = 'guest' AND pm.rsvp_status = 'accepted'
+                  ) < pe.max_guests
+              )
             ORDER BY pe.published_at DESC
             """,
             (user_id, user_id, user_id),
@@ -183,10 +208,28 @@ def list_candidate_publications(db_path: str | Path, user_id: str) -> list[tuple
             party_id=row["id"],
             event_type=row["pe_event_type"] or "",
             interest_tags=_decode_list(row["pe_interest_tags"] or ""),
+            max_guests=row["pe_max_guests"],
             published_at=datetime.fromisoformat(row["pe_published_at"]),
         )
         result.append((party, publication))
     return result
+
+
+def is_party_full(db_path: str | Path, party_id: str) -> bool:
+    """Sicherheitsnetz für ``discover.py::act_on_discover_card`` - eine
+    Party kann direkt per Action-Endpoint angesprochen werden, auch wenn sie
+    zwischenzeitlich aus dem Deck gefiltert wurde (siehe
+    ``list_candidate_publications``), z.B. durch eine Race Condition
+    zwischen Deck-Abruf und Swipe."""
+    publication = get_publication(db_path, party_id)
+    if publication is None or publication.max_guests == 0:
+        return False
+    with sqlite3.connect(db_path) as conn:
+        accepted_count = conn.execute(
+            "SELECT COUNT(*) FROM party_memberships WHERE party_id = ? AND role = 'guest' AND rsvp_status = 'accepted'",
+            (party_id,),
+        ).fetchone()[0]
+    return accepted_count >= publication.max_guests
 
 
 def get_discover_deck(db_path: str | Path, user_id: str, limit: int = 30) -> list[tuple[Party, PublicEvent, float]]:
@@ -262,5 +305,19 @@ if __name__ == "__main__":
 
         unpublish_party(db_path, party.id)
         assert get_publication(db_path, party.id) is None
+
+        # Kapazitätslimit: voll -> raus aus dem Deck, is_party_full stimmt.
+        guest2 = user_storage.create_user(db_path, uuid.uuid4().hex, "guest2@example.com", "hash", "Guest2")
+        party3 = party_storage.create_party(db_path, uuid.uuid4().hex, host.id, "Tiny Loft Party")
+        publish_party(db_path, party3.id, event_type="house_party", max_guests=1)
+        assert is_party_full(db_path, party3.id) is False
+        assert any(p.id == party3.id for p, _pe in list_candidate_publications(db_path, guest2.id))
+        party_storage.upsert_membership(
+            db_path, party3.id, guest.id, party_storage.PartyRole.GUEST, party_storage.RsvpStatus.ACCEPTED
+        )
+        assert is_party_full(db_path, party3.id) is True
+        assert all(p.id != party3.id for p, _pe in list_candidate_publications(db_path, guest2.id))
+        # max_guests=0 bleibt unbegrenzt, auch mit Gästen.
+        assert is_party_full(db_path, party2.id) is False
 
         print("accounts/discover_storage.py sanity check OK.")

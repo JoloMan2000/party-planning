@@ -66,6 +66,16 @@ def init_user_storage(db_path: str | Path) -> None:
             )
             """
         )
+        # Schema-Migration (mirrors accounts/party_storage.py::init_party_storage
+        # - idempotent ALTER TABLE für Spalten, die nach dem initialen Rollout
+        # dazugekommen sind, damit bereits existierende Dev-DBs nicht brechen).
+        existing_user_cols = {row[1] for row in conn.execute("PRAGMA table_info(users)")}
+        user_migrations = {
+            "is_verified": "ALTER TABLE users ADD COLUMN is_verified INTEGER NOT NULL DEFAULT 0",
+        }
+        for column, ddl in user_migrations.items():
+            if column not in existing_user_cols:
+                conn.execute(ddl)
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS refresh_tokens (
@@ -105,6 +115,7 @@ def _row_to_user(row: sqlite3.Row) -> User:
         email=row["email"],
         display_name=row["display_name"],
         profile_image=row["profile_image"],
+        is_verified=bool(row["is_verified"]),
         created_at=datetime.fromisoformat(row["created_at"]),
     )
 
@@ -130,7 +141,8 @@ def get_user_by_id(db_path: str | Path, user_id: str) -> User | None:
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
         row = conn.execute(
-            "SELECT id, email, display_name, profile_image, created_at FROM users WHERE id = ?", (user_id,)
+            "SELECT id, email, display_name, profile_image, is_verified, created_at FROM users WHERE id = ?",
+            (user_id,),
         ).fetchone()
     return _row_to_user(row) if row is not None else None
 
@@ -140,10 +152,27 @@ def get_user_by_email(db_path: str | Path, email: str) -> User | None:
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
         row = conn.execute(
-            "SELECT id, email, display_name, profile_image, created_at FROM users WHERE email = ?",
+            "SELECT id, email, display_name, profile_image, is_verified, created_at FROM users WHERE email = ?",
             (normalized_email,),
         ).fetchone()
     return _row_to_user(row) if row is not None else None
+
+
+def list_users(db_path: str | Path) -> list[User]:
+    """Für den Admin-Verification-Flow (kein Pagination-Bedarf bei dieser
+    App-Größe, siehe Plan)."""
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(
+            "SELECT id, email, display_name, profile_image, is_verified, created_at "
+            "FROM users ORDER BY created_at"
+        ).fetchall()
+    return [_row_to_user(row) for row in rows]
+
+
+def set_user_verified(db_path: str | Path, user_id: str, is_verified: bool) -> None:
+    with sqlite3.connect(db_path) as conn:
+        conn.execute("UPDATE users SET is_verified = ? WHERE id = ?", (int(is_verified), user_id))
 
 
 def get_credentials_by_email(db_path: str | Path, email: str) -> tuple[User, str] | None:
@@ -335,5 +364,15 @@ if __name__ == "__main__":
         invalidate_password_reset_tokens_for_user(db_path, user.id)
         assert get_password_reset_token(db_path, reset_token_id2).used_at is not None
         assert get_password_reset_token(db_path, "unknown") is None
+
+        assert user.is_verified is False
+        assert get_user_by_id(db_path, user.id).is_verified is False
+        set_user_verified(db_path, user.id, True)
+        assert get_user_by_id(db_path, user.id).is_verified is True
+        set_user_verified(db_path, user.id, False)
+        assert get_user_by_id(db_path, user.id).is_verified is False
+
+        all_users = list_users(db_path)
+        assert any(u.id == user.id for u in all_users)
 
         print("accounts/user_storage.py sanity check OK.")

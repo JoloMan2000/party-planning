@@ -123,6 +123,7 @@ class _PublishToDiscoverSection extends ConsumerStatefulWidget {
 class _PublishToDiscoverSectionState extends ConsumerState<_PublishToDiscoverSection> {
   String? _eventType;
   late Set<String> _interestTags;
+  late TextEditingController _maxGuestsController;
   bool _uploadingCover = false;
 
   @override
@@ -130,6 +131,7 @@ class _PublishToDiscoverSectionState extends ConsumerState<_PublishToDiscoverSec
     super.initState();
     _eventType = widget.party.eventType.isNotEmpty ? widget.party.eventType : null;
     _interestTags = widget.party.interestTags.toSet();
+    _maxGuestsController = TextEditingController(text: widget.party.maxGuests.toString());
   }
 
   @override
@@ -139,8 +141,17 @@ class _PublishToDiscoverSectionState extends ConsumerState<_PublishToDiscoverSec
         oldWidget.party.updatedAt != widget.party.updatedAt) {
       _eventType = widget.party.eventType.isNotEmpty ? widget.party.eventType : null;
       _interestTags = widget.party.interestTags.toSet();
+      _maxGuestsController.text = widget.party.maxGuests.toString();
     }
   }
+
+  @override
+  void dispose() {
+    _maxGuestsController.dispose();
+    super.dispose();
+  }
+
+  int get _maxGuests => int.tryParse(_maxGuestsController.text) ?? 0;
 
   Future<void> _pickAndUploadCover() async {
     final picker = ImagePicker();
@@ -160,6 +171,18 @@ class _PublishToDiscoverSectionState extends ConsumerState<_PublishToDiscoverSec
     }
   }
 
+  void _showPublishError(ScaffoldMessengerState messenger, ApiException e) {
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          e.statusCode == 403
+              ? 'Your account isn\'t verified yet - publishing is disabled until an admin verifies your account.'
+              : 'Failed to update publish status.',
+        ),
+      ),
+    );
+  }
+
   Future<void> _togglePublished(bool value) async {
     final messenger = ScaffoldMessenger.of(context);
     try {
@@ -168,14 +191,13 @@ class _PublishToDiscoverSectionState extends ConsumerState<_PublishToDiscoverSec
               widget.party.id,
               eventType: _eventType ?? '',
               interestTags: _interestTags.toList(),
+              maxGuests: _maxGuests,
             );
       } else {
         await ref.read(publishPartyProvider.notifier).unpublish(widget.party.id);
       }
-    } on ApiException catch (_) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Failed to update publish status.')),
-      );
+    } on ApiException catch (e) {
+      _showPublishError(messenger, e);
     }
   }
 
@@ -186,11 +208,10 @@ class _PublishToDiscoverSectionState extends ConsumerState<_PublishToDiscoverSec
             widget.party.id,
             eventType: _eventType ?? '',
             interestTags: _interestTags.toList(),
+            maxGuests: _maxGuests,
           );
-    } on ApiException catch (_) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Failed to update publish status.')),
-      );
+    } on ApiException catch (e) {
+      _showPublishError(messenger, e);
     }
   }
 
@@ -219,8 +240,17 @@ class _PublishToDiscoverSectionState extends ConsumerState<_PublishToDiscoverSec
               title: const Text('Publish to Discover'),
               subtitle: const Text('Let other users find and swipe on this party.'),
               value: isPublished,
-              onChanged: publishState.isLoading ? null : _togglePublished,
+              onChanged: (publishState.isLoading || !widget.party.hostIsVerified) ? null : _togglePublished,
             ),
+            if (!widget.party.hostIsVerified) ...[
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  'Your account isn\'t verified yet - publishing is disabled until an admin verifies your account.',
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+            ],
             GestureDetector(
               onTap: _uploadingCover ? null : _pickAndUploadCover,
               child: Container(
@@ -261,6 +291,15 @@ class _PublishToDiscoverSectionState extends ConsumerState<_PublishToDiscoverSec
               ),
             ),
             if (isPublished) ...[
+              const SizedBox(height: 16),
+              Text('Max guests (0 = unlimited)', style: Theme.of(context).textTheme.titleSmall),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _maxGuestsController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(border: OutlineInputBorder()),
+                onFieldSubmitted: (_) => _republish(),
+              ),
               const SizedBox(height: 16),
               Text('Event type', style: Theme.of(context).textTheme.titleSmall),
               const SizedBox(height: 8),

@@ -875,12 +875,13 @@ class ApiClient {
     String partyId, {
     required String eventType,
     List<String> interestTags = const [],
+    int maxGuests = 0,
   }) async {
     final resp = await _authorizedRequest(
       (token) => _http.post(
         _uri('/api/v1/parties/$partyId/publish'),
         headers: _authHeaders(token),
-        body: jsonEncode({'event_type': eventType, 'interest_tags': interestTags}),
+        body: jsonEncode({'event_type': eventType, 'interest_tags': interestTags, 'max_guests': maxGuests}),
       ),
       accessToken,
       onRefresh,

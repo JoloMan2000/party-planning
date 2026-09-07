@@ -12,6 +12,8 @@ class Party {
   final bool isPublished;
   final String eventType;
   final List<String> interestTags;
+  final int maxGuests;
+  final bool hostIsVerified;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -26,6 +28,8 @@ class Party {
     this.isPublished = false,
     this.eventType = '',
     this.interestTags = const [],
+    this.maxGuests = 0,
+    this.hostIsVerified = false,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -41,6 +45,8 @@ class Party {
         isPublished: (json['is_published'] as bool?) ?? false,
         eventType: (json['event_type'] as String?) ?? '',
         interestTags: (json['interest_tags'] as List?)?.cast<String>() ?? const [],
+        maxGuests: (json['max_guests'] as int?) ?? 0,
+        hostIsVerified: (json['host_is_verified'] as bool?) ?? false,
         createdAt: DateTime.parse(json['created_at'] as String),
         updatedAt: DateTime.parse(json['updated_at'] as String),
       );

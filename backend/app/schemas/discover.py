@@ -2,12 +2,20 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class PartyPublishRequest(BaseModel):
     event_type: str = ""
     interest_tags: list[str] = []
+    max_guests: int = 0
+
+    @field_validator("max_guests")
+    @classmethod
+    def _max_guests_darf_nicht_negativ_sein(cls, value: int) -> int:
+        if value < 0:
+            raise ValueError("max_guests darf nicht negativ sein.")
+        return value
 
 
 class DiscoverCardPublic(BaseModel):

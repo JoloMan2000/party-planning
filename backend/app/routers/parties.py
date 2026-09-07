@@ -31,15 +31,22 @@ router = APIRouter(prefix="/api/v1/parties", tags=["parties"])
 _MAX_COVER_IMAGE_BYTES = 5 * 1024 * 1024  # 5 MB
 
 
-def _to_party_public(party, publication=None) -> PartyPublic:
+def _to_party_public(party, publication=None, host_is_verified: bool = False) -> PartyPublic:
     return PartyPublic(
         id=party.id, host_user_id=party.host_user_id, name=party.name, description=party.description,
         starts_at=party.starts_at, location=party.location, cover_image=party.cover_image,
         is_published=publication is not None,
         event_type=publication.event_type if publication is not None else "",
         interest_tags=publication.interest_tags if publication is not None else [],
+        max_guests=publication.max_guests if publication is not None else 0,
+        host_is_verified=host_is_verified,
         created_at=party.created_at, updated_at=party.updated_at,
     )
+
+
+def _host_is_verified(db_path: Path, host_user_id: str) -> bool:
+    host = user_storage.get_user_by_id(db_path, host_user_id)
+    return host.is_verified if host is not None else False
 
 
 @router.post("", response_model=PartyPublic, status_code=status.HTTP_201_CREATED)
@@ -50,7 +57,7 @@ def create_party(
         db_path, uuid.uuid4().hex, current_user.id, payload.name,
         description=payload.description, starts_at=payload.starts_at, location=payload.location,
     )
-    return _to_party_public(party)
+    return _to_party_public(party, host_is_verified=current_user.is_verified)
 
 
 @router.get("/{party_id}", response_model=PartyPublic)
@@ -62,7 +69,9 @@ def get_party(
     party = party_storage.get_party(db_path, party_id)
     if party is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Party nicht gefunden.")
-    return _to_party_public(party, discover_storage.get_publication(db_path, party_id))
+    return _to_party_public(
+        party, discover_storage.get_publication(db_path, party_id), _host_is_verified(db_path, party.host_user_id)
+    )
 
 
 @router.patch("/{party_id}", response_model=PartyPublic)
@@ -73,22 +82,37 @@ def update_party(
     _membership=Depends(require_party_role({PartyRole.HOST, PartyRole.CO_HOST})),
 ) -> PartyPublic:
     party = party_storage.update_party(db_path, party_id, **payload.model_dump(exclude_unset=True))
-    return _to_party_public(party, discover_storage.get_publication(db_path, party_id))
+    return _to_party_public(
+        party, discover_storage.get_publication(db_path, party_id), _host_is_verified(db_path, party.host_user_id)
+    )
 
 
 @router.post("/{party_id}/publish", response_model=PartyPublic)
 def publish_party(
     party_id: str,
     payload: PartyPublishRequest,
+    current_user: User = Depends(get_current_user),
     db_path: Path = Depends(get_db_path),
     _membership=Depends(require_party_role({PartyRole.HOST})),
 ) -> PartyPublic:
     """Macht eine bereits existierende private Party im Discover-Deck
     anderer User sichtbar (MVP-Scope-Entscheidung: kein separater Event-
-    Erstellungs-Flow, siehe Plan). Nur der Host darf das."""
-    discover_storage.publish_party(db_path, party_id, event_type=payload.event_type, interest_tags=payload.interest_tags)
+    Erstellungs-Flow, siehe Plan). Nur der Host darf das, und nur wenn der
+    Host bereits als Organizer verifiziert wurde (siehe Plan: Organizer
+    Verification)."""
+    if not current_user.is_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account must be verified before you can publish parties.",
+        )
+    discover_storage.publish_party(
+        db_path, party_id, event_type=payload.event_type, interest_tags=payload.interest_tags,
+        max_guests=payload.max_guests,
+    )
     party = party_storage.get_party(db_path, party_id)
-    return _to_party_public(party, discover_storage.get_publication(db_path, party_id))
+    return _to_party_public(
+        party, discover_storage.get_publication(db_path, party_id), current_user.is_verified
+    )
 
 
 @router.delete("/{party_id}/publish", status_code=status.HTTP_204_NO_CONTENT)
@@ -132,7 +156,9 @@ async def upload_party_cover_image(
     relative_path = f"party_images/{party_id}.jpg"
     party_storage.set_cover_image(db_path, party_id, relative_path)
     party = party_storage.get_party(db_path, party_id)
-    return _to_party_public(party, discover_storage.get_publication(db_path, party_id))
+    return _to_party_public(
+        party, discover_storage.get_publication(db_path, party_id), _host_is_verified(db_path, party.host_user_id)
+    )
 
 
 @router.get("/{party_id}/guests", response_model=PartyGuestsResponse)

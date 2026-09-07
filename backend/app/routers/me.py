@@ -37,6 +37,7 @@ def get_my_parties(
     result = []
     for party, _membership in parties:
         publication = discover_storage.get_publication(db_path, party.id)
+        host = user_storage.get_user_by_id(db_path, party.host_user_id)
         result.append(
             PartyPublic(
                 id=party.id, host_user_id=party.host_user_id, name=party.name, description=party.description,
@@ -44,6 +45,8 @@ def get_my_parties(
                 is_published=publication is not None,
                 event_type=publication.event_type if publication is not None else "",
                 interest_tags=publication.interest_tags if publication is not None else [],
+                max_guests=publication.max_guests if publication is not None else 0,
+                host_is_verified=host.is_verified if host is not None else False,
                 created_at=party.created_at, updated_at=party.updated_at,
             )
         )

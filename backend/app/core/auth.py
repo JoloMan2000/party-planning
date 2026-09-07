@@ -103,6 +103,17 @@ def get_current_user(
     return user
 
 
+def require_admin(current_user: User = Depends(get_current_user)) -> User:
+    """MVP-Admin-Gate (siehe Plan): kein echtes Rollen-/Superuser-Modell,
+    nur eine hardcoded ``ADMIN_EMAILS``-Liste in ``settings``. Bewusst
+    isoliert in genau dieser einen Dependency, damit ein späteres echtes
+    Rollensystem nur hier ersetzt werden muss."""
+    admin_emails = {e.strip().lower() for e in settings.admin_emails.split(",") if e.strip()}
+    if current_user.email.lower() not in admin_emails:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin-Zugriff erforderlich.")
+    return current_user
+
+
 def require_party_role(allowed_roles: set[PartyRole]):
     """Dependency-Factory: 404 falls Party unbekannt, 403 falls der User
     keine oder eine nicht ausreichende Rolle in dieser Party hat. Erwartet

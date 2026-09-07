@@ -36,6 +36,11 @@ class Settings(BaseSettings):
     smtp_password: str = "placeholder-app-password"
     smtp_from_email: str = "no-reply@partyplanning.local"
     password_reset_base_url: str = "partyplanning://reset"
+    # Komma-separierte E-Mail-Liste, siehe backend/app/core/auth.py::require_admin.
+    # Bewusst kein echtes Rollen-/Superuser-Modell (siehe Plan) - isoliert
+    # hinter genau einer Dependency, damit ein späteres echtes System das
+    # hier problemlos ersetzen kann.
+    admin_emails: str = ""
 
 
 settings = Settings()

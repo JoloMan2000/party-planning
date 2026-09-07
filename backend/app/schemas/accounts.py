@@ -30,6 +30,8 @@ class PartyPublic(BaseModel):
     is_published: bool = False
     event_type: str = ""
     interest_tags: list[str] = []
+    max_guests: int = 0
+    host_is_verified: bool = False
     created_at: datetime
     updated_at: datetime
 

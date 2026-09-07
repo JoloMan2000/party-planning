@@ -466,7 +466,12 @@ class PublishPartyNotifier extends AsyncNotifier<Party?> {
   @override
   Future<Party?> build() async => null;
 
-  Future<Party> publish(String partyId, {required String eventType, List<String> interestTags = const []}) async {
+  Future<Party> publish(
+    String partyId, {
+    required String eventType,
+    List<String> interestTags = const [],
+    int maxGuests = 0,
+  }) async {
     final token = ref.read(requiredAccessTokenProvider);
     state = const AsyncLoading();
     try {
@@ -476,6 +481,7 @@ class PublishPartyNotifier extends AsyncNotifier<Party?> {
             partyId,
             eventType: eventType,
             interestTags: interestTags,
+            maxGuests: maxGuests,
           );
       state = AsyncData(party);
       ref.invalidate(partyDetailProvider(partyId));

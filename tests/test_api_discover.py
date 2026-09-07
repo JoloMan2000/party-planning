@@ -8,14 +8,30 @@ import io
 
 from PIL import Image
 
+import accounts.user_storage as user_storage
+
 
 def _make_party(api_client, headers, name: str = "P") -> str:
     return api_client.post("/api/v1/parties", json={"name": name}, headers=headers).json()["id"]
 
 
-def _publish(api_client, headers, party_id: str, event_type: str = "club_event") -> None:
+def _verify(api_client, user_id: str) -> None:
+    """Setzt ``is_verified`` direkt über die Storage-Schicht (kein HTTP-
+    Admin-Roundtrip nötig, mirroring ``conftest.py::co_host_headers_factory``'s
+    Direkt-Storage-Setup-Konvention) - Publish erfordert seit der Organizer-
+    Verification einen verifizierten Host."""
+    user_storage.set_user_verified(api_client.db_path, user_id, True)
+
+
+def _publish(
+    api_client, headers, party_id: str, event_type: str = "club_event", max_guests: int = 0
+) -> None:
+    me = api_client.get("/api/v1/me", headers=headers)
+    _verify(api_client, me.json()["id"])
     resp = api_client.post(
-        f"/api/v1/parties/{party_id}/publish", json={"event_type": event_type, "interest_tags": []}, headers=headers
+        f"/api/v1/parties/{party_id}/publish",
+        json={"event_type": event_type, "interest_tags": [], "max_guests": max_guests},
+        headers=headers,
     )
     assert resp.status_code == 200, resp.text
 
@@ -148,11 +164,12 @@ def test_action_ungueltig_gibt_422(api_client, auth_headers_factory):
 
 
 def test_publish_setzt_felder_auf_party_public(api_client, auth_headers_factory):
-    headers, _user, _ = auth_headers_factory(email="publishfieldshost@example.com")
+    headers, user, _ = auth_headers_factory(email="publishfieldshost@example.com")
     party_id = _make_party(api_client, headers)
+    _verify(api_client, user["id"])
     resp = api_client.post(
         f"/api/v1/parties/{party_id}/publish",
-        json={"event_type": "club_event", "interest_tags": ["techno"]},
+        json={"event_type": "club_event", "interest_tags": ["techno"], "max_guests": 5},
         headers=headers,
     )
     assert resp.status_code == 200
@@ -160,6 +177,70 @@ def test_publish_setzt_felder_auf_party_public(api_client, auth_headers_factory)
     assert body["is_published"] is True
     assert body["event_type"] == "club_event"
     assert body["interest_tags"] == ["techno"]
+    assert body["max_guests"] == 5
+    assert body["host_is_verified"] is True
+
+
+def test_publish_negative_max_guests_gibt_422(api_client, auth_headers_factory):
+    headers, user, _ = auth_headers_factory(email="negativemaxguests@example.com")
+    party_id = _make_party(api_client, headers)
+    _verify(api_client, user["id"])
+    resp = api_client.post(
+        f"/api/v1/parties/{party_id}/publish",
+        json={"event_type": "club_event", "max_guests": -1},
+        headers=headers,
+    )
+    assert resp.status_code == 422
+
+
+def test_publish_als_unverifizierter_host_gibt_403(api_client, auth_headers_factory):
+    headers, _user, _ = auth_headers_factory(email="unverifiedhost@example.com")
+    party_id = _make_party(api_client, headers)
+    resp = api_client.post(
+        f"/api/v1/parties/{party_id}/publish", json={"event_type": "club_event"}, headers=headers
+    )
+    assert resp.status_code == 403
+
+
+def test_publish_nach_admin_verifizierung_klappt(api_client, auth_headers_factory, monkeypatch):
+    from backend.app.core.config import settings
+
+    headers, user, _ = auth_headers_factory(email="toverify@example.com")
+    party_id = _make_party(api_client, headers)
+
+    resp = api_client.post(
+        f"/api/v1/parties/{party_id}/publish", json={"event_type": "club_event"}, headers=headers
+    )
+    assert resp.status_code == 403
+
+    admin_headers, _admin, _ = auth_headers_factory(email="theadmin@example.com")
+    monkeypatch.setattr(settings, "admin_emails", "theadmin@example.com")
+    verify_resp = api_client.post(f"/api/v1/admin/users/{user['id']}/verify", headers=admin_headers)
+    assert verify_resp.status_code == 200
+    assert verify_resp.json()["is_verified"] is True
+
+    resp = api_client.post(
+        f"/api/v1/parties/{party_id}/publish", json={"event_type": "club_event"}, headers=headers
+    )
+    assert resp.status_code == 200
+    assert resp.json()["host_is_verified"] is True
+
+
+def test_host_is_verified_auf_party_und_me_parties(api_client, auth_headers_factory):
+    headers, user, _ = auth_headers_factory(email="hostverifiedflag@example.com")
+    party_id = _make_party(api_client, headers)
+
+    get_resp = api_client.get(f"/api/v1/parties/{party_id}", headers=headers)
+    assert get_resp.json()["host_is_verified"] is False
+    my_parties_resp = api_client.get("/api/v1/me/parties", headers=headers)
+    assert next(p for p in my_parties_resp.json() if p["id"] == party_id)["host_is_verified"] is False
+
+    _verify(api_client, user["id"])
+
+    get_resp = api_client.get(f"/api/v1/parties/{party_id}", headers=headers)
+    assert get_resp.json()["host_is_verified"] is True
+    my_parties_resp = api_client.get("/api/v1/me/parties", headers=headers)
+    assert next(p for p in my_parties_resp.json() if p["id"] == party_id)["host_is_verified"] is True
 
 
 def test_unpublish_entfernt_publikation(api_client, auth_headers_factory):
@@ -224,3 +305,73 @@ def test_cover_image_als_guest_gibt_403(api_client, auth_headers_factory):
         headers=guest_headers,
     )
     assert resp.status_code == 403
+
+
+def test_volle_party_verschwindet_aus_dem_deck(api_client, auth_headers_factory):
+    host_headers, _host, _ = auth_headers_factory(email="capacityhost@example.com")
+    guest1_headers, _guest1, _ = auth_headers_factory(email="capacityguest1@example.com")
+    guest2_headers, _guest2, _ = auth_headers_factory(email="capacityguest2@example.com")
+    party_id = _make_party(api_client, host_headers)
+    _publish(api_client, host_headers, party_id, max_guests=1)
+
+    resp = api_client.post(f"/api/v1/discover/{party_id}/action", json={"action": "going"}, headers=guest1_headers)
+    assert resp.status_code == 200
+
+    deck_resp = api_client.get("/api/v1/discover/deck", headers=guest2_headers)
+    cards = deck_resp.json()["cards"]
+    assert all(c["party_id"] != party_id for c in cards)
+
+
+def test_going_auf_volle_party_gibt_409(api_client, auth_headers_factory):
+    host_headers, _host, _ = auth_headers_factory(email="capacitygoinghost@example.com")
+    guest1_headers, _guest1, _ = auth_headers_factory(email="capacitygoingguest1@example.com")
+    guest2_headers, _guest2, _ = auth_headers_factory(email="capacitygoingguest2@example.com")
+    party_id = _make_party(api_client, host_headers)
+    _publish(api_client, host_headers, party_id, max_guests=1)
+
+    api_client.post(f"/api/v1/discover/{party_id}/action", json={"action": "going"}, headers=guest1_headers)
+
+    resp = api_client.post(f"/api/v1/discover/{party_id}/action", json={"action": "going"}, headers=guest2_headers)
+    assert resp.status_code == 409
+
+
+def test_maybe_auf_volle_party_gibt_409(api_client, auth_headers_factory):
+    host_headers, _host, _ = auth_headers_factory(email="capacitymaybehost@example.com")
+    guest1_headers, _guest1, _ = auth_headers_factory(email="capacitymaybeguest1@example.com")
+    guest2_headers, _guest2, _ = auth_headers_factory(email="capacitymaybeguest2@example.com")
+    party_id = _make_party(api_client, host_headers)
+    _publish(api_client, host_headers, party_id, max_guests=1)
+
+    api_client.post(f"/api/v1/discover/{party_id}/action", json={"action": "going"}, headers=guest1_headers)
+
+    resp = api_client.post(f"/api/v1/discover/{party_id}/action", json={"action": "maybe"}, headers=guest2_headers)
+    assert resp.status_code == 409
+
+
+def test_not_interested_auf_volle_party_bleibt_erlaubt(api_client, auth_headers_factory):
+    host_headers, _host, _ = auth_headers_factory(email="capacitynotinthost@example.com")
+    guest1_headers, _guest1, _ = auth_headers_factory(email="capacitynotintguest1@example.com")
+    guest2_headers, _guest2, _ = auth_headers_factory(email="capacitynotintguest2@example.com")
+    party_id = _make_party(api_client, host_headers)
+    _publish(api_client, host_headers, party_id, max_guests=1)
+
+    api_client.post(f"/api/v1/discover/{party_id}/action", json={"action": "going"}, headers=guest1_headers)
+
+    resp = api_client.post(
+        f"/api/v1/discover/{party_id}/action", json={"action": "not_interested"}, headers=guest2_headers
+    )
+    assert resp.status_code == 200
+
+
+def test_unbegrenzte_party_bleibt_im_deck_mit_gaesten(api_client, auth_headers_factory):
+    host_headers, _host, _ = auth_headers_factory(email="unlimitedhost@example.com")
+    guest1_headers, _guest1, _ = auth_headers_factory(email="unlimitedguest1@example.com")
+    guest2_headers, _guest2, _ = auth_headers_factory(email="unlimitedguest2@example.com")
+    party_id = _make_party(api_client, host_headers)
+    _publish(api_client, host_headers, party_id, max_guests=0)
+
+    api_client.post(f"/api/v1/discover/{party_id}/action", json={"action": "going"}, headers=guest1_headers)
+
+    deck_resp = api_client.get("/api/v1/discover/deck", headers=guest2_headers)
+    cards = deck_resp.json()["cards"]
+    assert any(c["party_id"] == party_id for c in cards)
