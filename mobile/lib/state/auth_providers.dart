@@ -461,6 +461,31 @@ class DiscoverActionNotifier extends AsyncNotifier<DiscoverActionResult?> {
 final discoverActionProvider =
     AsyncNotifierProvider<DiscoverActionNotifier, DiscoverActionResult?>(DiscoverActionNotifier.new);
 
+/// Undo eines Discover-Swipes als einmalige Aktion - aufgerufen vom
+/// "Undo"-Button auf `PartyDetailScreen` (kein Rückwärts-Swipe im Deck,
+/// siehe Plan). Lädt `myPartiesProvider` neu, da die Mitgliedschaft danach
+/// weg ist.
+class UndoDiscoverActionNotifier extends AsyncNotifier<void> {
+  @override
+  Future<void> build() async {}
+
+  Future<void> undo(String partyId) async {
+    final token = ref.read(requiredAccessTokenProvider);
+    state = const AsyncLoading();
+    try {
+      await ref.read(apiClientProvider).undoDiscoverAction(token, onRefresh(ref), partyId);
+      state = const AsyncData(null);
+      ref.invalidate(myPartiesProvider);
+    } on ApiException catch (e) {
+      state = AsyncError(e, StackTrace.current);
+      rethrow;
+    }
+  }
+}
+
+final undoDiscoverActionProvider =
+    AsyncNotifierProvider<UndoDiscoverActionNotifier, void>(UndoDiscoverActionNotifier.new);
+
 /// Publish/Unpublish als einmalige Aktion, lädt `partyDetailProvider` danach neu.
 class PublishPartyNotifier extends AsyncNotifier<Party?> {
   @override

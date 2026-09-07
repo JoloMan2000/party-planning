@@ -375,3 +375,122 @@ def test_unbegrenzte_party_bleibt_im_deck_mit_gaesten(api_client, auth_headers_f
     deck_resp = api_client.get("/api/v1/discover/deck", headers=guest2_headers)
     cards = deck_resp.json()["cards"]
     assert any(c["party_id"] == party_id for c in cards)
+
+
+def test_undo_going_entfernt_mitgliedschaft_und_gibt_party_frei(api_client, auth_headers_factory):
+    host_headers, _host, _ = auth_headers_factory(email="undogoinghost@example.com")
+    guest_headers, guest, _ = auth_headers_factory(email="undogoingguest@example.com")
+    party_id = _make_party(api_client, host_headers)
+    _publish(api_client, host_headers, party_id)
+    api_client.post(f"/api/v1/discover/{party_id}/action", json={"action": "going"}, headers=guest_headers)
+
+    resp = api_client.delete(f"/api/v1/discover/{party_id}/action", headers=guest_headers)
+    assert resp.status_code == 204
+
+    guests_resp = api_client.get(f"/api/v1/parties/{party_id}/guests", headers=host_headers)
+    assert all(g["user_id"] != guest["id"] for g in guests_resp.json()["guests"])
+
+    deck_resp = api_client.get("/api/v1/discover/deck", headers=guest_headers)
+    cards = deck_resp.json()["cards"]
+    assert any(c["party_id"] == party_id for c in cards)
+
+
+def test_undo_maybe_entfernt_mitgliedschaft(api_client, auth_headers_factory):
+    host_headers, _host, _ = auth_headers_factory(email="undomaybehost@example.com")
+    guest_headers, guest, _ = auth_headers_factory(email="undomaybeguest@example.com")
+    party_id = _make_party(api_client, host_headers)
+    _publish(api_client, host_headers, party_id)
+    api_client.post(f"/api/v1/discover/{party_id}/action", json={"action": "maybe"}, headers=guest_headers)
+
+    resp = api_client.delete(f"/api/v1/discover/{party_id}/action", headers=guest_headers)
+    assert resp.status_code == 204
+
+    guests_resp = api_client.get(f"/api/v1/parties/{party_id}/guests", headers=host_headers)
+    assert all(g["user_id"] != guest["id"] for g in guests_resp.json()["guests"])
+
+
+def test_undo_nach_not_interested_gibt_404(api_client, auth_headers_factory):
+    host_headers, _host, _ = auth_headers_factory(email="undonotinthost@example.com")
+    guest_headers, _guest, _ = auth_headers_factory(email="undonotintguest@example.com")
+    party_id = _make_party(api_client, host_headers)
+    _publish(api_client, host_headers, party_id)
+    api_client.post(f"/api/v1/discover/{party_id}/action", json={"action": "not_interested"}, headers=guest_headers)
+
+    resp = api_client.delete(f"/api/v1/discover/{party_id}/action", headers=guest_headers)
+    assert resp.status_code == 404
+
+
+def test_undo_ohne_vorherigen_swipe_gibt_404(api_client, auth_headers_factory):
+    host_headers, _host, _ = auth_headers_factory(email="undononeverhost@example.com")
+    guest_headers, _guest, _ = auth_headers_factory(email="undoneverguest@example.com")
+    party_id = _make_party(api_client, host_headers)
+    _publish(api_client, host_headers, party_id)
+
+    resp = api_client.delete(f"/api/v1/discover/{party_id}/action", headers=guest_headers)
+    assert resp.status_code == 404
+
+
+def test_undo_zweimal_hintereinander_zweiter_aufruf_gibt_404(api_client, auth_headers_factory):
+    host_headers, _host, _ = auth_headers_factory(email="undotwicehost@example.com")
+    guest_headers, _guest, _ = auth_headers_factory(email="undotwiceguest@example.com")
+    party_id = _make_party(api_client, host_headers)
+    _publish(api_client, host_headers, party_id)
+    api_client.post(f"/api/v1/discover/{party_id}/action", json={"action": "going"}, headers=guest_headers)
+
+    first = api_client.delete(f"/api/v1/discover/{party_id}/action", headers=guest_headers)
+    assert first.status_code == 204
+    second = api_client.delete(f"/api/v1/discover/{party_id}/action", headers=guest_headers)
+    assert second.status_code == 404
+
+
+def test_undo_ohne_auth_gibt_401(api_client, auth_headers_factory):
+    host_headers, _host, _ = auth_headers_factory(email="undonoauthhost@example.com")
+    party_id = _make_party(api_client, host_headers)
+    _publish(api_client, host_headers, party_id)
+
+    resp = api_client.delete(f"/api/v1/discover/{party_id}/action")
+    assert resp.status_code == 401
+
+
+def test_undo_gibt_slot_auf_voller_party_frei(api_client, auth_headers_factory):
+    host_headers, _host, _ = auth_headers_factory(email="undofreeshost@example.com")
+    guest1_headers, _guest1, _ = auth_headers_factory(email="undofreesguest1@example.com")
+    guest2_headers, _guest2, _ = auth_headers_factory(email="undofreesguest2@example.com")
+    party_id = _make_party(api_client, host_headers)
+    _publish(api_client, host_headers, party_id, max_guests=1)
+    api_client.post(f"/api/v1/discover/{party_id}/action", json={"action": "going"}, headers=guest1_headers)
+
+    blocked = api_client.post(
+        f"/api/v1/discover/{party_id}/action", json={"action": "going"}, headers=guest2_headers
+    )
+    assert blocked.status_code == 409
+
+    undo_resp = api_client.delete(f"/api/v1/discover/{party_id}/action", headers=guest1_headers)
+    assert undo_resp.status_code == 204
+
+    allowed = api_client.post(
+        f"/api/v1/discover/{party_id}/action", json={"action": "going"}, headers=guest2_headers
+    )
+    assert allowed.status_code == 200
+
+
+def test_my_discover_action_auf_party_und_me_parties(api_client, auth_headers_factory):
+    host_headers, _host, _ = auth_headers_factory(email="mydiscoveractionhost@example.com")
+    guest_headers, _guest, _ = auth_headers_factory(email="mydiscoveractionguest@example.com")
+    party_id = _make_party(api_client, host_headers)
+    _publish(api_client, host_headers, party_id)
+
+    host_get_resp = api_client.get(f"/api/v1/parties/{party_id}", headers=host_headers)
+    assert host_get_resp.json()["my_discover_action"] is None
+
+    api_client.post(f"/api/v1/discover/{party_id}/action", json={"action": "going"}, headers=guest_headers)
+
+    guest_get_resp = api_client.get(f"/api/v1/parties/{party_id}", headers=guest_headers)
+    assert guest_get_resp.json()["my_discover_action"] == "going"
+    my_parties_resp = api_client.get("/api/v1/me/parties", headers=guest_headers)
+    assert next(p for p in my_parties_resp.json() if p["id"] == party_id)["my_discover_action"] == "going"
+
+    api_client.delete(f"/api/v1/discover/{party_id}/action", headers=guest_headers)
+    # Membership ist weg -> guest hat keinen Zugriff mehr auf /parties/{id}
+    after_undo_resp = api_client.get(f"/api/v1/parties/{party_id}", headers=guest_headers)
+    assert after_undo_resp.status_code == 403

@@ -869,6 +869,24 @@ class ApiClient {
     return DiscoverActionResult.fromJson(_decodeObject(resp));
   }
 
+  /// Macht einen früheren `going`/`maybe`-Swipe rückgängig - bewusst kein
+  /// Rückwärts-Swipe im Deck, sondern von einem "Undo"-Button im
+  /// `PartyDetailScreen` aufgerufen (siehe Plan).
+  Future<void> undoDiscoverAction(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String partyId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.delete(_uri('/api/v1/discover/$partyId/action'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    if (resp.statusCode >= 400) {
+      throw ApiException(resp.statusCode, resp.body);
+    }
+  }
+
   Future<Party> publishParty(
     String accessToken,
     Future<String?> Function() onRefresh,

@@ -14,6 +14,7 @@ class Party {
   final List<String> interestTags;
   final int maxGuests;
   final bool hostIsVerified;
+  final String? myDiscoverAction;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -30,6 +31,7 @@ class Party {
     this.interestTags = const [],
     this.maxGuests = 0,
     this.hostIsVerified = false,
+    this.myDiscoverAction,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -47,6 +49,7 @@ class Party {
         interestTags: (json['interest_tags'] as List?)?.cast<String>() ?? const [],
         maxGuests: (json['max_guests'] as int?) ?? 0,
         hostIsVerified: (json['host_is_verified'] as bool?) ?? false,
+        myDiscoverAction: json['my_discover_action'] as String?,
         createdAt: DateTime.parse(json['created_at'] as String),
         updatedAt: DateTime.parse(json['updated_at'] as String),
       );

@@ -10,7 +10,7 @@ import accounts.discover_storage as discover_storage
 import accounts.invitation_storage as invitation_storage
 import accounts.party_storage as party_storage
 import accounts.user_storage as user_storage
-from accounts.domain import User
+from accounts.domain import DiscoverAction, User
 from backend.app.core.auth import get_current_user
 from backend.app.core.deps import get_db_path, get_media_dir
 from backend.app.schemas.accounts import InvitationPublic, PartyPublic
@@ -38,6 +38,12 @@ def get_my_parties(
     for party, _membership in parties:
         publication = discover_storage.get_publication(db_path, party.id)
         host = user_storage.get_user_by_id(db_path, party.host_user_id)
+        discover_action = discover_storage.get_discover_action(db_path, current_user.id, party.id)
+        my_discover_action = (
+            discover_action.action.value
+            if discover_action is not None and discover_action.action in (DiscoverAction.GOING, DiscoverAction.MAYBE)
+            else None
+        )
         result.append(
             PartyPublic(
                 id=party.id, host_user_id=party.host_user_id, name=party.name, description=party.description,
@@ -47,6 +53,7 @@ def get_my_parties(
                 interest_tags=publication.interest_tags if publication is not None else [],
                 max_guests=publication.max_guests if publication is not None else 0,
                 host_is_verified=host.is_verified if host is not None else False,
+                my_discover_action=my_discover_action,
                 created_at=party.created_at, updated_at=party.updated_at,
             )
         )

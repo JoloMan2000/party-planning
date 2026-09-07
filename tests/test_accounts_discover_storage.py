@@ -144,3 +144,29 @@ def test_is_party_full_tentative_zaehlt_nicht(db_path, guest, party):
 
 def test_is_party_full_ohne_publikation_ist_false(db_path, party):
     assert discover_storage.is_party_full(db_path, party.id) is False
+
+
+def test_delete_discover_action_entfernt_die_zeile(db_path, guest, party):
+    discover_storage.publish_party(db_path, party.id)
+    discover_storage.upsert_discover_action(db_path, uuid.uuid4().hex, guest.id, party.id, DiscoverAction.GOING)
+    assert discover_storage.get_discover_action(db_path, guest.id, party.id) is not None
+
+    discover_storage.delete_discover_action(db_path, guest.id, party.id)
+
+    assert discover_storage.get_discover_action(db_path, guest.id, party.id) is None
+
+
+def test_delete_discover_action_ohne_bestehenden_eintrag_ist_no_op(db_path, guest, party):
+    discover_storage.delete_discover_action(db_path, guest.id, party.id)  # darf nicht raisen
+
+
+def test_delete_discover_action_macht_party_wieder_kandidat(db_path, guest, party):
+    discover_storage.publish_party(db_path, party.id)
+    party_storage.upsert_membership(db_path, party.id, guest.id, PartyRole.GUEST, RsvpStatus.ACCEPTED)
+    discover_storage.upsert_discover_action(db_path, uuid.uuid4().hex, guest.id, party.id, DiscoverAction.GOING)
+    assert discover_storage.list_candidate_publications(db_path, guest.id) == []
+
+    party_storage.remove_membership(db_path, party.id, guest.id)
+    discover_storage.delete_discover_action(db_path, guest.id, party.id)
+
+    assert any(p.id == party.id for p, _pe in discover_storage.list_candidate_publications(db_path, guest.id))

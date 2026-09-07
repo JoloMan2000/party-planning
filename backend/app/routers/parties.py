@@ -12,7 +12,7 @@ import accounts.invitation_storage as invitation_storage
 import accounts.notification_storage as notification_storage
 import accounts.party_storage as party_storage
 import accounts.user_storage as user_storage
-from accounts.domain import PartyRole, User
+from accounts.domain import DiscoverAction, PartyRole, User
 from backend.app.core.auth import get_current_user, require_party_role
 from backend.app.core.deps import get_db_path, get_media_dir
 from backend.app.schemas.accounts import (
@@ -31,7 +31,9 @@ router = APIRouter(prefix="/api/v1/parties", tags=["parties"])
 _MAX_COVER_IMAGE_BYTES = 5 * 1024 * 1024  # 5 MB
 
 
-def _to_party_public(party, publication=None, host_is_verified: bool = False) -> PartyPublic:
+def _to_party_public(
+    party, publication=None, host_is_verified: bool = False, my_discover_action: str | None = None
+) -> PartyPublic:
     return PartyPublic(
         id=party.id, host_user_id=party.host_user_id, name=party.name, description=party.description,
         starts_at=party.starts_at, location=party.location, cover_image=party.cover_image,
@@ -40,6 +42,7 @@ def _to_party_public(party, publication=None, host_is_verified: bool = False) ->
         interest_tags=publication.interest_tags if publication is not None else [],
         max_guests=publication.max_guests if publication is not None else 0,
         host_is_verified=host_is_verified,
+        my_discover_action=my_discover_action,
         created_at=party.created_at, updated_at=party.updated_at,
     )
 
@@ -47,6 +50,13 @@ def _to_party_public(party, publication=None, host_is_verified: bool = False) ->
 def _host_is_verified(db_path: Path, host_user_id: str) -> bool:
     host = user_storage.get_user_by_id(db_path, host_user_id)
     return host.is_verified if host is not None else False
+
+
+def _my_discover_action(db_path: Path, user_id: str, party_id: str) -> str | None:
+    record = discover_storage.get_discover_action(db_path, user_id, party_id)
+    if record is not None and record.action in (DiscoverAction.GOING, DiscoverAction.MAYBE):
+        return record.action.value
+    return None
 
 
 @router.post("", response_model=PartyPublic, status_code=status.HTTP_201_CREATED)
@@ -63,6 +73,7 @@ def create_party(
 @router.get("/{party_id}", response_model=PartyPublic)
 def get_party(
     party_id: str,
+    current_user: User = Depends(get_current_user),
     db_path: Path = Depends(get_db_path),
     _membership=Depends(require_party_role({PartyRole.HOST, PartyRole.CO_HOST, PartyRole.GUEST})),
 ) -> PartyPublic:
@@ -70,7 +81,10 @@ def get_party(
     if party is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Party nicht gefunden.")
     return _to_party_public(
-        party, discover_storage.get_publication(db_path, party_id), _host_is_verified(db_path, party.host_user_id)
+        party,
+        discover_storage.get_publication(db_path, party_id),
+        _host_is_verified(db_path, party.host_user_id),
+        _my_discover_action(db_path, current_user.id, party_id),
     )
 
 

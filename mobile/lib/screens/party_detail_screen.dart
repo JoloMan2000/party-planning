@@ -50,6 +50,7 @@ class PartyDetailScreen extends ConsumerWidget {
             children: [
               _PartyHeader(party: party),
               const SizedBox(height: 20),
+              _UndoDiscoverJoinSection(party: party),
               _PublishToDiscoverSection(party: party),
               const SizedBox(height: 20),
               _GuestsSection(partyId: partyId),
@@ -58,6 +59,61 @@ class PartyDetailScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+/// "Undo"-Button für einen früheren Discover-Swipe (`going`/`maybe`) -
+/// bewusst KEIN Rückwärts-Swipe im Deck, sondern ein expliziter Button im
+/// Party-Detail-Screen (siehe Plan). Erscheint nie für den Host/Co-Host
+/// oder für persönlich eingeladene Gäste, da nur ein Discover-Join
+/// `party.myDiscoverAction` setzt.
+class _UndoDiscoverJoinSection extends ConsumerWidget {
+  final Party party;
+  const _UndoDiscoverJoinSection({required this.party});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (party.myDiscoverAction == null) return const SizedBox.shrink();
+    final undoState = ref.watch(undoDiscoverActionProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.undo),
+            title: const Text('Joined via Discover'),
+            subtitle: Text('You are ${party.myDiscoverAction} for this party.'),
+            trailing: TextButton(
+              onPressed: undoState.isLoading ? null : () => _confirmAndUndo(context, ref),
+              child: const Text('Undo'),
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
+  Future<void> _confirmAndUndo(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Leave this party?'),
+        content: const Text('You joined this party via Discover. Undoing will remove you from it.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Leave')),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(undoDiscoverActionProvider.notifier).undo(party.id);
+      ref.read(selectedPartyIdProvider.notifier).state = null; // zurück zur Liste - Membership ist weg
+    } on ApiException catch (_) {
+      messenger.showSnackBar(const SnackBar(content: Text('Failed to undo - please try again.')));
+    }
   }
 }
 

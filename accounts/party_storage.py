@@ -179,6 +179,17 @@ def upsert_membership(
     return get_membership(db_path, party_id, user_id)
 
 
+def remove_membership(db_path: str | Path, party_id: str, user_id: str) -> None:
+    """Entfernt eine Mitgliedschaft (= Party verlassen) - aktuell nur für
+    den Discover-Undo-Flow genutzt (``discover.py::undo_discover_action``),
+    kein anderer 'Party verlassen'-Weg existiert bislang in der App."""
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            "DELETE FROM party_memberships WHERE party_id = ? AND user_id = ?",
+            (party_id, user_id),
+        )
+
+
 def list_memberships_for_party(db_path: str | Path, party_id: str) -> list[PartyMembership]:
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row

@@ -32,6 +32,7 @@ class PartyPublic(BaseModel):
     interest_tags: list[str] = []
     max_guests: int = 0
     host_is_verified: bool = False
+    my_discover_action: str | None = None
     created_at: datetime
     updated_at: datetime
 

@@ -51,6 +51,25 @@ def test_create_party_legt_atomisch_host_membership_an(db_path):
     assert membership.rsvp_status == RsvpStatus.ACCEPTED
 
 
+def test_remove_membership_entfernt_die_zeile(db_path):
+    host = user_storage.create_user(db_path, uuid.uuid4().hex, "host3@example.com", "hash", "Host")
+    guest = user_storage.create_user(db_path, uuid.uuid4().hex, "guest3@example.com", "hash", "Guest")
+    party = party_storage.create_party(db_path, uuid.uuid4().hex, host.id, "Party")
+    party_storage.upsert_membership(db_path, party.id, guest.id, PartyRole.GUEST, RsvpStatus.ACCEPTED)
+    assert party_storage.get_membership(db_path, party.id, guest.id) is not None
+
+    party_storage.remove_membership(db_path, party.id, guest.id)
+
+    assert party_storage.get_membership(db_path, party.id, guest.id) is None
+
+
+def test_remove_membership_ohne_bestehende_mitgliedschaft_ist_no_op(db_path):
+    host = user_storage.create_user(db_path, uuid.uuid4().hex, "host4@example.com", "hash", "Host")
+    party = party_storage.create_party(db_path, uuid.uuid4().hex, host.id, "Party")
+
+    party_storage.remove_membership(db_path, party.id, "unbekannter-user")  # darf nicht raisen
+
+
 def test_create_invitation_legt_atomisch_guest_membership_an(db_path):
     host = user_storage.create_user(db_path, uuid.uuid4().hex, "host2@example.com", "hash", "Host")
     guest = user_storage.create_user(db_path, uuid.uuid4().hex, "guest2@example.com", "hash", "Guest")

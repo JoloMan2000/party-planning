@@ -168,6 +168,17 @@ def get_discover_action(db_path: str | Path, user_id: str, party_id: str) -> Dis
     return _row_to_discover_action(row) if row is not None else None
 
 
+def delete_discover_action(db_path: str | Path, user_id: str, party_id: str) -> None:
+    """Löscht den Swipe-Datensatz - Teil des Discover-Undo-Flows
+    (``discover.py::undo_discover_action``), damit die Party wieder in
+    ``list_candidate_publications`` auftauchen kann (siehe dortige Filter)."""
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            "DELETE FROM discover_actions WHERE user_id = ? AND party_id = ?",
+            (user_id, party_id),
+        )
+
+
 def list_candidate_publications(db_path: str | Path, user_id: str) -> list[tuple[Party, PublicEvent]]:
     """Alle für [user_id] noch swipbaren veröffentlichten Parties - EIN
     Query kodiert drei Hard-Filter gleichzeitig: nicht die eigene Party,
@@ -319,5 +330,9 @@ if __name__ == "__main__":
         assert all(p.id != party3.id for p, _pe in list_candidate_publications(db_path, guest2.id))
         # max_guests=0 bleibt unbegrenzt, auch mit Gästen.
         assert is_party_full(db_path, party2.id) is False
+
+        # Undo: Discover-Action löschen -> Party taucht wieder im Deck auf.
+        delete_discover_action(db_path, guest.id, party3.id)
+        assert get_discover_action(db_path, guest.id, party3.id) is None
 
         print("accounts/discover_storage.py sanity check OK.")

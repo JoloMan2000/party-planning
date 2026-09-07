@@ -89,3 +89,26 @@ def act_on_discover_card(
         membership_role=membership.role.value if membership is not None else None,
         membership_rsvp_status=membership.rsvp_status.value if membership is not None else None,
     )
+
+
+@router.delete("/{party_id}/action", status_code=status.HTTP_204_NO_CONTENT)
+def undo_discover_action(
+    party_id: str,
+    current_user: User = Depends(get_current_user),
+    db_path: Path = Depends(get_db_path),
+) -> None:
+    """Undo eines früheren Discover-Swipes ('going'/'maybe') - bewusst KEIN
+    Rückwärts-Swipe im Deck (Produktentscheidung), sondern ein expliziter
+    Undo-Button im Party-Detail-Screen (siehe Plan). Entfernt sowohl die
+    Mitgliedschaft (= Party verlassen) als auch den discover_actions-
+    Eintrag, damit die Party bei einem künftigen Deck-Fetch wieder auftauchen
+    kann (siehe ``list_candidate_publications`` - beide Filter müssen
+    geräumt werden)."""
+    record = discover_storage.get_discover_action(db_path, current_user.id, party_id)
+    if record is None or record.action not in (DiscoverAction.GOING, DiscoverAction.MAYBE):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No Discover join found to undo for this party.",
+        )
+    party_storage.remove_membership(db_path, party_id, current_user.id)
+    discover_storage.delete_discover_action(db_path, current_user.id, party_id)
