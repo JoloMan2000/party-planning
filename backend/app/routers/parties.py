@@ -121,7 +121,7 @@ def publish_party(
         )
     discover_storage.publish_party(
         db_path, party_id, event_type=payload.event_type, interest_tags=payload.interest_tags,
-        max_guests=payload.max_guests,
+        max_guests=payload.max_guests, is_major_event=payload.is_major_event,
     )
     party = party_storage.get_party(db_path, party_id)
     return _to_party_public(

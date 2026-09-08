@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../api/api_config.dart';
 import '../models/invitation.dart';
 import '../state/auth_providers.dart';
+import '../state/geo_providers.dart';
 import '../widgets/image_source_picker.dart';
 import 'discover_screen.dart';
 import 'invitation_list_screen.dart';
@@ -42,6 +43,12 @@ class HomeShell extends ConsumerWidget {
           orElse: () => 'Party App',
         )),
         actions: [
+          if (selectedTab == 0)
+            IconButton(
+              icon: const Icon(Icons.tune),
+              tooltip: 'Discovery preferences',
+              onPressed: () => ref.read(showDiscoveryPreferencesProvider.notifier).state = true,
+            ),
           const _ProfileAvatarButton(),
           const _NotificationBellButton(),
           IconButton(

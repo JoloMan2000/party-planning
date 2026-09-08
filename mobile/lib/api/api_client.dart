@@ -13,6 +13,7 @@ import '../models/derived_party_context.dart';
 import '../models/discover_action_result.dart';
 import '../models/discover_card.dart';
 import '../models/discovery_catalog_item.dart';
+import '../models/discovery_preferences.dart';
 import '../models/event_type.dart';
 import '../models/guest_response.dart';
 import '../models/invitation.dart';
@@ -20,6 +21,7 @@ import '../models/language_option.dart';
 import '../models/music_admin_settings.dart';
 import '../models/music_planning_result.dart';
 import '../models/party.dart';
+import '../geo/geo_models.dart';
 import '../models/party_context.dart';
 import '../models/party_context_override.dart';
 import '../models/party_demand_result.dart';
@@ -1021,6 +1023,168 @@ class ApiClient {
     return _decodeList(resp)
         .map((e) => DiscoveryCatalogItem.fromJson((e as Map).cast<String, dynamic>()))
         .toList();
+  }
+
+  // ---------------------------------------------------------------------
+  // Geo Platform - Ortssuche (Suggest/Retrieve/Reverse), strukturierte
+  // Party-Location (Privacy-Tiers) und Discovery-Radius-Einstellungen
+  // (`geo/`, `backend/app/routers/geo.py`, `party_locations.py`,
+  // `discovery_preferences.py`).
+  // ---------------------------------------------------------------------
+
+  Future<List<GeoSuggestion>> suggestPlaces(
+    String accessToken,
+    Future<String?> Function() onRefresh, {
+    required String query,
+    String? sessionId,
+    double? biasLat,
+    double? biasLon,
+    String? biasCountry,
+  }) async {
+    final params = <String, String>{'query': query};
+    if (sessionId != null) params['session_id'] = sessionId;
+    if (biasLat != null) params['bias_lat'] = biasLat.toString();
+    if (biasLon != null) params['bias_lon'] = biasLon.toString();
+    if (biasCountry != null) params['bias_country'] = biasCountry;
+
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/geo/suggest', params), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    final body = _decodeObject(resp);
+    return (body['suggestions'] as List)
+        .map((e) => GeoSuggestion.fromJson((e as Map).cast<String, dynamic>()))
+        .toList();
+  }
+
+  Future<GeoPlace?> retrievePlace(
+    String accessToken,
+    Future<String?> Function() onRefresh, {
+    required String providerPlaceId,
+    String? sessionId,
+  }) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.post(
+        _uri('/api/v1/geo/retrieve'),
+        headers: _authHeaders(token),
+        body: jsonEncode({'provider_place_id': providerPlaceId, 'session_id': sessionId}),
+      ),
+      accessToken,
+      onRefresh,
+    );
+    if (resp.statusCode >= 400) throw ApiException(resp.statusCode, resp.body);
+    final decoded = jsonDecode(utf8.decode(resp.bodyBytes));
+    return decoded == null ? null : GeoPlace.fromJson((decoded as Map).cast<String, dynamic>());
+  }
+
+  Future<GeoPlace?> reverseGeocode(
+    String accessToken,
+    Future<String?> Function() onRefresh, {
+    required double latitude,
+    required double longitude,
+  }) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.post(
+        _uri('/api/v1/geo/reverse'),
+        headers: _authHeaders(token),
+        body: jsonEncode({'latitude': latitude, 'longitude': longitude}),
+      ),
+      accessToken,
+      onRefresh,
+    );
+    if (resp.statusCode >= 400) throw ApiException(resp.statusCode, resp.body);
+    final decoded = jsonDecode(utf8.decode(resp.bodyBytes));
+    return decoded == null ? null : GeoPlace.fromJson((decoded as Map).cast<String, dynamic>());
+  }
+
+  /// Setzt/aktualisiert die strukturierte Location einer Party (nur HOST/
+  /// CO_HOST). `address`/`point` bleiben `null`, wenn der Host nur Freitext
+  /// eingegeben und nie einen Vorschlag ausgewählt hat.
+  Future<PartyLocationView> setPartyLocation(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String partyId, {
+    String? placeName,
+    GeoAddress? address,
+    GeoPoint? point,
+    String precision = 'approximate',
+    String? provider,
+    String? providerPlaceId,
+    String publicLocationLabel = '',
+    String visibilityPolicy = 'exact_after_accept',
+    String? arrivalInstructions,
+    bool manuallyAdjusted = false,
+    String source = 'organizer_entry',
+  }) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.put(
+        _uri('/api/v1/parties/$partyId/location'),
+        headers: _authHeaders(token),
+        body: jsonEncode({
+          'place_name': placeName,
+          'address': address?.toJson(),
+          'point': point?.toJson(),
+          'precision': precision,
+          'provider': provider,
+          'provider_place_id': providerPlaceId,
+          'public_location_label': publicLocationLabel,
+          'visibility_policy': visibilityPolicy,
+          'arrival_instructions': arrivalInstructions,
+          'manually_adjusted': manuallyAdjusted,
+          'source': source,
+        }),
+      ),
+      accessToken,
+      onRefresh,
+    );
+    return PartyLocationView.fromJson(_decodeObject(resp));
+  }
+
+  /// `null`, wenn für diese Party noch keine strukturierte Location gesetzt
+  /// wurde (Backend liefert dafür 404 - kein Fehlerfall, der Client fällt auf
+  /// das bestehende `Party.location`-Freitextfeld zurück).
+  Future<PartyLocationView?> getPartyLocation(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String partyId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/parties/$partyId/location'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    if (resp.statusCode == 404) return null;
+    return PartyLocationView.fromJson(_decodeObject(resp));
+  }
+
+  Future<DiscoveryPreferences> getDiscoveryPreferences(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/me/discovery-preferences'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return DiscoveryPreferences.fromJson(_decodeObject(resp));
+  }
+
+  Future<DiscoveryPreferences> updateDiscoveryPreferences(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    DiscoveryPreferences preferences,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.put(
+        _uri('/api/v1/me/discovery-preferences'),
+        headers: _authHeaders(token),
+        body: jsonEncode(preferences.toJson()),
+      ),
+      accessToken,
+      onRefresh,
+    );
+    return DiscoveryPreferences.fromJson(_decodeObject(resp));
   }
 
   void close() => _http.close();

@@ -33,6 +33,10 @@ class Settings(BaseSettings):
     spotify_client_secret: str = ""
     spotify_redirect_uri: str = "http://localhost:8000/api/v1/me/music-provider/spotify/callback"
     spotify_token_encryption_key: str = "Z2gwSwfJWFGkb502WXm7rf21GzM3ZhggiMtT_S1CsOI="
+    # Geo Platform (siehe geo/providers.py::get_default_geo_search_provider) -
+    # optionales Feature, exakt wie spotify_client_id/-secret: ohne Key läuft
+    # alles mit dem kostenlosen Nominatim-Adapter (Zero-Config-Dev/Test).
+    google_places_api_key: str = ""
     smtp_host: str = "smtp.example.com"
     smtp_port: int = 587
     smtp_username: str = "placeholder@example.com"

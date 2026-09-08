@@ -23,6 +23,7 @@ import accounts.profile_storage as profile_storage
 import accounts.spotify_storage as spotify_storage
 import accounts.user_storage as user_storage
 import event_theme
+import geo.storage as geo_storage
 import music_engine.admin_settings as music_admin_settings
 import party_engine.response_storage as response_storage
 from backend.app.core.config import settings, warn_if_insecure_defaults
@@ -40,11 +41,13 @@ from backend.app.routers import (
     discover,
     discovery_catalogs,
     discovery_preferences,
+    geo as geo_router,
     guest,
     invitations,
     me,
     notifications,
     parties,
+    party_locations,
     profile,
     spotify_connect,
     translations,
@@ -91,6 +94,8 @@ for router in (
     discovery_catalogs.router,
     spotify_connect.router,
     discover.router,
+    geo_router.router,
+    party_locations.router,
 ):
     app.include_router(router)
 
@@ -129,6 +134,7 @@ def on_startup() -> None:
     spotify_storage.init_spotify_storage(db_path)
     init_catalog_curation(db_path)
     response_storage.init_db(db_path)
+    geo_storage.init_geo_storage(db_path)
 
     # WAL-Modus reduziert "database is locked"-Risiko bei parallelem
     # Schreibzugriff von Streamlit- und FastAPI-Prozess (Plan Schritt 2) -

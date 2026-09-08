@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 
+import '../geo/debounce.dart';
+import '../geo/geo_models.dart';
 import '../state/auth_providers.dart';
+import '../state/geo_providers.dart';
 
 // TODO(i18n): English-only strings for now, deliberately deferred per Phase-3
 // scope decision (translations live in the backend-served `translations.py`
@@ -20,15 +24,82 @@ class _CreatePartyScreenState extends ConsumerState<CreatePartyScreen> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
+  final _locationDebouncer = Debouncer();
   DateTime? _startsAt;
   String? _clientError;
+
+  // Autocomplete/current-location Ergebnis - nur gesetzt, wenn der Host
+  // tatsächlich eine Suggestion ausgewählt oder "Use current location"
+  // genutzt hat. Bleibt `null` bei reiner Freitext-Eingabe (Spec §97: eine
+  // down/leere Suche darf die Party-Erstellung nie blockieren - dann greift
+  // exakt das alte Verhalten, ein reiner String im `location`-Feld).
+  GeoPlace? _resolvedPlace;
+  bool _requestingCurrentLocation = false;
 
   @override
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
     _locationController.dispose();
+    _locationDebouncer.dispose();
     super.dispose();
+  }
+
+  void _onLocationChanged(String query) {
+    if (_resolvedPlace != null) setState(() => _resolvedPlace = null);
+    _locationDebouncer.run(() => ref.read(locationSearchProvider.notifier).suggest(query));
+  }
+
+  Future<void> _selectSuggestion(GeoSuggestion suggestion) async {
+    final place = await ref.read(locationSearchProvider.notifier).retrieve(suggestion.providerPlaceId);
+    if (!mounted) return;
+    ref.read(locationSearchProvider.notifier).clear();
+    setState(() {
+      _resolvedPlace = place;
+      _locationController.text = place?.name ?? suggestion.primaryText;
+    });
+  }
+
+  Future<void> _useCurrentLocation() async {
+    setState(() => _requestingCurrentLocation = true);
+    try {
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Location permission denied.')),
+          );
+        }
+        return;
+      }
+      final position = await Geolocator.getCurrentPosition();
+      final place = await ref
+          .read(locationSearchProvider.notifier)
+          .reverseGeocode(position.latitude, position.longitude);
+      if (!mounted) return;
+      if (place == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not resolve an address for your location.')),
+        );
+        return;
+      }
+      setState(() {
+        _resolvedPlace = place;
+        _locationController.text = place.name;
+      });
+    } catch (_) {
+      // Provider down/GPS aus/etc. - darf die Party-Erstellung nie blockieren.
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not determine current location.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _requestingCurrentLocation = false);
+    }
   }
 
   @override
@@ -76,11 +147,35 @@ class _CreatePartyScreenState extends ConsumerState<CreatePartyScreen> {
               TextField(
                 controller: _locationController,
                 maxLength: 300,
-                decoration: const InputDecoration(
-                  labelText: 'Location (optional)',
-                  border: OutlineInputBorder(),
+                onChanged: _onLocationChanged,
+                decoration: InputDecoration(
+                  labelText: 'Where is the party?',
+                  border: const OutlineInputBorder(),
+                  suffixIcon: _requestingCurrentLocation
+                      ? const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                      : IconButton(
+                          icon: const Icon(Icons.my_location),
+                          tooltip: 'Use current location',
+                          onPressed: _useCurrentLocation,
+                        ),
                 ),
               ),
+              _LocationSuggestions(onSelect: _selectSuggestion),
+              if (_resolvedPlace != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    _resolvedPlace!.address.formattedAddress,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
               const SizedBox(height: 12),
               OutlinedButton.icon(
                 onPressed: _pickStartsAt,
@@ -148,10 +243,48 @@ class _CreatePartyScreenState extends ConsumerState<CreatePartyScreen> {
             startsAt: _startsAt,
             location: _locationController.text.trim(),
           );
-      ref.read(selectedPartyIdProvider.notifier).state = party.id;
       ref.read(creatingPartyProvider.notifier).state = false;
+      if (_resolvedPlace != null) {
+        // Ein zweiter Schritt (Kartenvorschau/Sichtbarkeit/Ankunftshinweise)
+        // folgt noch - erst danach landet der Host in `PartyDetailScreen`
+        // (siehe `ConfirmPartyLocationScreen`).
+        ref.read(confirmingPartyLocationProvider.notifier).state = (partyId: party.id, place: _resolvedPlace);
+      } else {
+        // Reine Freitext-Eingabe (oder gar keine) - exakt das alte Verhalten.
+        ref.read(selectedPartyIdProvider.notifier).state = party.id;
+      }
     } catch (_) {
       // error already reflected via createPartyProvider's AsyncError state
     }
+  }
+}
+
+/// Dropdown mit Autocomplete-Vorschlägen unterhalb des Location-Suchfelds
+/// (Spec §10: primärer/sekundärer Text). Verschwindet automatisch, sobald
+/// die Liste leer ist (kein Suchtext, zu kurz, oder Provider down).
+class _LocationSuggestions extends ConsumerWidget {
+  final void Function(GeoSuggestion) onSelect;
+  const _LocationSuggestions({required this.onSelect});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final suggestionsAsync = ref.watch(locationSearchProvider);
+    final suggestions = suggestionsAsync.maybeWhen(data: (s) => s, orElse: () => const <GeoSuggestion>[]);
+    if (suggestions.isEmpty) return const SizedBox.shrink();
+
+    return Card(
+      margin: const EdgeInsets.only(top: 4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: suggestions
+            .map((s) => ListTile(
+                  dense: true,
+                  title: Text(s.primaryText),
+                  subtitle: s.secondaryText.isNotEmpty ? Text(s.secondaryText) : null,
+                  onTap: () => onSelect(s),
+                ))
+            .toList(),
+      ),
+    );
   }
 }

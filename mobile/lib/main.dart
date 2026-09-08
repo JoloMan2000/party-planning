@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'screens/admin_dashboard_screen.dart';
+import 'screens/confirm_party_location_screen.dart';
 import 'screens/create_party_screen.dart';
+import 'screens/discovery_preferences_screen.dart';
 import 'screens/edit_party_screen.dart';
 import 'screens/forgot_password_screen.dart';
 import 'screens/home_shell.dart';
@@ -19,6 +21,7 @@ import 'screens/signup_screen.dart';
 import 'screens/unlock_account_screen.dart';
 import 'screens/verify_email_screen.dart';
 import 'state/auth_providers.dart';
+import 'state/geo_providers.dart';
 import 'theme/party_theme.dart';
 
 void main() {
@@ -125,6 +128,8 @@ class _PartyAppState extends ConsumerState<PartyApp> {
       final selectedPartyId = ref.watch(selectedPartyIdProvider);
       final selectedInvitationId = ref.watch(selectedInvitationIdProvider);
       final creatingParty = ref.watch(creatingPartyProvider);
+      final confirmingPartyLocation = ref.watch(confirmingPartyLocationProvider);
+      final showDiscoveryPreferences = ref.watch(showDiscoveryPreferencesProvider);
 
       if (resetToken != null) {
         // Vor `tokens == null` geprüft - ein Reset-Link kann ankommen,
@@ -142,6 +147,13 @@ class _PartyAppState extends ConsumerState<PartyApp> {
                 : (showSignup ? const SignupScreen() : const LoginScreen()));
       } else if (showNotifications) {
         home = const NotificationsScreen();
+      } else if (showDiscoveryPreferences) {
+        home = const DiscoveryPreferencesScreen();
+      } else if (confirmingPartyLocation != null) {
+        home = ConfirmPartyLocationScreen(
+          partyId: confirmingPartyLocation.partyId,
+          initialPlace: confirmingPartyLocation.place,
+        );
       } else if (selectedPartyId != null) {
         home = PartyDetailScreen(partyId: selectedPartyId);
       } else if (selectedInvitationId != null) {

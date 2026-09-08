@@ -98,10 +98,11 @@ def test_get_discover_deck_liefert_score_pro_kandidat(db_path, guest, party):
     discover_storage.publish_party(db_path, party.id, event_type="club_event")
     deck = discover_storage.get_discover_deck(db_path, guest.id)
     assert len(deck) == 1
-    ranked_party, publication, score = deck[0]
+    ranked_party, publication, score, distance_km = deck[0]
     assert ranked_party.id == party.id
     assert publication.event_type == "club_event"
     assert 0.0 < score <= 1.0
+    assert distance_km is None  # keine Discovery-Koordinaten gesetzt
 
 
 def test_publish_party_speichert_und_aktualisiert_max_guests(db_path, party):

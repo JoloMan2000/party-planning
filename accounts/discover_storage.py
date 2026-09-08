@@ -20,11 +20,27 @@ from pathlib import Path
 
 from accounts.domain import DiscoverAction, DiscoverActionRecord, Party, PublicEvent
 from accounts.party_storage import _row_to_party
+from geo.distance import bounding_box, haversine_km
+from geo.domain import GeoPoint
+import geo.storage as geo_storage
+
+# Geo Platform (Spec §123-124): erweiterter Radius für als "Major Event"
+# markierte Parties, NUR wenn der User zusätzlich
+# ``allow_major_events_outside_radius`` gesetzt hat - überschreibt niemals
+# stillschweigend den vom User gewählten Standard-Radius.
+MAJOR_EVENT_RADIUS_KM = 100.0
 
 
 def init_discover_storage(db_path: str | Path) -> None:
     """Legt ``public_events``/``discover_actions`` an, falls nicht
-    vorhanden. Idempotent, sicher bei jedem App-Start aufrufbar."""
+    vorhanden. Idempotent, sicher bei jedem App-Start aufrufbar.
+
+    Initialisiert zusätzlich ``geo.storage`` (``party_locations``), da
+    ``list_candidate_publications`` seit der Geo Platform hart gegen diese
+    Tabelle joint (Spec §123-124) - jeder bestehende Aufrufer von
+    ``init_discover_storage`` (Tests inkl.) bekommt die Tabelle damit ohne
+    eigene Anpassung."""
+    geo_storage.init_geo_storage(db_path)
     with sqlite3.connect(db_path) as conn:
         conn.execute(
             """
@@ -44,6 +60,7 @@ def init_discover_storage(db_path: str | Path) -> None:
         existing_public_event_cols = {row[1] for row in conn.execute("PRAGMA table_info(public_events)")}
         public_event_migrations = {
             "max_guests": "ALTER TABLE public_events ADD COLUMN max_guests INTEGER NOT NULL DEFAULT 0",
+            "is_major_event": "ALTER TABLE public_events ADD COLUMN is_major_event INTEGER NOT NULL DEFAULT 0",
         }
         for column, ddl in public_event_migrations.items():
             if column not in existing_public_event_cols:
@@ -80,6 +97,7 @@ def _row_to_public_event(row: sqlite3.Row) -> PublicEvent:
         event_type=row["event_type"] or "",
         interest_tags=_decode_list(row["interest_tags"] or ""),
         max_guests=row["max_guests"],
+        is_major_event=bool(row["is_major_event"]) if "is_major_event" in row.keys() else False,
         published_at=datetime.fromisoformat(row["published_at"]),
     )
 
@@ -100,6 +118,7 @@ def publish_party(
     event_type: str = "",
     interest_tags: list[str] | None = None,
     max_guests: int = 0,
+    is_major_event: bool = False,
 ) -> PublicEvent:
     """Veröffentlicht (oder aktualisiert, falls bereits veröffentlicht) eine
     Party fürs Discover-Deck - Upsert per ``party_id``, damit erneutes
@@ -111,15 +130,16 @@ def publish_party(
     with sqlite3.connect(db_path) as conn:
         conn.execute(
             """
-            INSERT INTO public_events (id, party_id, event_type, interest_tags, max_guests, published_at)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO public_events (id, party_id, event_type, interest_tags, max_guests, is_major_event, published_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(party_id) DO UPDATE SET
                 event_type = excluded.event_type,
                 interest_tags = excluded.interest_tags,
                 max_guests = excluded.max_guests,
+                is_major_event = excluded.is_major_event,
                 published_at = excluded.published_at
             """,
-            (event_id, party_id, event_type, _encode_list(interest_tags or []), max_guests, now),
+            (event_id, party_id, event_type, _encode_list(interest_tags or []), max_guests, 1 if is_major_event else 0, now),
         )
     result = get_publication(db_path, party_id)
     assert result is not None
@@ -179,7 +199,14 @@ def delete_discover_action(db_path: str | Path, user_id: str, party_id: str) -> 
         )
 
 
-def list_candidate_publications(db_path: str | Path, user_id: str) -> list[tuple[Party, PublicEvent]]:
+def list_candidate_publications(
+    db_path: str | Path,
+    user_id: str,
+    *,
+    user_point: GeoPoint | None = None,
+    user_radius_km: float = 25.0,
+    allow_major_events_outside_radius: bool = False,
+) -> list[tuple[Party, PublicEvent]]:
     """Alle für [user_id] noch swipbaren veröffentlichten Parties - EIN
     Query kodiert drei Hard-Filter gleichzeitig: nicht die eigene Party,
     noch nicht Mitglied (deckt sowohl frühere Discover-Joins als auch
@@ -187,16 +214,40 @@ def list_candidate_publications(db_path: str | Path, user_id: str) -> list[tuple
     dadurch faktisch Vorrang, siehe Spec §58), noch nicht in irgendeine
     Richtung geswiped (auch 'going'/'maybe' - ein bereits akzeptiertes
     Event nochmal anzuzeigen wäre ohnehin nutzlos, da erneutes Beitreten
-    nicht möglich ist)."""
+    nicht möglich ist).
+
+    Geo Platform (Spec §123-124): ein VIERTER, bewusst BEDINGTER Hard-Filter -
+    nur aktiv, wenn ``user_point`` gesetzt ist (User hat Discovery-
+    Koordinaten). Fehlen sie, oder fehlt einer Kandidaten-Party die
+    strukturierte ``party_locations``-Koordinate, bleibt das Verhalten exakt
+    wie zuvor (nur das weiche ``_city_fit``-Signal im Ranking) - siehe Plan,
+    Backward-Compat-Regel. ``bounding_box`` ist NUR ein günstiges SQL-
+    Prefilter; die tatsächliche Radius-Entscheidung fällt danach in Python
+    per ``haversine_km`` (Spec §50)."""
+    bbox_clause = ""
+    bbox_params: tuple = ()
+    if user_point is not None:
+        prefilter_radius_km = max(user_radius_km, MAJOR_EVENT_RADIUS_KM if allow_major_events_outside_radius else 0.0)
+        lat_min, lat_max, lon_min, lon_max = bounding_box(user_point, prefilter_radius_km)
+        bbox_clause = """
+              AND (
+                  pl.latitude IS NULL OR pl.longitude IS NULL
+                  OR (pl.latitude BETWEEN ? AND ? AND pl.longitude BETWEEN ? AND ?)
+              )
+        """
+        bbox_params = (lat_min, lat_max, lon_min, lon_max)
+
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
         rows = conn.execute(
-            """
+            f"""
             SELECT p.*, pe.id AS public_event_id, pe.event_type AS pe_event_type,
                    pe.interest_tags AS pe_interest_tags, pe.max_guests AS pe_max_guests,
-                   pe.published_at AS pe_published_at
+                   pe.is_major_event AS pe_is_major_event, pe.published_at AS pe_published_at,
+                   pl.latitude AS pl_latitude, pl.longitude AS pl_longitude
             FROM parties p
             JOIN public_events pe ON pe.party_id = p.id
+            LEFT JOIN party_locations pl ON pl.party_id = p.id
             WHERE p.host_user_id != ?
               AND p.id NOT IN (SELECT party_id FROM party_memberships WHERE user_id = ?)
               AND p.id NOT IN (SELECT party_id FROM discover_actions WHERE user_id = ?)
@@ -207,9 +258,10 @@ def list_candidate_publications(db_path: str | Path, user_id: str) -> list[tuple
                       WHERE pm.party_id = p.id AND pm.role = 'guest' AND pm.rsvp_status = 'accepted'
                   ) < pe.max_guests
               )
+              {bbox_clause}
             ORDER BY pe.published_at DESC
             """,
-            (user_id, user_id, user_id),
+            (user_id, user_id, user_id, *bbox_params),
         ).fetchall()
     result = []
     for row in rows:
@@ -220,8 +272,18 @@ def list_candidate_publications(db_path: str | Path, user_id: str) -> list[tuple
             event_type=row["pe_event_type"] or "",
             interest_tags=_decode_list(row["pe_interest_tags"] or ""),
             max_guests=row["pe_max_guests"],
+            is_major_event=bool(row["pe_is_major_event"]),
             published_at=datetime.fromisoformat(row["pe_published_at"]),
         )
+        if user_point is not None and row["pl_latitude"] is not None and row["pl_longitude"] is not None:
+            candidate_point = GeoPoint(latitude=row["pl_latitude"], longitude=row["pl_longitude"])
+            effective_radius_km = (
+                MAJOR_EVENT_RADIUS_KM
+                if publication.is_major_event and allow_major_events_outside_radius
+                else user_radius_km
+            )
+            if haversine_km(user_point, candidate_point) > effective_radius_km:
+                continue
         result.append((party, publication))
     return result
 
@@ -243,14 +305,30 @@ def is_party_full(db_path: str | Path, party_id: str) -> bool:
     return accepted_count >= publication.max_guests
 
 
-def get_discover_deck(db_path: str | Path, user_id: str, limit: int = 30) -> list[tuple[Party, PublicEvent, float]]:
+def get_discover_deck(
+    db_path: str | Path, user_id: str, limit: int = 30
+) -> list[tuple[Party, PublicEvent, float, float | None]]:
     """Orchestriert Kandidaten-Auswahl + regelbasiertes Ranking (siehe
-    ``accounts/discover_ranking.py``) - liefert die Top [limit] Kandidaten."""
+    ``accounts/discover_ranking.py``) - liefert die Top [limit] Kandidaten
+    inkl. ``distance_km`` (``None``, wenn einer Seite Koordinaten fehlen -
+    Spec §83, nie eine vorgetäuschte Präzision)."""
     import accounts.discover_ranking as discover_ranking
     import accounts.discovery_storage as discovery_storage
 
-    candidates = list_candidate_publications(db_path, user_id)
     preferences = discovery_storage.get_discovery_preferences(db_path, user_id)
+    user_point = None
+    if preferences is not None and preferences.discovery_lat is not None and preferences.discovery_lon is not None:
+        user_point = GeoPoint(latitude=preferences.discovery_lat, longitude=preferences.discovery_lon)
+
+    candidates = list_candidate_publications(
+        db_path,
+        user_id,
+        user_point=user_point,
+        user_radius_km=preferences.discovery_radius_km if preferences is not None else 25.0,
+        allow_major_events_outside_radius=(
+            preferences.allow_major_events_outside_radius if preferences is not None else False
+        ),
+    )
     event_type_interests = {
         p.item_id for p in discovery_storage.get_event_interests(db_path, user_id, category="event_type")
     }
@@ -258,7 +336,16 @@ def get_discover_deck(db_path: str | Path, user_id: str, limit: int = 30) -> lis
         p.item_id for p in discovery_storage.get_event_interests(db_path, user_id, category="interest_tag")
     }
     ranked = discover_ranking.rank_candidates(candidates, preferences, event_type_interests, interest_tag_interests)
-    return ranked[:limit]
+
+    result = []
+    for party, publication, score in ranked[:limit]:
+        distance_km = None
+        if user_point is not None:
+            location = geo_storage.get_party_location(db_path, party.id)
+            if location is not None and location.point is not None:
+                distance_km = round(haversine_km(user_point, location.point), 1)
+        result.append((party, publication, score, distance_km))
+    return result
 
 
 if __name__ == "__main__":

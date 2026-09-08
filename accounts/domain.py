@@ -252,6 +252,11 @@ class PublicEvent:
     event_type: str = ""
     interest_tags: list[str] = field(default_factory=list)
     max_guests: int = 0
+    # Geo Platform (Spec §123-124): schaltet für Discover-Radius-Eligibility
+    # einen erweiterten Radius frei, WENN der User zusätzlich
+    # ``allow_major_events_outside_radius`` gesetzt hat (siehe
+    # ``accounts/discover_storage.py::MAJOR_EVENT_RADIUS_KM``).
+    is_major_event: bool = False
     published_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 

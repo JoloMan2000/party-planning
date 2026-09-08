@@ -28,7 +28,7 @@ def get_deck(
 ) -> DiscoverDeckResponse:
     ranked = discover_storage.get_discover_deck(db_path, current_user.id)
     cards = []
-    for party, publication, score in ranked:
+    for party, publication, score, distance_km in ranked:
         host = user_storage.get_user_by_id(db_path, party.host_user_id)
         cards.append(
             DiscoverCardPublic(
@@ -37,6 +37,7 @@ def get_deck(
                 event_type=publication.event_type, interest_tags=publication.interest_tags,
                 host_display_name=host.display_name if host is not None else "",
                 match_score=round(score, 3),
+                distance_km=distance_km,
             )
         )
     return DiscoverDeckResponse(cards=cards)

@@ -17,6 +17,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from backend.app.core.config import settings
+from geo.providers import GeoSearchProvider, get_default_geo_search_provider
 from music_engine.catalog import load_music_catalog
 from music_engine.domain import MusicCatalog, MusicOccasionProfile
 from music_engine.occasions import load_all_music_occasions
@@ -60,6 +61,14 @@ class SpotifyOAuthConfig:
     client_secret: str
     redirect_uri: str
     encryption_key: bytes
+
+
+@lru_cache(maxsize=1)
+def get_geo_search_provider() -> GeoSearchProvider:
+    """Ein Prozess-weiter Provider (analog ``get_catalog``) - wichtig für
+    ``NominatimGeoSearchProvider``, dessen Suggest->Retrieve-Cache sonst bei
+    jedem Request neu und leer wäre."""
+    return get_default_geo_search_provider(settings)
 
 
 def get_spotify_oauth_config() -> SpotifyOAuthConfig:

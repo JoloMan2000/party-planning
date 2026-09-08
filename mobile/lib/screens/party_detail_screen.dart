@@ -1,15 +1,21 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../api/api_client.dart';
 import '../api/api_config.dart';
+import '../geo/geo_models.dart';
 import '../models/party.dart';
 import '../models/party_guests_response.dart';
 import '../state/auth_providers.dart';
+import '../state/geo_providers.dart';
 import '../widgets/image_source_picker.dart';
 
 // TODO(i18n): English-only strings for now, deliberately deferred per Phase-3
@@ -154,10 +160,124 @@ class _PartyHeader extends ConsumerWidget {
               const SizedBox(height: 8),
               Text('Where: ${party.location}'),
             ],
+            _PartyLocationMapSection(partyId: party.id),
           ],
         ),
       ),
     );
+  }
+}
+
+/// Guest-Kartenvorschau (Spec §30-34): erscheint nur, wenn eine strukturierte
+/// Location existiert UND der aktuelle Nutzer laut Server exakte Koordinaten
+/// sehen darf (`visibility_level == "exact"`, bereits serverseitig
+/// privacy-gefiltert - approximate/kein Eintrag zeigt hier bewusst nichts
+/// Zusätzliches, das sichere Label steht schon oben in `Where: ...`).
+class _PartyLocationMapSection extends ConsumerWidget {
+  final String partyId;
+  const _PartyLocationMapSection({required this.partyId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locationAsync = ref.watch(partyLocationProvider(partyId));
+    return locationAsync.when(
+      loading: () => const SizedBox.shrink(),
+      // 404 (keine strukturierte Location) wird von `ApiClient.getPartyLocation`
+      // bereits zu `null` gemappt - ein echter Fehler hier soll den restlichen
+      // Party-Detail-Screen nicht kaputt machen, daher fail-soft statt Retry-UI.
+      error: (err, st) => const SizedBox.shrink(),
+      data: (view) {
+        if (view == null || !view.isExact || view.point == null) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: _ExactLocationMap(view: view),
+        );
+      },
+    );
+  }
+}
+
+class _ExactLocationMap extends StatelessWidget {
+  final PartyLocationView view;
+  const _ExactLocationMap({required this.view});
+
+  @override
+  Widget build(BuildContext context) {
+    // Map-Rendering-Fehler dürfen den restlichen Screen nie mitreißen (Spec
+    // §98) - bei einem synchronen Konstruktionsfehler fällt dieser Abschnitt
+    // auf reinen Text zurück statt den ganzen `PartyDetailScreen` abstürzen
+    // zu lassen.
+    try {
+      final point = view.point!;
+      final center = LatLng(point.latitude, point.longitude);
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (view.arrivalInstructions != null && view.arrivalInstructions!.isNotEmpty) ...[
+            Text('Arrival: ${view.arrivalInstructions}'),
+            const SizedBox(height: 8),
+          ],
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: SizedBox(
+              height: 200,
+              child: FlutterMap(
+                options: MapOptions(initialCenter: center, initialZoom: 15),
+                children: [
+                  TileLayer(
+                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    userAgentPackageName: 'com.partyplanning.mobile',
+                  ),
+                  MarkerLayer(markers: [
+                    Marker(
+                      point: center,
+                      width: 40,
+                      height: 40,
+                      child: const Icon(Icons.location_pin, size: 36, color: Colors.red),
+                    ),
+                  ]),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.map_outlined),
+                  label: const Text('Open in Maps'),
+                  onPressed: () => _openInMaps(point.latitude, point.longitude),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.copy),
+                  label: const Text('Copy Address'),
+                  onPressed: () => _copyAddress(context),
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    } catch (_) {
+      return Text(view.formattedAddress ?? view.displayLabel);
+    }
+  }
+
+  Future<void> _openInMaps(double latitude, double longitude) async {
+    final uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$latitude,$longitude');
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  Future<void> _copyAddress(BuildContext context) async {
+    final address = view.formattedAddress ?? view.displayLabel;
+    await Clipboard.setData(ClipboardData(text: address));
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Address copied.')));
+    }
   }
 }
 

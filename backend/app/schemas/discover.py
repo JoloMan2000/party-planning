@@ -9,6 +9,9 @@ class PartyPublishRequest(BaseModel):
     event_type: str = ""
     interest_tags: list[str] = []
     max_guests: int = 0
+    # Geo Platform (Spec §123-124) - schaltet für Discover-Radius-Eligibility
+    # einen erweiterten Radius frei (siehe accounts/discover_storage.py::MAJOR_EVENT_RADIUS_KM).
+    is_major_event: bool = False
 
     @field_validator("max_guests")
     @classmethod
@@ -29,6 +32,10 @@ class DiscoverCardPublic(BaseModel):
     interest_tags: list[str]
     host_display_name: str
     match_score: float
+    # Geo Platform (Spec §83) - nur gesetzt, wenn BEIDE Seiten (User-
+    # Discovery-Koordinaten + Party-``party_locations``-Punkt) aufgelöst
+    # sind; nie eine vorgetäuschte Distanz aus einem Städte-Textvergleich.
+    distance_km: float | None = None
 
 
 class DiscoverDeckResponse(BaseModel):
