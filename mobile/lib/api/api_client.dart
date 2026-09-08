@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 import '../models/admin_recommendation.dart';
 import '../models/app_notification.dart';
@@ -29,7 +30,9 @@ import '../models/party_guests_response.dart';
 import '../models/party_info.dart';
 import '../models/party_settings.dart';
 import '../models/guest_response_draft.dart';
+import '../models/profile.dart';
 import '../models/rsvp_response.dart';
+import '../models/spotify_status.dart';
 import '../models/user_account.dart';
 import 'api_config.dart';
 
@@ -1185,6 +1188,115 @@ class ApiClient {
       onRefresh,
     );
     return DiscoveryPreferences.fromJson(_decodeObject(resp));
+  }
+
+  /// Wirft ein 404 als `ApiException` (anders als `getPartyLocation`) - der
+  /// 404-Zustand IST hier das fachliche "Onboarding noch nicht abgeschlossen"-
+  /// Signal, das `ProfileScreen` explizit auffängt, kein stiller Sonderfall.
+  Future<Profile> getProfile(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/me/profile'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return Profile.fromJson(_decodeObject(resp));
+  }
+
+  /// Bewusst OHNE `birth_date`-Parameter (siehe `ProfileUpdateRequest` im
+  /// Backend) - der einzige Schreibpfad dafür ist [correctBirthDate].
+  Future<Profile> updateProfile(
+    String accessToken,
+    Future<String?> Function() onRefresh, {
+    String? gender,
+    String? bio,
+  }) async {
+    final body = <String, dynamic>{};
+    if (gender != null) body['gender'] = gender;
+    if (bio != null) body['bio'] = bio;
+    final resp = await _authorizedRequest(
+      (token) => _http.patch(
+        _uri('/api/v1/me/profile'),
+        headers: _authHeaders(token),
+        body: jsonEncode(body),
+      ),
+      accessToken,
+      onRefresh,
+    );
+    return Profile.fromJson(_decodeObject(resp));
+  }
+
+  /// Legt das Profil beim allerersten Aufruf an (Onboarding) oder korrigiert
+  /// das Geburtsdatum später - einziger Endpoint, der `birth_date` je
+  /// schreibt.
+  Future<Profile> correctBirthDate(
+    String accessToken,
+    Future<String?> Function() onRefresh, {
+    required DateTime birthDate,
+    String reason = '',
+  }) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.post(
+        _uri('/api/v1/me/profile/birth-date-correction'),
+        headers: _authHeaders(token),
+        body: jsonEncode({
+          'birth_date': DateFormat('yyyy-MM-dd').format(birthDate),
+          'reason': reason,
+        }),
+      ),
+      accessToken,
+      onRefresh,
+    );
+    return Profile.fromJson(_decodeObject(resp));
+  }
+
+  Future<String> getSpotifyConnectUrl(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(
+        _uri('/api/v1/me/music-provider/spotify/connect'),
+        headers: _authHeaders(token),
+      ),
+      accessToken,
+      onRefresh,
+    );
+    return _decodeObject(resp)['authorize_url'] as String;
+  }
+
+  Future<SpotifyStatus> getSpotifyStatus(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(
+        _uri('/api/v1/me/music-provider/spotify/status'),
+        headers: _authHeaders(token),
+      ),
+      accessToken,
+      onRefresh,
+    );
+    return SpotifyStatus.fromJson(_decodeObject(resp));
+  }
+
+  Future<void> disconnectSpotify(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.delete(
+        _uri('/api/v1/me/music-provider/spotify/disconnect'),
+        headers: _authHeaders(token),
+      ),
+      accessToken,
+      onRefresh,
+    );
+    if (resp.statusCode >= 400) {
+      throw ApiException(resp.statusCode, resp.body);
+    }
   }
 
   void close() => _http.close();
