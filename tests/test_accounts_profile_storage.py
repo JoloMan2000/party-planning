@@ -83,3 +83,57 @@ def test_is_username_available(db_path):
     assert profile_storage.is_username_available(db_path, "maxm") is False
     assert profile_storage.is_username_available(db_path, "MAXM") is False
     assert profile_storage.is_username_available(db_path, "someoneelse") is True
+
+
+# --- Social-Graph-Phase-3: Privacy-Felder ---------------------------------
+
+
+def test_neues_profil_hat_privacy_defaults(db_path):
+    profile = profile_storage.upsert_user_profile(db_path, "user-1", birth_date=date(1995, 1, 1))
+    assert profile.friend_list_visibility == "friends"
+    assert profile.friend_request_privacy == "everyone"
+    assert profile.discoverable_by_username is True
+    assert profile.discoverable_by_name is True
+
+
+def test_friend_list_visibility_kann_gesetzt_werden(db_path):
+    profile_storage.upsert_user_profile(db_path, "user-1", birth_date=date(1995, 1, 1))
+    updated = profile_storage.upsert_user_profile(db_path, "user-1", friend_list_visibility="nobody")
+    assert updated.friend_list_visibility == "nobody"
+
+
+def test_friend_request_privacy_kann_gesetzt_werden(db_path):
+    profile_storage.upsert_user_profile(db_path, "user-1", birth_date=date(1995, 1, 1))
+    updated = profile_storage.upsert_user_profile(db_path, "user-1", friend_request_privacy="nobody")
+    assert updated.friend_request_privacy == "nobody"
+
+
+def test_discoverable_flags_unabhaengig_setzbar(db_path):
+    profile_storage.upsert_user_profile(db_path, "user-1", birth_date=date(1995, 1, 1))
+    updated = profile_storage.upsert_user_profile(db_path, "user-1", discoverable_by_username=False)
+    assert updated.discoverable_by_username is False
+    assert updated.discoverable_by_name is True  # unveraendert
+
+    updated2 = profile_storage.upsert_user_profile(db_path, "user-1", discoverable_by_name=False)
+    assert updated2.discoverable_by_username is False  # bleibt vom vorigen Aufruf
+    assert updated2.discoverable_by_name is False
+
+
+def test_privacy_felder_none_lassen_bestehende_werte_unveraendert(db_path):
+    profile_storage.upsert_user_profile(
+        db_path, "user-1", birth_date=date(1995, 1, 1),
+        friend_list_visibility="everyone", friend_request_privacy="nobody",
+        discoverable_by_username=False, discoverable_by_name=False,
+    )
+    unchanged = profile_storage.upsert_user_profile(db_path, "user-1", gender="woman")
+    assert unchanged.friend_list_visibility == "everyone"
+    assert unchanged.friend_request_privacy == "nobody"
+    assert unchanged.discoverable_by_username is False
+    assert unchanged.discoverable_by_name is False
+
+
+def test_init_profile_storage_migration_ist_idempotent_mit_privacy_feldern(db_path):
+    profile_storage.upsert_user_profile(db_path, "user-1", birth_date=date(1995, 1, 1), friend_list_visibility="nobody")
+    profile_storage.init_profile_storage(db_path)  # erneuter Aufruf darf Werte nicht zuruecksetzen
+    survived = profile_storage.get_user_profile(db_path, "user-1")
+    assert survived.friend_list_visibility == "nobody"

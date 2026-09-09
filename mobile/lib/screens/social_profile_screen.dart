@@ -51,7 +51,25 @@ class SocialProfileScreen extends ConsumerWidget {
                 const SizedBox(height: 4),
                 Text('@${profile.username}', style: const TextStyle(color: Colors.grey)),
               ],
-              const SizedBox(height: 24),
+              if (profile.mutualFriendCount > 0) ...[
+                const SizedBox(height: 4),
+                Text(
+                  '${profile.mutualFriendCount} mutual friend${profile.mutualFriendCount == 1 ? '' : 's'}',
+                  style: const TextStyle(color: Colors.grey),
+                ),
+              ],
+              if (profile.relationshipStatus != RelationshipStatus.self_) ...[
+                const SizedBox(height: 8),
+                // Social-Graph-Phase-3: Sichtbarkeit wird server-seitig via
+                // 403 in GET /users/{id}/friends durchgesetzt - client-seitig
+                // wird der Link immer gezeigt statt eines fünften
+                // Privacy-Felds nur fürs Ausblenden (siehe Plan).
+                TextButton(
+                  onPressed: () => ref.read(viewingUserFriendsUserIdProvider.notifier).state = profile.userId,
+                  child: const Text('View friends'),
+                ),
+              ],
+              const SizedBox(height: 16),
               _ActionSection(profile: profile),
             ],
           ),

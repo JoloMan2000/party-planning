@@ -116,7 +116,20 @@ class _SearchResultTile extends ConsumerWidget {
       child: ListTile(
         leading: const CircleAvatar(child: Icon(Icons.person)),
         title: Text(result.displayName),
-        subtitle: result.username.isEmpty ? null : Text('@${result.username}'),
+        subtitle: (result.username.isEmpty && result.mutualFriendCount == 0)
+            ? null
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (result.username.isNotEmpty) Text('@${result.username}'),
+                  if (result.mutualFriendCount > 0)
+                    Text(
+                      '${result.mutualFriendCount} mutual friend${result.mutualFriendCount == 1 ? '' : 's'}',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                ],
+              ),
         trailing: _actionForStatus(context, ref, sendState.isLoading),
         onTap: () => ref.read(selectedFriendProfileUserIdProvider.notifier).state = result.userId,
       ),

@@ -193,6 +193,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     onTap: () => ref.read(showFriendsProvider.notifier).state = true,
                   ),
                 ),
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.privacy_tip),
+                    title: const Text('Social Privacy'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => ref.read(showSocialPrivacyProvider.notifier).state = true,
+                  ),
+                ),
               ],
             ),
           );

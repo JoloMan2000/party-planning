@@ -12,10 +12,16 @@ import accounts.invitation_storage as invitation_storage
 import accounts.notification_storage as notification_storage
 import accounts.party_storage as party_storage
 import accounts.user_storage as user_storage
-from accounts.domain import DiscoverAction, PartyRole, User
+import social.friendships as friendships
+from accounts.domain import DiscoverAction, PartyRole, RsvpStatus, User
 from backend.app.core.auth import get_current_user, require_party_role
 from backend.app.core.deps import get_db_path, get_media_dir
 from backend.app.schemas.accounts import (
+    CoHostPromoteRequest,
+    CoHostPromoteResponse,
+    FriendInviteRequest,
+    FriendInviteResponse,
+    FriendInviteResultItem,
     GuestListEntry,
     InvitationCreate,
     InvitationPublic,
@@ -228,3 +234,80 @@ def invite_guest(
         invitation_message=invitation.invitation_message, version=invitation.version,
         created_at=invitation.created_at, viewed_at=invitation.viewed_at, responded_at=invitation.responded_at,
     )
+
+
+@router.post("/{party_id}/invitations/friends", response_model=FriendInviteResponse)
+def invite_friends(
+    party_id: str,
+    payload: FriendInviteRequest,
+    current_user: User = Depends(get_current_user),
+    db_path: Path = Depends(get_db_path),
+    _membership=Depends(require_party_role({PartyRole.HOST, PartyRole.CO_HOST})),
+) -> FriendInviteResponse:
+    """Social-Graph-Phase-2: Batch-Einladung aus dem Freundeskreis - EIN
+    schlechter Eintrag (kein Freund, bereits Mitglied) bricht den Batch
+    NICHT ab, jede ID bekommt ihr eigenes Ergebnis (siehe
+    ``FriendInviteResponse``-Docstring). ``are_friends`` wird IMMER geprüft,
+    die vom Client behauptete Freundes-Auswahl wird nie vertraut."""
+    party = party_storage.get_party(db_path, party_id)
+    party_name = party.name if party is not None else party_id
+    results: list[FriendInviteResultItem] = []
+    for friend_id in payload.friend_user_ids:
+        if not friendships.are_friends(db_path, current_user.id, friend_id):
+            results.append(FriendInviteResultItem(user_id=friend_id, status="not_a_friend"))
+            continue
+        if party_storage.get_membership(db_path, party_id, friend_id) is not None:
+            results.append(FriendInviteResultItem(user_id=friend_id, status="already_member"))
+            continue
+        try:
+            invitation = invitation_storage.create_invitation(
+                db_path, uuid.uuid4().hex, party_id, current_user.id, friend_id,
+            )
+        except invitation_storage.InvitationAlreadyExistsError:
+            results.append(FriendInviteResultItem(user_id=friend_id, status="already_invited"))
+            continue
+        notification_storage.create_notification(
+            db_path, uuid.uuid4().hex, friend_id, party_id, "invitation",
+            f"You've been invited to {party_name}.",
+        )
+        results.append(FriendInviteResultItem(user_id=friend_id, status="invited", invitation_id=invitation.id))
+    return FriendInviteResponse(results=results)
+
+
+@router.post("/{party_id}/co-hosts", response_model=CoHostPromoteResponse)
+def promote_co_host(
+    party_id: str,
+    payload: CoHostPromoteRequest,
+    current_user: User = Depends(get_current_user),
+    db_path: Path = Depends(get_db_path),
+    _membership=Depends(require_party_role({PartyRole.HOST})),
+) -> CoHostPromoteResponse:
+    """Social-Graph-Phase-2: Co-Host-Beförderung ist bewusst NUR dem Host
+    vorbehalten (nicht auch Co-Hosts, wie beim generischen Invite) - ein
+    Co-Host, der selbst weitere Co-Hosts ernennen kann, ist eine
+    Privilegien-Eskalation, die dieses kleine App-Modell nicht braucht.
+    Freundschafts-unabhängig: das Ziel muss KEIN Freund des Hosts sein,
+    nur bereits akzeptiertes Party-Mitglied (Mobile-UI schlägt Freunde nur
+    als bequeme Vorauswahl vor, siehe Plan)."""
+    if payload.user_id == current_user.id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Du kannst dich nicht selbst befördern.")
+    target = party_storage.get_membership(db_path, party_id, payload.user_id)
+    if target is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Dieser User ist kein Mitglied dieser Party.")
+    if target.role == PartyRole.HOST:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Der Host kann nicht befördert werden.")
+    if target.role == PartyRole.CO_HOST:
+        return CoHostPromoteResponse(user_id=payload.user_id, party_id=party_id, role="co_host", already_co_host=True)
+    if target.rsvp_status != RsvpStatus.ACCEPTED:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Dieser Gast muss die Einladung zuerst annehmen, bevor er Co-Host werden kann.",
+        )
+    party_storage.upsert_membership(db_path, party_id, payload.user_id, PartyRole.CO_HOST, target.rsvp_status)
+    party = party_storage.get_party(db_path, party_id)
+    party_name = party.name if party is not None else party_id
+    notification_storage.create_notification(
+        db_path, uuid.uuid4().hex, payload.user_id, party_id, "co_host_promoted",
+        f"You're now a co-host of {party_name}.",
+    )
+    return CoHostPromoteResponse(user_id=payload.user_id, party_id=party_id, role="co_host")

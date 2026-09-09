@@ -5,9 +5,11 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../api/api_client.dart';
 import '../models/app_notification.dart';
+import '../models/co_host_promote_result.dart';
 import '../models/discover_action_result.dart';
 import '../models/discover_card.dart';
 import '../models/discovery_catalog_item.dart';
+import '../models/friend_invite_result.dart';
 import '../models/invitation.dart';
 import '../models/party.dart';
 import '../models/party_guests_response.dart';
@@ -268,6 +270,55 @@ class InviteGuestNotifier extends AsyncNotifier<Invitation?> {
 }
 
 final inviteGuestProvider = AsyncNotifierProvider<InviteGuestNotifier, Invitation?>(InviteGuestNotifier.new);
+
+/// Social-Graph-Phase-2: Batch-Einladung aus dem Freundeskreis - mirrort
+/// `InviteGuestNotifier` exakt.
+class InviteFriendsNotifier extends AsyncNotifier<FriendInviteResponse?> {
+  @override
+  Future<FriendInviteResponse?> build() async => null;
+
+  Future<FriendInviteResponse> invite(String partyId, {required List<String> friendUserIds}) async {
+    final token = ref.read(requiredAccessTokenProvider);
+    state = const AsyncLoading();
+    try {
+      final result = await ref.read(apiClientProvider).inviteFriends(
+            token, onRefresh(ref), partyId, friendUserIds: friendUserIds,
+          );
+      state = AsyncData(result);
+      ref.invalidate(partyGuestsProvider(partyId));
+      return result;
+    } catch (e) {
+      state = AsyncError(e, StackTrace.current);
+      rethrow;
+    }
+  }
+}
+
+final inviteFriendsProvider =
+    AsyncNotifierProvider<InviteFriendsNotifier, FriendInviteResponse?>(InviteFriendsNotifier.new);
+
+/// Social-Graph-Phase-2: befördert einen Gast zum Co-Host.
+class PromoteCoHostNotifier extends AsyncNotifier<CoHostPromoteResult?> {
+  @override
+  Future<CoHostPromoteResult?> build() async => null;
+
+  Future<CoHostPromoteResult> promote(String partyId, {required String userId}) async {
+    final token = ref.read(requiredAccessTokenProvider);
+    state = const AsyncLoading();
+    try {
+      final result = await ref.read(apiClientProvider).promoteCoHost(token, onRefresh(ref), partyId, userId: userId);
+      state = AsyncData(result);
+      ref.invalidate(partyGuestsProvider(partyId));
+      return result;
+    } catch (e) {
+      state = AsyncError(e, StackTrace.current);
+      rethrow;
+    }
+  }
+}
+
+final promoteCoHostProvider =
+    AsyncNotifierProvider<PromoteCoHostNotifier, CoHostPromoteResult?>(PromoteCoHostNotifier.new);
 
 /// RSVP-Antwort als einmalige Aktion. Lädt nach Erfolg `invitationDetailProvider`
 /// + `myInvitationsProvider` neu (Re-Fetch statt optimistisches UI, siehe

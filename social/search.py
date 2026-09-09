@@ -10,8 +10,12 @@ Kopieren, daher hier explizit dokumentiert: ``%``/``_``/``\\`` werden im
 rohen Query-String escaped, bevor er ins ``LIKE``-Pattern eingebettet wird,
 damit ein User keine SQL-Wildcards in seine Suchanfrage schmuggeln kann.
 Blockierte User werden HIER NICHT ausgefiltert - das bleibt Aufgabe des
-Routers (via ``social.blocks.is_blocked``), damit dieses Modul eine reine
-Text-Such-Zuständigkeit behält."""
+Routers (via ``social.blocks.is_blocked``), da Blocking eine Beziehung
+zwischen ZWEI Usern ist (Daten des Suchenden). Discoverability
+(Social-Graph-Phase-3, ``discoverable_by_username``/``discoverable_by_name``
+auf ``UserProfile``) ist dagegen eine Eigenschaft des GESUCHTEN Users
+allein und wird deshalb HIER in der WHERE-Klausel durchgesetzt, nicht
+nachgelagert im Router - siehe ``search_users`` unten."""
 
 from __future__ import annotations
 
@@ -33,21 +37,45 @@ def _escape_like(raw: str) -> str:
 
 
 def search_users(db_path: str | Path, query: str, exclude_user_id: str, limit: int = 20) -> list[UserSearchResult]:
+    """UNION zweier unabhängig gegateter Zweige (Social-Graph-Phase-3) -
+    ein einzelnes ``WHERE (username LIKE ? OR display_name LIKE ?)`` könnte
+    nicht ausdrücken, WELCHES Feld getroffen hat, und damit die beiden
+    ``discoverable_by_*``-Toggles nicht unabhängig durchsetzen (ein User,
+    der nur per @handle, nicht aber per echtem Namen auffindbar sein will,
+    bräuchte sonst eine Alles-oder-nichts-Regel). ``UNION`` (nicht
+    ``UNION ALL``) dedupliziert automatisch, wenn ein User über BEIDE Zweige
+    matcht. ``ORDER BY``/``LIMIT`` wirken bewusst auf die äußere,
+    zusammengeführte Query - nicht auf einen der beiden inneren Zweige,
+    sonst würde ``LIMIT`` jeden Zweig unabhängig kappen statt das
+    kombinierte Ergebnis."""
     pattern = f"%{_escape_like(query)}%"
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
         rows = conn.execute(
             """
-            SELECT u.id AS user_id, COALESCE(up.username, '') AS username,
-                   u.display_name AS display_name, u.profile_image AS profile_image
-            FROM users u
-            LEFT JOIN user_profiles up ON up.user_id = u.id
-            WHERE u.id != ?
-              AND (up.username LIKE ? ESCAPE '\\' OR u.display_name LIKE ? ESCAPE '\\')
-            ORDER BY u.display_name
+            SELECT * FROM (
+                SELECT u.id AS user_id, COALESCE(up.username, '') AS username,
+                       u.display_name AS display_name, u.profile_image AS profile_image
+                FROM users u
+                LEFT JOIN user_profiles up ON up.user_id = u.id
+                WHERE u.id != ?
+                  AND COALESCE(up.discoverable_by_username, 1) = 1
+                  AND up.username LIKE ? ESCAPE '\\'
+
+                UNION
+
+                SELECT u.id AS user_id, COALESCE(up.username, '') AS username,
+                       u.display_name AS display_name, u.profile_image AS profile_image
+                FROM users u
+                LEFT JOIN user_profiles up ON up.user_id = u.id
+                WHERE u.id != ?
+                  AND COALESCE(up.discoverable_by_name, 1) = 1
+                  AND u.display_name LIKE ? ESCAPE '\\'
+            )
+            ORDER BY display_name
             LIMIT ?
             """,
-            (exclude_user_id, pattern, pattern, limit),
+            (exclude_user_id, pattern, exclude_user_id, pattern, limit),
         ).fetchall()
     return [
         UserSearchResult(
@@ -96,5 +124,32 @@ if __name__ == "__main__":
 
         # SQL-Wildcards im Query werden escaped, nicht als Wildcard interpretiert.
         assert search_users(db_path, "%", exclude_user_id=me.id) == []
+
+        # Social-Graph-Phase-3: die zwei Discoverability-Toggles wirken unabhängig.
+        username_only = user_storage.create_user(
+            db_path, uuid.uuid4().hex, "usernameonly@example.com", "hash", "Findable By Name"
+        )
+        profile_storage.upsert_user_profile(
+            db_path, username_only.id, birth_date=date(1990, 1, 1), username="handleonly",
+            discoverable_by_name=False,
+        )
+        # Per Username findbar (Toggle an)...
+        assert any(r.user_id == username_only.id for r in search_users(db_path, "handleonly", exclude_user_id=me.id))
+        # ...aber NICHT per echtem Namen (Toggle aus).
+        assert not any(
+            r.user_id == username_only.id for r in search_users(db_path, "Findable By Name", exclude_user_id=me.id)
+        )
+
+        name_only = user_storage.create_user(db_path, uuid.uuid4().hex, "nameonly@example.com", "hash", "Only By Name")
+        profile_storage.upsert_user_profile(
+            db_path, name_only.id, birth_date=date(1990, 1, 1), username="hiddenhandle",
+            discoverable_by_username=False,
+        )
+        # Per echtem Namen findbar (Toggle an)...
+        assert any(r.user_id == name_only.id for r in search_users(db_path, "Only By Name", exclude_user_id=me.id))
+        # ...aber NICHT per Username (Toggle aus).
+        assert not any(
+            r.user_id == name_only.id for r in search_users(db_path, "hiddenhandle", exclude_user_id=me.id)
+        )
 
         print("social/search.py sanity check OK.")
