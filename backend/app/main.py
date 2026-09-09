@@ -26,6 +26,7 @@ import accounts.user_storage as user_storage
 import event_theme
 import geo.storage as geo_storage
 import music_engine.admin_settings as music_admin_settings
+import organizers.storage as organizers_storage
 import party_engine.response_storage as response_storage
 import social.blocks as social_blocks
 import social.friend_requests as social_friend_requests
@@ -34,6 +35,7 @@ from backend.app.core.config import settings, warn_if_insecure_defaults
 from backend.app.routers import (
     admin_catalog_curation,
     admin_music,
+    admin_organizers,
     admin_party_context,
     admin_party_settings,
     admin_recommendations,
@@ -50,6 +52,7 @@ from backend.app.routers import (
     invitations,
     me,
     notifications,
+    organizers,
     parties,
     party_locations,
     profile,
@@ -82,6 +85,7 @@ for router in (
     me.router,
     notifications.router,
     parties.router,
+    organizers.router,
     invitations.router,
     catalog.router,
     guest.router,
@@ -94,6 +98,7 @@ for router in (
     admin_music.router,
     admin_shopping_list.router,
     admin_users.router,
+    admin_organizers.router,
     profile.router,
     discovery_preferences.router,
     discovery_catalogs.router,
@@ -128,6 +133,7 @@ def on_startup() -> None:
     db_path = settings.db_path
     user_storage.init_user_storage(db_path)
     party_storage.init_party_storage(db_path)
+    organizers_storage.init_organizer_storage(db_path)
     invitation_storage.init_invitation_storage(db_path)
     notification_storage.init_notifications(db_path)
     event_theme.init_party_settings(db_path)

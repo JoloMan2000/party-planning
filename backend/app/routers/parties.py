@@ -12,6 +12,7 @@ import accounts.invitation_storage as invitation_storage
 import accounts.notification_storage as notification_storage
 import accounts.party_storage as party_storage
 import accounts.user_storage as user_storage
+import organizers.storage as organizers_storage
 import social.friendships as friendships
 from accounts.domain import DiscoverAction, PartyRole, RsvpStatus, User
 from backend.app.core.auth import get_current_user, require_party_role
@@ -54,8 +55,10 @@ def _to_party_public(
 
 
 def _host_is_verified(db_path: Path, host_user_id: str) -> bool:
-    host = user_storage.get_user_by_id(db_path, host_user_id)
-    return host.is_verified if host is not None else False
+    """Social-Graph-Phase-4: prüft jetzt Organizer-Mitgliedschaft statt des
+    LEGACY ``User.is_verified``-Flags (siehe
+    ``organizers.storage.is_user_verified_organizer_member``-Docstring)."""
+    return organizers_storage.is_user_verified_organizer_member(db_path, host_user_id)
 
 
 def _my_discover_action(db_path: Path, user_id: str, party_id: str) -> str | None:
@@ -73,7 +76,9 @@ def create_party(
         db_path, uuid.uuid4().hex, current_user.id, payload.name,
         description=payload.description, starts_at=payload.starts_at, location=payload.location,
     )
-    return _to_party_public(party, host_is_verified=current_user.is_verified)
+    return _to_party_public(
+        party, host_is_verified=organizers_storage.is_user_verified_organizer_member(db_path, current_user.id)
+    )
 
 
 @router.get("/{party_id}", response_model=PartyPublic)
@@ -118,12 +123,15 @@ def publish_party(
     """Macht eine bereits existierende private Party im Discover-Deck
     anderer User sichtbar (MVP-Scope-Entscheidung: kein separater Event-
     Erstellungs-Flow, siehe Plan). Nur der Host darf das, und nur wenn der
-    Host bereits als Organizer verifiziert wurde (siehe Plan: Organizer
-    Verification)."""
-    if not current_user.is_verified:
+    Host Mitglied (beliebige Rolle) eines verifizierten ``Organizer`` ist
+    (Social-Graph-Phase-4, siehe
+    ``organizers.storage.is_user_verified_organizer_member`` - ersetzt das
+    LEGACY ``User.is_verified``-Flag funktional, siehe dessen Docstring in
+    ``backend/app/schemas/admin.py::UserAdminPublic``)."""
+    if not organizers_storage.is_user_verified_organizer_member(db_path, current_user.id):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Your account must be verified before you can publish parties.",
+            detail="You must be a member of a verified organizer before you can publish parties.",
         )
     discover_storage.publish_party(
         db_path, party_id, event_type=payload.event_type, interest_tags=payload.interest_tags,
@@ -131,7 +139,8 @@ def publish_party(
     )
     party = party_storage.get_party(db_path, party_id)
     return _to_party_public(
-        party, discover_storage.get_publication(db_path, party_id), current_user.is_verified
+        party, discover_storage.get_publication(db_path, party_id),
+        organizers_storage.is_user_verified_organizer_member(db_path, current_user.id),
     )
 
 

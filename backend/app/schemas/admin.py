@@ -74,11 +74,28 @@ class ArtistOverrideCreate(BaseModel):
 
 
 class UserAdminPublic(BaseModel):
-    """Für den Organizer-Verification-Flow (``backend/app/routers/admin_users.py``)
-    - reencapsuliert ``User`` ohne ``password_hash``."""
+    """Für den LEGACY User-Verification-Flow (``backend/app/routers/admin_users.py``)
+    - reencapsuliert ``User`` ohne ``password_hash``. Seit Social-Graph-
+    Phase-4 funktional deprecated-in-place: ``is_verified`` steuert nicht
+    mehr das Discover-Publish-Gating (siehe ``OrganizerAdminPublic``
+    unten + ``organizers.storage.is_user_verified_organizer_member``),
+    der Endpunkt/das Feld bleiben aber unverändert erreichbar (kein
+    Breaking Change für bestehende Aufrufer)."""
 
     id: str
     email: str
     display_name: str
     is_verified: bool
+    created_at: datetime
+
+
+class OrganizerAdminPublic(BaseModel):
+    """Admin-Sicht auf einen ``Organizer`` (Social-Graph-Phase-4) - das
+    NEUE Verification-Gate für Discover-Publish, siehe
+    ``backend/app/routers/admin_organizers.py``."""
+
+    id: str
+    owner_user_id: str
+    display_name: str
+    verification_status: str
     created_at: datetime
