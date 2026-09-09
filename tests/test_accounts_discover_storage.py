@@ -94,15 +94,60 @@ def test_upsert_discover_action_ist_ein_echtes_upsert(db_path, guest, party):
     assert action.action == DiscoverAction.GOING
 
 
+def test_upsert_discover_action_ohne_reason_ist_leerer_string(db_path, guest, party):
+    discover_storage.publish_party(db_path, party.id)
+    discover_storage.upsert_discover_action(db_path, uuid.uuid4().hex, guest.id, party.id, DiscoverAction.NOT_INTERESTED)
+    action = discover_storage.get_discover_action(db_path, guest.id, party.id)
+    assert action.reason == ""
+
+
+def test_upsert_discover_action_speichert_reason(db_path, guest, party):
+    discover_storage.publish_party(db_path, party.id)
+    discover_storage.upsert_discover_action(
+        db_path, uuid.uuid4().hex, guest.id, party.id, DiscoverAction.NOT_INTERESTED, reason="too_far"
+    )
+    action = discover_storage.get_discover_action(db_path, guest.id, party.id)
+    assert action.reason == "too_far"
+
+
+def test_upsert_discover_action_erneutes_swipen_ohne_reason_ueberschreibt_alten_grund(db_path, guest, party):
+    discover_storage.publish_party(db_path, party.id)
+    discover_storage.upsert_discover_action(
+        db_path, uuid.uuid4().hex, guest.id, party.id, DiscoverAction.NOT_INTERESTED, reason="too_far"
+    )
+    discover_storage.upsert_discover_action(db_path, uuid.uuid4().hex, guest.id, party.id, DiscoverAction.GOING)
+    action = discover_storage.get_discover_action(db_path, guest.id, party.id)
+    assert action.reason == ""
+
+
 def test_get_discover_deck_liefert_score_pro_kandidat(db_path, guest, party):
     discover_storage.publish_party(db_path, party.id, event_type="club_event")
     deck = discover_storage.get_discover_deck(db_path, guest.id)
     assert len(deck) == 1
-    ranked_party, publication, score, distance_km = deck[0]
+    ranked_party, publication, score, distance_km, why = deck[0]
     assert ranked_party.id == party.id
     assert publication.event_type == "club_event"
     assert 0.0 < score <= 1.0
     assert distance_km is None  # keine Discovery-Koordinaten gesetzt
+    assert why  # Build-Schritt 7: nie leer
+
+
+def test_get_discover_deck_schreibt_exposure_pro_kandidat(db_path, guest, party):
+    """Discover-Engine-Phase-1: jeder Deck-Abruf muss eine
+    ``EventRecommendationExposure``-Zeile pro zurückgegebenem Kandidaten
+    hinterlassen (Spec §74-75), sonst lässt sich später "nie gezeigt" nicht
+    von "gezeigt, aber ignoriert" unterscheiden."""
+    import accounts.discover_learning as discover_learning
+
+    discover_storage.publish_party(db_path, party.id, event_type="club_event")
+    deck = discover_storage.get_discover_deck(db_path, guest.id)
+    assert len(deck) == 1
+
+    exposures = discover_learning.list_exposures_for_user(db_path, guest.id)
+    assert len(exposures) == 1
+    assert exposures[0].party_id == party.id
+    assert exposures[0].rank == 0
+    assert exposures[0].model_version == discover_learning.CURRENT_MODEL_VERSION
 
 
 def test_publish_party_speichert_und_aktualisiert_max_guests(db_path, party):

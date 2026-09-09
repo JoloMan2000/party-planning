@@ -17,10 +17,11 @@ class ProfileNotifier extends AsyncNotifier<Profile> {
     return ref.watch(apiClientProvider).getProfile(token, onRefresh(ref));
   }
 
-  Future<void> save({String? gender, String? bio}) async {
+  Future<void> save({String? gender, String? bio, String? username}) async {
     final token = ref.read(requiredAccessTokenProvider);
     final client = ref.read(apiClientProvider);
-    final updated = await client.updateProfile(token, onRefresh(ref), gender: gender, bio: bio);
+    final updated =
+        await client.updateProfile(token, onRefresh(ref), gender: gender, bio: bio, username: username);
     state = AsyncData(updated);
   }
 

@@ -92,3 +92,47 @@ def test_patch_profile_request_ignoriert_unbekanntes_birth_date_feld(api_client,
 def test_get_profile_ohne_token_gibt_401(api_client):
     resp = api_client.get("/api/v1/me/profile")
     assert resp.status_code == 401
+
+
+def _onboard(api_client, headers, years_ago: int = 25) -> None:
+    today = datetime.date.today()
+    birth_date = today.replace(year=today.year - years_ago)
+    resp = api_client.post(
+        "/api/v1/me/profile/birth-date-correction", json={"birth_date": birth_date.isoformat()}, headers=headers
+    )
+    assert resp.status_code == 200, resp.text
+
+
+def test_patch_profile_setzt_username(api_client, auth_headers_factory):
+    headers, _user, _refresh_token = auth_headers_factory()
+    _onboard(api_client, headers)
+    resp = api_client.patch("/api/v1/me/profile", json={"username": "MaxM"}, headers=headers)
+    assert resp.status_code == 200
+    assert resp.json()["username"] == "MaxM"
+
+
+def test_patch_profile_username_bereits_vergeben_gibt_409(api_client, auth_headers_factory):
+    headers_a, _a, _ = auth_headers_factory(email="usernamea@example.com")
+    headers_b, _b, _ = auth_headers_factory(email="usernameb@example.com")
+    _onboard(api_client, headers_a)
+    _onboard(api_client, headers_b)
+    assert api_client.patch("/api/v1/me/profile", json={"username": "MaxM"}, headers=headers_a).status_code == 200
+
+    resp = api_client.patch("/api/v1/me/profile", json={"username": "maxm"}, headers=headers_b)
+    assert resp.status_code == 409
+
+
+def test_patch_profile_ungueltiges_username_format_gibt_422(api_client, auth_headers_factory):
+    headers, _user, _refresh_token = auth_headers_factory()
+    _onboard(api_client, headers)
+    resp = api_client.patch("/api/v1/me/profile", json={"username": "a"}, headers=headers)
+    assert resp.status_code == 422
+
+
+def test_patch_profile_ohne_username_laesst_bestehenden_unveraendert(api_client, auth_headers_factory):
+    headers, _user, _refresh_token = auth_headers_factory()
+    _onboard(api_client, headers)
+    api_client.patch("/api/v1/me/profile", json={"username": "MaxM"}, headers=headers)
+    resp = api_client.patch("/api/v1/me/profile", json={"bio": "Loves techno."}, headers=headers)
+    assert resp.status_code == 200
+    assert resp.json()["username"] == "MaxM"

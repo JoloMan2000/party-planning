@@ -14,6 +14,7 @@ class Profile {
   final int age;
   final String gender;
   final String bio;
+  final String username;
   final DateTime? onboardingCompletedAt;
   final int profileCompletionVersion;
 
@@ -23,6 +24,7 @@ class Profile {
     required this.age,
     this.gender = '',
     this.bio = '',
+    this.username = '',
     this.onboardingCompletedAt,
     this.profileCompletionVersion = 0,
   });
@@ -33,6 +35,7 @@ class Profile {
         age: json['age'] as int,
         gender: (json['gender'] as String?) ?? '',
         bio: (json['bio'] as String?) ?? '',
+        username: (json['username'] as String?) ?? '',
         onboardingCompletedAt: json['onboarding_completed_at'] == null
             ? null
             : DateTime.parse(json['onboarding_completed_at'] as String),

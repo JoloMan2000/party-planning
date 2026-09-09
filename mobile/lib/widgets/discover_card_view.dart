@@ -81,6 +81,33 @@ class DiscoverCardView extends ConsumerWidget {
                       style: const TextStyle(color: Colors.white70, fontSize: 13),
                     ),
                   ],
+                  if (card.why.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    // Build-Schritt 7 (Explainability) - "Why this event?",
+                    // keine versteckte Black Box (siehe accounts/discover_ranking.py::explain_candidate).
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.lightbulb_outline, size: 14, color: Colors.white),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              card.why,
+                              style: const TextStyle(color: Colors.white, fontSize: 12),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

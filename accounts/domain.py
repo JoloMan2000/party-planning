@@ -120,12 +120,23 @@ class UserProfile:
     ``apply_birth_date_correction``), ``gender`` ist optional/frei editierbar.
     ``display_name``/``profile_image`` bleiben pragmatisch auf ``User`` (dort
     bereits verdrahtet über den bestehenden Profile-Image-Upload-Endpoint) -
-    keine schema-brechende Migration nur für die Layer-Trennung."""
+    keine schema-brechende Migration nur für die Layer-Trennung.
+
+    ``username`` (Social-Graph-Phase-1) ist der stabile öffentliche
+    Social-Identifier - bewusst auf ``UserProfile``, NICHT auf ``User``
+    (Account/Auth-Identity bleibt E-Mail-basiert; ``username`` ist rein
+    sozial/öffentlich und optional, bis der User ihn setzt). Anders als
+    ``User.email`` (immer auf lowercase normalisiert gespeichert, siehe
+    ``user_storage.create_user``) bleibt die vom User gewählte
+    Groß-/Kleinschreibung hier erhalten - Eindeutigkeit wird stattdessen
+    ausschließlich über den ``COLLATE NOCASE``-Unique-Index in
+    ``accounts/profile_storage.py`` erzwungen."""
 
     user_id: str
     birth_date: date
     gender: str = ""
     bio: str = ""
+    username: str = ""
     onboarding_completed_at: datetime | None = None
     profile_completion_version: int = 0
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
@@ -239,6 +250,25 @@ class DiscoverAction(str, Enum):
     NOT_INTERESTED = "not_interested"
 
 
+class DiscoverNotInterestedReason(str, Enum):
+    """Optionaler Grund bei ``NOT_INTERESTED`` (Discover-Engine-Phase-1,
+    Build-Schritt 3) - bewusst NUR bei ``NOT_INTERESTED`` erlaubt (siehe
+    Validierung in ``backend/app/schemas/discover.py``), da ein positives
+    Swipe-Ergebnis (``GOING``/``MAYBE``) keinen Ablehnungsgrund braucht.
+    Zero-Friction: der Grund ist immer optional, ein Swipe ohne Angabe bleibt
+    ein vollwertiges Signal (leerer String, kein Pflichtfeld). Feed für die
+    spätere Learned-Affinity-Auswertung (Build-Schritt 4) - jeder Wert ist
+    bewusst so gewählt, dass er ein unterscheidbares Lern-Signal trägt
+    (z.B. ``WRONG_VIBE`` sollte künftig stärker auf Genre-/Tag-Affinität
+    wirken als ``TOO_FAR`` auf die Distanz-Komponente)."""
+
+    WRONG_VIBE = "wrong_vibe"
+    TOO_FAR = "too_far"
+    BAD_TIMING = "bad_timing"
+    NOT_INTERESTED_IN_ORGANIZER = "not_interested_in_organizer"
+    OTHER = "other"
+
+
 @dataclass
 class PublicEvent:
     """Discovery-Projektion einer bereits existierenden ``Party`` - kein
@@ -264,13 +294,86 @@ class PublicEvent:
 class DiscoverActionRecord:
     """Auditierbare Swipe-Aktion eines Users auf eine ``PublicEvent`` -
     UNIQUE(user_id, party_id), damit erneutes Swipen überschreibt statt
-    Duplikate anzuhäufen (siehe ``discover_storage.upsert_discover_action``)."""
+    Duplikate anzuhäufen (siehe ``discover_storage.upsert_discover_action``).
+
+    ``reason`` (Build-Schritt 3) ist ein freier String statt direkt
+    ``DiscoverNotInterestedReason`` - Persistenz-Ebene ist bewusst permissiv
+    (leerer String = kein Grund angegeben), die Enum-Validierung passiert
+    ausschließlich an der API-Grenze (``backend/app/schemas/discover.py``),
+    damit ein künftiger neuer Reason-Wert nicht sofort alte, bereits
+    gespeicherte Zeilen invalidiert."""
 
     id: str
     user_id: str
     party_id: str
     action: DiscoverAction
+    reason: str = ""
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+@dataclass
+class EventRecommendationExposure:
+    """Auditiert, dass eine ``PublicEvent`` einem User tatsächlich im Deck
+    GEZEIGT wurde (Discover-Engine-Spec §74-75) - ohne diesen Datensatz lässt
+    sich "nie gezeigt" nicht von "gezeigt, aber ignoriert" unterscheiden, was
+    für spätere Learning-Auswertungen (Phase 1, ``accounts/discover_learning.py``)
+    kritisch ist. Bewusst append-only, keine Deduplizierung: jeder Deck-Abruf
+    ist ein eigenes Exposure-Ereignis, auch für dieselbe Party."""
+
+    id: str
+    user_id: str
+    party_id: str
+    rank: int
+    model_version: str
+    shown_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+@dataclass
+class BlockedOrganizer:
+    """Harter Ausschluss eines Organizers (Discover-Engine-Phase-1, Spec §40) -
+    bewusst GETRENNT von einem einzelnen ``NOT_INTERESTED``-Swipe: ein Block
+    ist eine explizite Nutzer-Entscheidung, keine gelernte/inferierte
+    Präferenz, und übersteht deshalb auch ein ``reset-learning`` (siehe
+    ``accounts/discover_learning.py::reset_learned_profile``). Wirkt als
+    Hard-Filter VOR jedem Ranking (``list_candidate_publications``), niemals
+    durch Diversity/Exploration überschreibbar."""
+
+    id: str
+    user_id: str
+    organizer_user_id: str
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+@dataclass
+class LearnedAffinitySignal:
+    """Gelernte Affinität zu EINEM Attribut (Discover-Engine-Phase-1,
+    Build-Schritt 4) - bewusst GETRENNT von den expliziten Preferences
+    (``UserDiscoveryPreferences``/``ExplicitDiscoveryPreference``): dieser
+    Datensatz entsteht ausschließlich aus beobachtetem Verhalten (Swipes,
+    siehe ``accounts/discover_learning.py::record_signal_from_action``), nie
+    aus einer direkten User-Eingabe, und darf explizite Preferences im
+    späteren Blended Ranking (Build-Schritt 5) deshalb nur ERGÄNZEN, nie
+    überschreiben.
+
+    ``value`` ist ein laufender gewichteter Mittelwert der pro Swipe
+    beobachteten Fit-Ziele, auf derselben (0, 1]-Skala wie die Fit-Terme in
+    ``accounts/discover_ranking.py`` (0.5 = neutral) - bewusst NICHT bereits
+    decayed gespeichert: die Alters-Abschwächung (Halbwertszeit, siehe
+    ``AFFINITY_HALF_LIFE_DAYS``) passiert ausschließlich LESEND in
+    ``get_learned_affinity``, damit ``updated_at`` immer den Zeitpunkt der
+    letzten tatsächlichen Beobachtung trägt statt eines künstlich
+    vorgealterten Werts. ``observation_count`` ist das Konfidenzmaß, das
+    Build-Schritt 5 als ``observation_weight`` im Bayesian-Shrinkage-Blend
+    verwendet - je mehr Beobachtungen, desto mehr Gewicht gegenüber dem
+    expliziten Prior."""
+
+    id: str
+    user_id: str
+    attribute_category: str  # "event_type" | "interest_tag"
+    attribute_value: str
+    value: float = 0.5
+    observation_count: float = 0.0
+    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass

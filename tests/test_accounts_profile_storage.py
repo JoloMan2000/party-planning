@@ -50,3 +50,36 @@ def test_mark_onboarding_completed_setzt_timestamp_und_version(db_path):
     completed = profile_storage.mark_onboarding_completed(db_path, "user-1", profile_completion_version=2)
     assert completed.onboarding_completed_at is not None
     assert completed.profile_completion_version == 2
+
+
+def test_neues_profil_hat_leeren_username(db_path):
+    profile = profile_storage.upsert_user_profile(db_path, "user-1", birth_date=date(1995, 1, 1))
+    assert profile.username == ""
+
+
+def test_username_kann_gesetzt_werden(db_path):
+    profile_storage.upsert_user_profile(db_path, "user-1", birth_date=date(1995, 1, 1))
+    updated = profile_storage.upsert_user_profile(db_path, "user-1", username="MaxM")
+    assert updated.username == "MaxM"
+
+
+def test_username_none_laesst_bestehenden_wert_unveraendert(db_path):
+    profile_storage.upsert_user_profile(db_path, "user-1", birth_date=date(1995, 1, 1), username="MaxM")
+    unchanged = profile_storage.upsert_user_profile(db_path, "user-1", gender="woman")
+    assert unchanged.username == "MaxM"
+    assert unchanged.gender == "woman"
+
+
+def test_username_eindeutigkeit_ist_case_insensitiv(db_path):
+    profile_storage.upsert_user_profile(db_path, "user-1", birth_date=date(1995, 1, 1), username="MaxM")
+    profile_storage.upsert_user_profile(db_path, "user-2", birth_date=date(1990, 1, 1))
+    with pytest.raises(profile_storage.UsernameAlreadyTakenError):
+        profile_storage.upsert_user_profile(db_path, "user-2", username="maxm")
+
+
+def test_is_username_available(db_path):
+    assert profile_storage.is_username_available(db_path, "maxm") is True
+    profile_storage.upsert_user_profile(db_path, "user-1", birth_date=date(1995, 1, 1), username="MaxM")
+    assert profile_storage.is_username_available(db_path, "maxm") is False
+    assert profile_storage.is_username_available(db_path, "MAXM") is False
+    assert profile_storage.is_username_available(db_path, "someoneelse") is True

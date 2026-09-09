@@ -8,6 +8,7 @@ import io
 
 from PIL import Image
 
+import accounts.discover_learning as discover_learning
 import accounts.user_storage as user_storage
 
 
@@ -57,6 +58,18 @@ def test_deck_zeigt_veroeffentlichte_party_eines_anderen_hosts(api_client, auth_
     assert resp.status_code == 200
     cards = resp.json()["cards"]
     assert any(c["party_id"] == party_id for c in cards)
+
+
+def test_deck_cards_haben_nie_leeren_why(api_client, auth_headers_factory):
+    host_headers, _host, _ = auth_headers_factory(email="whyhost@example.com")
+    guest_headers, _guest, _ = auth_headers_factory(email="whyguest@example.com")
+    party_id = _make_party(api_client, host_headers)
+    _publish(api_client, host_headers, party_id)
+
+    resp = api_client.get("/api/v1/discover/deck", headers=guest_headers)
+    assert resp.status_code == 200
+    cards = resp.json()["cards"]
+    assert all(c["why"] for c in cards)
 
 
 def test_deck_schliesst_eigene_party_aus(api_client, auth_headers_factory):
@@ -160,6 +173,125 @@ def test_action_ungueltig_gibt_422(api_client, auth_headers_factory):
     _publish(api_client, host_headers, party_id)
 
     resp = api_client.post(f"/api/v1/discover/{party_id}/action", json={"action": "nonsense"}, headers=guest_headers)
+    assert resp.status_code == 422
+
+
+def test_not_interested_mit_reason_speichert_reason(api_client, auth_headers_factory):
+    host_headers, _host, _ = auth_headers_factory(email="reasonhost@example.com")
+    guest_headers, _guest, _ = auth_headers_factory(email="reasonguest@example.com")
+    party_id = _make_party(api_client, host_headers)
+    _publish(api_client, host_headers, party_id)
+
+    resp = api_client.post(
+        f"/api/v1/discover/{party_id}/action",
+        json={"action": "not_interested", "reason": "too_far"},
+        headers=guest_headers,
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["reason"] == "too_far"
+
+
+def test_not_interested_ohne_reason_ist_leerer_string(api_client, auth_headers_factory):
+    host_headers, _host, _ = auth_headers_factory(email="noreasonhost@example.com")
+    guest_headers, _guest, _ = auth_headers_factory(email="noreasonguest@example.com")
+    party_id = _make_party(api_client, host_headers)
+    _publish(api_client, host_headers, party_id)
+
+    resp = api_client.post(
+        f"/api/v1/discover/{party_id}/action", json={"action": "not_interested"}, headers=guest_headers
+    )
+    assert resp.status_code == 200
+    assert resp.json()["reason"] == ""
+
+
+def test_reason_ungueltiger_wert_gibt_422(api_client, auth_headers_factory):
+    host_headers, _host, _ = auth_headers_factory(email="badreasonhost@example.com")
+    guest_headers, _guest, _ = auth_headers_factory(email="badreasonguest@example.com")
+    party_id = _make_party(api_client, host_headers)
+    _publish(api_client, host_headers, party_id)
+
+    resp = api_client.post(
+        f"/api/v1/discover/{party_id}/action",
+        json={"action": "not_interested", "reason": "nonsense"},
+        headers=guest_headers,
+    )
+    assert resp.status_code == 422
+
+
+def test_going_action_schreibt_learned_affinity_signal(api_client, auth_headers_factory):
+    host_headers, _host, _ = auth_headers_factory(email="affinityhost@example.com")
+    guest_headers, guest, _ = auth_headers_factory(email="affinityguest@example.com")
+    party_id = _make_party(api_client, host_headers)
+    _publish(api_client, host_headers, party_id, event_type="club_event")
+
+    resp = api_client.post(f"/api/v1/discover/{party_id}/action", json={"action": "going"}, headers=guest_headers)
+    assert resp.status_code == 200
+
+    fit, count = discover_learning.get_learned_affinity(api_client.db_path, guest["id"], "event_type", "club_event")
+    assert fit > 0.9
+    assert count == 1.0
+
+
+def test_deck_bevorzugt_gelernte_praeferenz_nach_going_swipe(api_client, auth_headers_factory):
+    host_headers, _host, _ = auth_headers_factory(email="blendhost@example.com")
+    guest_headers, guest, _ = auth_headers_factory(email="blendguest@example.com")
+
+    liked_party_id = _make_party(api_client, host_headers, name="Club Night")
+    _publish(api_client, host_headers, liked_party_id, event_type="club_event")
+    other_party_id = _make_party(api_client, host_headers, name="Cultural Evening")
+    _publish(api_client, host_headers, other_party_id, event_type="cultural_event")
+
+    # Erster Deck-Abruf: keine Praeferenz -> Reihenfolge nicht garantiert.
+    api_client.get("/api/v1/discover/deck", headers=guest_headers)
+
+    # Mehrfach GOING auf club_event, um genug observation_weight aufzubauen.
+    api_client.post(f"/api/v1/discover/{liked_party_id}/action", json={"action": "going"}, headers=guest_headers)
+    api_client.delete(f"/api/v1/discover/{liked_party_id}/action", headers=guest_headers)
+
+    resp = api_client.get("/api/v1/discover/deck", headers=guest_headers)
+    assert resp.status_code == 200
+    cards = resp.json()["cards"]
+    club_card = next(c for c in cards if c["party_id"] == liked_party_id)
+    cultural_card = next(c for c in cards if c["party_id"] == other_party_id)
+    assert club_card["match_score"] >= cultural_card["match_score"]
+
+
+def test_deck_ignoriert_learned_affinity_wenn_personalisierung_deaktiviert(api_client, auth_headers_factory):
+    host_headers, _host, _ = auth_headers_factory(email="bypasshost@example.com")
+    guest_headers, guest, _ = auth_headers_factory(email="bypassguest@example.com")
+
+    party_id = _make_party(api_client, host_headers, name="Club Night")
+    _publish(api_client, host_headers, party_id, event_type="club_event")
+
+    api_client.post(f"/api/v1/discover/{party_id}/action", json={"action": "going"}, headers=guest_headers)
+    api_client.delete(f"/api/v1/discover/{party_id}/action", headers=guest_headers)
+
+    resp = api_client.put(
+        "/api/v1/me/discovery-preferences",
+        json={"personalized_recommendations_enabled": False},
+        headers=guest_headers,
+    )
+    assert resp.status_code == 200, resp.text
+
+    # Deck-Abruf crasht nicht und liefert weiterhin Kandidaten - der einzig
+    # HTTP-sichtbare Vertrag des Bypasses (die Score-Differenz selbst ist
+    # bereits in tests/test_accounts_discover_ranking.py exakt getestet).
+    deck_resp = api_client.get("/api/v1/discover/deck", headers=guest_headers)
+    assert deck_resp.status_code == 200
+    assert any(c["party_id"] == party_id for c in deck_resp.json()["cards"])
+
+
+def test_reason_bei_going_gibt_422(api_client, auth_headers_factory):
+    host_headers, _host, _ = auth_headers_factory(email="reasongoinghost@example.com")
+    guest_headers, _guest, _ = auth_headers_factory(email="reasongoingguest@example.com")
+    party_id = _make_party(api_client, host_headers)
+    _publish(api_client, host_headers, party_id)
+
+    resp = api_client.post(
+        f"/api/v1/discover/{party_id}/action",
+        json={"action": "going", "reason": "too_far"},
+        headers=guest_headers,
+    )
     assert resp.status_code == 422
 
 
@@ -494,3 +626,70 @@ def test_my_discover_action_auf_party_und_me_parties(api_client, auth_headers_fa
     # Membership ist weg -> guest hat keinen Zugriff mehr auf /parties/{id}
     after_undo_resp = api_client.get(f"/api/v1/parties/{party_id}", headers=guest_headers)
     assert after_undo_resp.status_code == 403
+
+
+def test_block_organizer_ohne_auth_gibt_401(api_client):
+    resp = api_client.post("/api/v1/discover/organizers/some-id/block")
+    assert resp.status_code == 401
+
+
+def test_block_organizer_self_block_gibt_422(api_client, auth_headers_factory):
+    headers, user, _ = auth_headers_factory(email="selfblock@example.com")
+    resp = api_client.post(f"/api/v1/discover/organizers/{user['id']}/block", headers=headers)
+    assert resp.status_code == 422
+
+
+def test_block_organizer_unbekannter_organizer_gibt_404(api_client, auth_headers_factory):
+    headers, _user, _ = auth_headers_factory(email="blockunknown@example.com")
+    resp = api_client.post("/api/v1/discover/organizers/does-not-exist/block", headers=headers)
+    assert resp.status_code == 404
+
+
+def test_block_organizer_entfernt_dessen_parties_aus_kuenftigem_deck(api_client, auth_headers_factory):
+    host_headers, host, _ = auth_headers_factory(email="blockhost@example.com")
+    guest_headers, _guest, _ = auth_headers_factory(email="blockguest@example.com")
+    party_id = _make_party(api_client, host_headers)
+    _publish(api_client, host_headers, party_id)
+
+    deck_before = api_client.get("/api/v1/discover/deck", headers=guest_headers)
+    assert any(c["party_id"] == party_id for c in deck_before.json()["cards"])
+
+    block_resp = api_client.post(f"/api/v1/discover/organizers/{host['id']}/block", headers=guest_headers)
+    assert block_resp.status_code == 200
+    assert block_resp.json() == {"organizer_id": host["id"], "blocked": True}
+
+    deck_after = api_client.get("/api/v1/discover/deck", headers=guest_headers)
+    assert all(c["party_id"] != party_id for c in deck_after.json()["cards"])
+
+
+def test_block_organizer_ist_idempotent(api_client, auth_headers_factory):
+    host_headers, host, _ = auth_headers_factory(email="blockidempotenthost@example.com")
+    guest_headers, _guest, _ = auth_headers_factory(email="blockidempotentguest@example.com")
+
+    first = api_client.post(f"/api/v1/discover/organizers/{host['id']}/block", headers=guest_headers)
+    second = api_client.post(f"/api/v1/discover/organizers/{host['id']}/block", headers=guest_headers)
+    assert first.status_code == 200
+    assert second.status_code == 200
+
+
+def test_unblock_organizer_bringt_dessen_parties_zurueck(api_client, auth_headers_factory):
+    host_headers, host, _ = auth_headers_factory(email="unblockhost@example.com")
+    guest_headers, _guest, _ = auth_headers_factory(email="unblockguest@example.com")
+    party_id = _make_party(api_client, host_headers)
+    _publish(api_client, host_headers, party_id)
+
+    api_client.post(f"/api/v1/discover/organizers/{host['id']}/block", headers=guest_headers)
+    deck_blocked = api_client.get("/api/v1/discover/deck", headers=guest_headers)
+    assert all(c["party_id"] != party_id for c in deck_blocked.json()["cards"])
+
+    unblock_resp = api_client.delete(f"/api/v1/discover/organizers/{host['id']}/block", headers=guest_headers)
+    assert unblock_resp.status_code == 204
+
+    deck_unblocked = api_client.get("/api/v1/discover/deck", headers=guest_headers)
+    assert any(c["party_id"] == party_id for c in deck_unblocked.json()["cards"])
+
+
+def test_unblock_organizer_ohne_bestehenden_block_ist_no_op(api_client, auth_headers_factory):
+    headers, _user, _ = auth_headers_factory(email="unblocknoop@example.com")
+    resp = api_client.delete("/api/v1/discover/organizers/some-id/block", headers=headers)
+    assert resp.status_code == 204

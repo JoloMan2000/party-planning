@@ -5,9 +5,12 @@ keine Storage-/Domain-Importe außer für Typ-Referenzen)."""
 
 from __future__ import annotations
 
+import re
 from datetime import date, datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
+
+_USERNAME_PATTERN = re.compile(r"^[A-Za-z0-9_.]{3,30}$")
 
 
 class ProfilePublic(BaseModel):
@@ -16,6 +19,7 @@ class ProfilePublic(BaseModel):
     age: int
     gender: str = ""
     bio: str = ""
+    username: str = ""
     onboarding_completed_at: datetime | None = None
     profile_completion_version: int = 0
 
@@ -31,10 +35,23 @@ class ProfileCreateRequest(BaseModel):
 
 class ProfileUpdateRequest(BaseModel):
     """Normales Profil-Update - bewusst OHNE ``birth_date`` (geschützt, siehe
-    ``BirthDateCorrectionRequest``)."""
+    ``BirthDateCorrectionRequest``). ``username=None`` bedeutet "unverändert
+    lassen" (Social-Graph-Phase-1) - siehe
+    ``accounts.profile_storage.upsert_user_profile``."""
 
     gender: str | None = None
     bio: str | None = None
+    username: str | None = None
+
+    @field_validator("username")
+    @classmethod
+    def _username_hat_gueltiges_format(cls, value: str | None) -> str | None:
+        if value is not None and not _USERNAME_PATTERN.match(value):
+            raise ValueError(
+                "username muss 3-30 Zeichen lang sein und darf nur Buchstaben, Zahlen, "
+                "Unterstriche und Punkte enthalten."
+            )
+        return value
 
 
 class BirthDateCorrectionRequest(BaseModel):

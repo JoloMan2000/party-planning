@@ -146,7 +146,7 @@ def test_get_discover_deck_liefert_distance_km_wenn_beide_seiten_koordinaten_hab
 
     deck = discover_storage.get_discover_deck(db_path, guest.id)
     entry = next(e for e in deck if e[0].id == party.id)
-    _ranked_party, _publication, _score, distance_km = entry
+    _ranked_party, _publication, _score, distance_km, _why = entry
     assert distance_km is not None
     assert 0 < distance_km < 50
 
@@ -156,5 +156,5 @@ def test_get_discover_deck_distance_km_ist_none_ohne_user_koordinaten(db_path, h
 
     deck = discover_storage.get_discover_deck(db_path, guest.id)
     entry = next(e for e in deck if e[0].id == party.id)
-    _ranked_party, _publication, _score, distance_km = entry
+    _ranked_party, _publication, _score, distance_km, _why = entry
     assert distance_km is None

@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import datetime
 
+import accounts.discover_learning as discover_learning
+
 
 def test_get_discovery_preferences_liefert_defaults_wenn_nie_gesetzt(api_client, auth_headers_factory):
     headers, _user, _refresh_token = auth_headers_factory()
@@ -137,3 +139,26 @@ def test_onboarding_complete_ohne_event_interesse_gibt_422(api_client, auth_head
 
     resp = api_client.post("/api/v1/me/onboarding/complete", headers=headers)
     assert resp.status_code == 422
+
+
+def test_reset_learning_ohne_auth_gibt_401(api_client):
+    resp = api_client.post("/api/v1/me/discovery-profile/reset-learning")
+    assert resp.status_code == 401
+
+
+def test_reset_learning_loescht_learned_affinity(api_client, auth_headers_factory):
+    headers, user, _ = auth_headers_factory()
+    discover_learning.apply_signal(
+        api_client.db_path, user["id"], "event_type", "club_event", target_fit=1.0, weight=5.0
+    )
+    assert discover_learning.get_learned_affinities_for_user(api_client.db_path, user["id"]) != {}
+
+    resp = api_client.post("/api/v1/me/discovery-profile/reset-learning", headers=headers)
+    assert resp.status_code == 204
+    assert discover_learning.get_learned_affinities_for_user(api_client.db_path, user["id"]) == {}
+
+
+def test_reset_learning_ohne_bestehende_signale_ist_no_op(api_client, auth_headers_factory):
+    headers, _user, _ = auth_headers_factory()
+    resp = api_client.post("/api/v1/me/discovery-profile/reset-learning", headers=headers)
+    assert resp.status_code == 204

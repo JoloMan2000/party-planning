@@ -481,12 +481,13 @@ class DiscoverActionNotifier extends AsyncNotifier<DiscoverActionResult?> {
   @override
   Future<DiscoverActionResult?> build() async => null;
 
-  Future<DiscoverActionResult> act(String partyId, {required String action}) async {
+  Future<DiscoverActionResult> act(String partyId, {required String action, String? reason}) async {
     final token = ref.read(requiredAccessTokenProvider);
     state = const AsyncLoading();
     try {
-      final result =
-          await ref.read(apiClientProvider).postDiscoverAction(token, onRefresh(ref), partyId, action: action);
+      final result = await ref
+          .read(apiClientProvider)
+          .postDiscoverAction(token, onRefresh(ref), partyId, action: action, reason: reason);
       state = AsyncData(result);
       ref.invalidate(myPartiesProvider);
       return result;
@@ -524,6 +525,48 @@ class UndoDiscoverActionNotifier extends AsyncNotifier<void> {
 
 final undoDiscoverActionProvider =
     AsyncNotifierProvider<UndoDiscoverActionNotifier, void>(UndoDiscoverActionNotifier.new);
+
+/// Organizer blockieren/entblocken (Discover-Engine-Phase-1) - lädt
+/// `partyDetailProvider` der aktuell offenen Party neu, da
+/// `PartyDetailScreen` selbst keinen separaten "ist geblockt"-Provider
+/// beobachtet, sondern rein über den Button-Zustand hier gesteuert wird.
+class BlockOrganizerNotifier extends AsyncNotifier<void> {
+  @override
+  Future<void> build() async {}
+
+  Future<void> block(String organizerId) async {
+    final token = ref.read(requiredAccessTokenProvider);
+    state = const AsyncLoading();
+    try {
+      await ref.read(apiClientProvider).blockOrganizer(token, onRefresh(ref), organizerId);
+      state = const AsyncData(null);
+    } catch (e) {
+      state = AsyncError(e, StackTrace.current);
+      rethrow;
+    }
+  }
+}
+
+final blockOrganizerProvider = AsyncNotifierProvider<BlockOrganizerNotifier, void>(BlockOrganizerNotifier.new);
+
+class UnblockOrganizerNotifier extends AsyncNotifier<void> {
+  @override
+  Future<void> build() async {}
+
+  Future<void> unblock(String organizerId) async {
+    final token = ref.read(requiredAccessTokenProvider);
+    state = const AsyncLoading();
+    try {
+      await ref.read(apiClientProvider).unblockOrganizer(token, onRefresh(ref), organizerId);
+      state = const AsyncData(null);
+    } catch (e) {
+      state = AsyncError(e, StackTrace.current);
+      rethrow;
+    }
+  }
+}
+
+final unblockOrganizerProvider = AsyncNotifierProvider<UnblockOrganizerNotifier, void>(UnblockOrganizerNotifier.new);
 
 /// Publish/Unpublish als einmalige Aktion, lädt `partyDetailProvider` danach neu.
 class PublishPartyNotifier extends AsyncNotifier<Party?> {
