@@ -444,7 +444,7 @@ class _PublishToDiscoverSectionState extends ConsumerState<_PublishToDiscoverSec
       SnackBar(
         content: Text(
           e is ApiException && e.statusCode == 403
-              ? 'Your account isn\'t verified yet - publishing is disabled until an admin verifies your account.'
+              ? 'Your account isn\'t linked to a verified organizer yet - publishing is disabled until an admin verifies your organizer.'
               : 'Failed to update publish status.',
         ),
       ),
@@ -514,7 +514,7 @@ class _PublishToDiscoverSectionState extends ConsumerState<_PublishToDiscoverSec
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Text(
-                  'Your account isn\'t verified yet - publishing is disabled until an admin verifies your account.',
+                  'Your account isn\'t linked to a verified organizer yet - publishing is disabled until an admin verifies your organizer.',
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
               ),

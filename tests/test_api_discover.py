@@ -8,8 +8,11 @@ import io
 
 from PIL import Image
 
+import uuid
+
 import accounts.discover_learning as discover_learning
-import accounts.user_storage as user_storage
+import organizers.storage as organizers_storage
+from organizers.domain import OrganizerVerificationStatus
 
 
 def _make_party(api_client, headers, name: str = "P") -> str:
@@ -17,11 +20,16 @@ def _make_party(api_client, headers, name: str = "P") -> str:
 
 
 def _verify(api_client, user_id: str) -> None:
-    """Setzt ``is_verified`` direkt über die Storage-Schicht (kein HTTP-
-    Admin-Roundtrip nötig, mirroring ``conftest.py::co_host_headers_factory``'s
+    """Social-Graph-Phase-4: erzeugt direkt über die Storage-Schicht einen
+    ``Organizer`` mit ``user_id`` als Owner und verifiziert ihn (kein HTTP-
+    Roundtrip nötig, mirroring ``conftest.py::co_host_headers_factory``'s
     Direkt-Storage-Setup-Konvention) - Publish erfordert seit der Organizer-
-    Verification einen verifizierten Host."""
-    user_storage.set_user_verified(api_client.db_path, user_id, True)
+    Verification-Migration Mitgliedschaft in einem verifizierten Organizer
+    statt des LEGACY ``User.is_verified``-Flags (siehe
+    ``test_publish_admin_user_verify_hat_keine_wirkung_mehr`` für den
+    konkreten Beweis, dass das alte Flag nicht mehr wirkt)."""
+    organizer = organizers_storage.create_organizer(api_client.db_path, uuid.uuid4().hex, user_id, "Test Organizer")
+    organizers_storage.set_verification_status(api_client.db_path, organizer.id, OrganizerVerificationStatus.VERIFIED)
 
 
 def _publish(
@@ -334,7 +342,11 @@ def test_publish_als_unverifizierter_host_gibt_403(api_client, auth_headers_fact
     assert resp.status_code == 403
 
 
-def test_publish_nach_admin_verifizierung_klappt(api_client, auth_headers_factory, monkeypatch):
+def test_publish_admin_user_verify_hat_keine_wirkung_mehr(api_client, auth_headers_factory, monkeypatch):
+    """Social-Graph-Phase-4: beweist, dass das LEGACY ``/admin/users/{id}/verify``
+    (``User.is_verified``) seit der Organizer-Verification-Migration
+    KEINEN Einfluss mehr auf Publish-Berechtigung hat - deprecated-in-place,
+    nicht still kaputt (siehe Plan, "deprecate-in-place"-Entscheidung)."""
     from backend.app.core.config import settings
 
     headers, user, _ = auth_headers_factory(email="toverify@example.com")
@@ -350,6 +362,35 @@ def test_publish_nach_admin_verifizierung_klappt(api_client, auth_headers_factor
     verify_resp = api_client.post(f"/api/v1/admin/users/{user['id']}/verify", headers=admin_headers)
     assert verify_resp.status_code == 200
     assert verify_resp.json()["is_verified"] is True
+
+    resp = api_client.post(
+        f"/api/v1/parties/{party_id}/publish", json={"event_type": "club_event"}, headers=headers
+    )
+    assert resp.status_code == 403  # weiterhin blockiert - das alte Flag wirkt nicht mehr
+
+
+def test_publish_nach_admin_organizer_verifizierung_klappt(api_client, auth_headers_factory, monkeypatch):
+    from backend.app.core.config import settings
+
+    headers, user, _ = auth_headers_factory(email="toverifyorg@example.com")
+    party_id = _make_party(api_client, headers)
+
+    resp = api_client.post(
+        f"/api/v1/parties/{party_id}/publish", json={"event_type": "club_event"}, headers=headers
+    )
+    assert resp.status_code == 403
+
+    create_resp = api_client.post(
+        "/api/v1/organizers", json={"display_name": "Toverifyorg Events"}, headers=headers
+    )
+    assert create_resp.status_code == 201
+    organizer_id = create_resp.json()["id"]
+
+    admin_headers, _admin, _ = auth_headers_factory(email="theorgadmin@example.com")
+    monkeypatch.setattr(settings, "admin_emails", "theorgadmin@example.com")
+    verify_resp = api_client.post(f"/api/v1/admin/organizers/{organizer_id}/verify", headers=admin_headers)
+    assert verify_resp.status_code == 200
+    assert verify_resp.json()["verification_status"] == "verified"
 
     resp = api_client.post(
         f"/api/v1/parties/{party_id}/publish", json={"event_type": "club_event"}, headers=headers
