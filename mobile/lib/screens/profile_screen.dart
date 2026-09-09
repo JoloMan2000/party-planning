@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../api/api_client.dart';
 import '../models/profile.dart';
 import '../state/profile_providers.dart';
+import '../state/social_providers.dart';
 import '../state/spotify_providers.dart';
 
 // TODO(i18n): English-only strings for now, deliberately deferred per Phase-3
@@ -27,6 +28,7 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _genderController = TextEditingController();
   final _bioController = TextEditingController();
+  final _usernameController = TextEditingController();
   bool _initialized = false;
   bool _saving = false;
 
@@ -34,6 +36,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   void dispose() {
     _genderController.dispose();
     _bioController.dispose();
+    _usernameController.dispose();
     super.dispose();
   }
 
@@ -42,6 +45,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     _initialized = true;
     _genderController.text = profile.gender;
     _bioController.text = profile.bio;
+    _usernameController.text = profile.username;
   }
 
   Future<DateTime?> _pickBirthDate() {
@@ -72,13 +76,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     setState(() => _saving = true);
     final messenger = ScaffoldMessenger.of(context);
     try {
+      final trimmedUsername = _usernameController.text.trim();
       await ref.read(profileProvider.notifier).save(
             gender: _genderController.text.trim(),
             bio: _bioController.text.trim(),
+            username: trimmedUsername.isEmpty ? null : trimmedUsername,
           );
       if (mounted) messenger.showSnackBar(const SnackBar(content: Text('Profile saved.')));
-    } catch (_) {
-      messenger.showSnackBar(const SnackBar(content: Text('Failed to save. Please try again.')));
+    } catch (e) {
+      final message = e is ApiException && e.detail is String
+          ? e.detail as String
+          : 'Failed to save. Please try again.';
+      messenger.showSnackBar(SnackBar(content: Text(message)));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -131,6 +140,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 const SizedBox(height: 12),
                 TextField(
+                  controller: _usernameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Username',
+                    prefixText: '@',
+                    border: OutlineInputBorder(),
+                    helperText: '3-30 characters: letters, numbers, underscore, period.',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
                   controller: _genderController,
                   decoration: const InputDecoration(labelText: 'Gender', border: OutlineInputBorder()),
                 ),
@@ -164,6 +183,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => ref.read(showSpotifyConnectProvider.notifier).state = true,
+                  ),
+                ),
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.people),
+                    title: const Text('Friends'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => ref.read(showFriendsProvider.notifier).state = true,
                   ),
                 ),
               ],

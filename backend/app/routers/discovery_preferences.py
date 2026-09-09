@@ -14,6 +14,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+import accounts.discover_learning as discover_learning
 import accounts.discovery_storage as discovery_storage
 import accounts.profile_storage as profile_storage
 from accounts.domain import (
@@ -86,6 +87,19 @@ def put_discovery_preferences(
     )
     saved = discovery_storage.upsert_discovery_preferences(db_path, current_user.id, prefs)
     return _to_public(saved)
+
+
+@router.post("/discovery-profile/reset-learning", status_code=status.HTTP_204_NO_CONTENT)
+def reset_learning(
+    current_user: User = Depends(get_current_user),
+    db_path: Path = Depends(get_db_path),
+) -> None:
+    """Build-Schritt 8: löscht alle gelernten Affinitäten (siehe
+    ``accounts/discover_learning.py::reset_learned_profile``) - Ranking
+    fällt danach auf reine explizite Preferences zurück. Explizite
+    Preferences selbst, Blocked Organizers und Exposure-Historie bleiben
+    unangetastet (siehe dortige Docstring-Begründung)."""
+    discover_learning.reset_learned_profile(db_path, current_user.id)
 
 
 @router.put("/discovery-preferences/music", response_model=list[MusicPreferenceItem])

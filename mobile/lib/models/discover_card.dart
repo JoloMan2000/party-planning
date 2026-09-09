@@ -10,6 +10,7 @@ class DiscoverCard {
   final List<String> interestTags;
   final String hostDisplayName;
   final double matchScore;
+  final String why;
 
   const DiscoverCard({
     required this.partyId,
@@ -22,6 +23,7 @@ class DiscoverCard {
     required this.interestTags,
     required this.hostDisplayName,
     required this.matchScore,
+    required this.why,
   });
 
   factory DiscoverCard.fromJson(Map<String, dynamic> json) => DiscoverCard(
@@ -35,5 +37,6 @@ class DiscoverCard {
         interestTags: (json['interest_tags'] as List?)?.cast<String>() ?? const [],
         hostDisplayName: (json['host_display_name'] as String?) ?? '',
         matchScore: (json['match_score'] as num).toDouble(),
+        why: (json['why'] as String?) ?? '',
       );
 }

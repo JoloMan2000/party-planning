@@ -10,6 +10,7 @@ import 'screens/create_party_screen.dart';
 import 'screens/discovery_preferences_screen.dart';
 import 'screens/edit_party_screen.dart';
 import 'screens/forgot_password_screen.dart';
+import 'screens/friends_screen.dart';
 import 'screens/home_shell.dart';
 import 'screens/invitation_detail_screen.dart';
 import 'screens/login_screen.dart';
@@ -19,12 +20,14 @@ import 'screens/profile_screen.dart';
 import 'screens/request_account_unlock_screen.dart';
 import 'screens/reset_password_screen.dart';
 import 'screens/signup_screen.dart';
+import 'screens/social_profile_screen.dart';
 import 'screens/spotify_connect_screen.dart';
 import 'screens/unlock_account_screen.dart';
 import 'screens/verify_email_screen.dart';
 import 'state/auth_providers.dart';
 import 'state/geo_providers.dart';
 import 'state/profile_providers.dart';
+import 'state/social_providers.dart';
 import 'state/spotify_providers.dart';
 import 'theme/party_theme.dart';
 
@@ -130,6 +133,8 @@ class _PartyAppState extends ConsumerState<PartyApp> {
       final showAccountUnlockRequest = ref.watch(showAccountUnlockRequestProvider);
       final showNotifications = ref.watch(showNotificationsProvider);
       final showProfile = ref.watch(showProfileProvider);
+      final showFriends = ref.watch(showFriendsProvider);
+      final selectedFriendProfileUserId = ref.watch(selectedFriendProfileUserIdProvider);
       final showSpotifyConnect = ref.watch(showSpotifyConnectProvider);
       final selectedPartyId = ref.watch(selectedPartyIdProvider);
       final selectedInvitationId = ref.watch(selectedInvitationIdProvider);
@@ -155,6 +160,10 @@ class _PartyAppState extends ConsumerState<PartyApp> {
         home = const SpotifyConnectScreen();
       } else if (showProfile) {
         home = const ProfileScreen();
+      } else if (showFriends) {
+        home = const FriendsScreen();
+      } else if (selectedFriendProfileUserId != null) {
+        home = SocialProfileScreen(userId: selectedFriendProfileUserId);
       } else if (showNotifications) {
         home = const NotificationsScreen();
       } else if (showDiscoveryPreferences) {

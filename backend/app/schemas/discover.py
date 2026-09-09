@@ -36,6 +36,9 @@ class DiscoverCardPublic(BaseModel):
     # Discovery-Koordinaten + Party-``party_locations``-Punkt) aufgelöst
     # sind; nie eine vorgetäuschte Distanz aus einem Städte-Textvergleich.
     distance_km: float | None = None
+    # Build-Schritt 7 (Explainability) - ein kurzer, für den User
+    # verständlicher Grund, nie leer (siehe accounts/discover_ranking.py::explain_candidate).
+    why: str = ""
 
 
 class DiscoverDeckResponse(BaseModel):
@@ -44,10 +47,21 @@ class DiscoverDeckResponse(BaseModel):
 
 class DiscoverActionRequest(BaseModel):
     action: str  # "going" | "maybe" | "not_interested"
+    # Build-Schritt 3: nur bei action="not_interested" erlaubt (siehe
+    # Validierung in backend/app/routers/discover.py::act_on_discover_card) -
+    # bewusst kein Enum-Typ hier, damit ein unbekannter Wert als 422 mit
+    # klarer Fehlermeldung endet statt als generischer Pydantic-Parse-Fehler.
+    reason: str | None = None
 
 
 class DiscoverActionResponse(BaseModel):
     party_id: str
     action: str
+    reason: str
     membership_role: str | None
     membership_rsvp_status: str | None
+
+
+class OrganizerBlockResponse(BaseModel):
+    organizer_id: str
+    blocked: bool

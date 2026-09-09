@@ -58,6 +58,7 @@ class PartyDetailScreen extends ConsumerWidget {
               _PartyHeader(party: party),
               const SizedBox(height: 20),
               _UndoDiscoverJoinSection(party: party),
+              _BlockOrganizerSection(party: party),
               _PublishToDiscoverSection(party: party),
               const SizedBox(height: 20),
               _GuestsSection(partyId: partyId),
@@ -120,6 +121,71 @@ class _UndoDiscoverJoinSection extends ConsumerWidget {
       ref.read(selectedPartyIdProvider.notifier).state = null; // zurück zur Liste - Membership ist weg
     } catch (_) {
       messenger.showSnackBar(const SnackBar(content: Text('Failed to undo - please try again.')));
+    }
+  }
+}
+
+/// "Block organizer"-Button (Discover-Engine-Phase-1) - für jeden
+/// Nicht-Host sichtbar, unabhängig von einem eigenen Discover-Swipe auf
+/// DIESE Party (Block wirkt auf ALLE künftigen Parties des Organizers, nicht
+/// nur diese eine - siehe `backend/app/routers/discover.py::block_organizer`).
+/// Nach erfolgreichem Block zurück zur Liste, mirrort
+/// `_UndoDiscoverJoinSection`'s Confirm-Dialog-/SnackBar-Muster.
+class _BlockOrganizerSection extends ConsumerWidget {
+  final Party party;
+  const _BlockOrganizerSection({required this.party});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentUserAsync = ref.watch(currentUserProvider);
+    final isHost = currentUserAsync.maybeWhen(
+      data: (user) => user.id == party.hostUserId,
+      orElse: () => true, // solange unbekannt: nicht anzeigen (fail-closed)
+    );
+    if (isHost) return const SizedBox.shrink();
+
+    final blockState = ref.watch(blockOrganizerProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.block, color: Colors.red),
+            title: const Text('Block organizer'),
+            subtitle: const Text('Hide future parties from this organizer in Discover.'),
+            trailing: TextButton(
+              onPressed: blockState.isLoading ? null : () => _confirmAndBlock(context, ref),
+              child: const Text('Block'),
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
+  Future<void> _confirmAndBlock(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Block this organizer?'),
+        content: const Text(
+          'You will no longer see parties from this organizer in Discover. This does not affect your membership in this party.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Block')),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(blockOrganizerProvider.notifier).block(party.hostUserId);
+      messenger.showSnackBar(const SnackBar(content: Text('Organizer blocked.')));
+      ref.read(selectedPartyIdProvider.notifier).state = null;
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(content: Text('Failed to block organizer. Please try again.')));
     }
   }
 }

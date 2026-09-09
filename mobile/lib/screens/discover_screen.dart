@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../models/discover_action_result.dart';
 import '../models/discover_card.dart';
 import '../state/auth_providers.dart';
 import '../widgets/discover_card_view.dart';
@@ -109,6 +110,61 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
       messenger.showSnackBar(
         const SnackBar(content: Text('Failed to record your swipe. Please try again.')),
       );
+      return;
     }
+    // Zero-Friction (Build-Schritt 3, siehe accounts/domain.py::DiscoverNotInterestedReason-
+    // Docstring): der Swipe ist bereits gespeichert, der Reason-Picker ist rein
+    // optionales Nachreichen - ein Dismiss ändert nichts am bereits erfolgten Swipe.
+    if (direction == SwipeDirection.left && mounted) {
+      await _promptForReason(card.partyId);
+    }
+  }
+
+  Future<void> _promptForReason(String partyId) async {
+    final reason = await showModalBottomSheet<DiscoverNotInterestedReason>(
+      context: context,
+      builder: (context) => _NotInterestedReasonSheet(),
+    );
+    if (reason == null || !mounted) return;
+    try {
+      await ref
+          .read(discoverActionProvider.notifier)
+          .act(partyId, action: 'not_interested', reason: reason.wireValue);
+    } catch (_) {
+      // Der Swipe selbst wurde bereits erfolgreich gespeichert - ein
+      // fehlgeschlagener Reason-Nachtrag ist nicht kritisch genug für eine
+      // SnackBar-Fehlermeldung, der User hat den Screen ohnehin schon verlassen.
+    }
+  }
+}
+
+class _NotInterestedReasonSheet extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Why not interested?',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 4),
+            const Text('Optional - helps us show you better events.', textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            for (final reason in DiscoverNotInterestedReason.values)
+              ListTile(
+                title: Text(reason.label),
+                onTap: () => Navigator.pop(context, reason),
+              ),
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Skip')),
+          ],
+        ),
+      ),
+    );
   }
 }

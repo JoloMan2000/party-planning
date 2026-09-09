@@ -44,6 +44,11 @@ class DiscoveryPreferences {
     String? discoveryCity,
     double? discoveryLat,
     double? discoveryLon,
+    List<String>? preferredDays,
+    List<String>? preferredDayparts,
+    String? pricePreference,
+    double? mainstreamDiscovery,
+    bool? personalizedRecommendationsEnabled,
   }) =>
       DiscoveryPreferences(
         discoveryRadiusKm: discoveryRadiusKm ?? this.discoveryRadiusKm,
@@ -51,11 +56,11 @@ class DiscoveryPreferences {
         discoveryCity: discoveryCity ?? this.discoveryCity,
         discoveryLat: discoveryLat ?? this.discoveryLat,
         discoveryLon: discoveryLon ?? this.discoveryLon,
-        preferredDays: preferredDays,
-        preferredDayparts: preferredDayparts,
-        pricePreference: pricePreference,
-        mainstreamDiscovery: mainstreamDiscovery,
-        personalizedRecommendationsEnabled: personalizedRecommendationsEnabled,
+        preferredDays: preferredDays ?? this.preferredDays,
+        preferredDayparts: preferredDayparts ?? this.preferredDayparts,
+        pricePreference: pricePreference ?? this.pricePreference,
+        mainstreamDiscovery: mainstreamDiscovery ?? this.mainstreamDiscovery,
+        personalizedRecommendationsEnabled: personalizedRecommendationsEnabled ?? this.personalizedRecommendationsEnabled,
       );
 
   Map<String, dynamic> toJson() => {

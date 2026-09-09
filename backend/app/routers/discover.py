@@ -5,11 +5,12 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+import accounts.discover_learning as discover_learning
 import accounts.discover_storage as discover_storage
 import accounts.notification_storage as notification_storage
 import accounts.party_storage as party_storage
 import accounts.user_storage as user_storage
-from accounts.domain import DiscoverAction, PartyRole, RsvpStatus, User
+from accounts.domain import DiscoverAction, DiscoverNotInterestedReason, PartyRole, RsvpStatus, User
 from backend.app.core.auth import get_current_user
 from backend.app.core.deps import get_db_path
 from backend.app.schemas.discover import (
@@ -17,6 +18,7 @@ from backend.app.schemas.discover import (
     DiscoverActionResponse,
     DiscoverCardPublic,
     DiscoverDeckResponse,
+    OrganizerBlockResponse,
 )
 
 router = APIRouter(prefix="/api/v1/discover", tags=["discover"])
@@ -28,7 +30,7 @@ def get_deck(
 ) -> DiscoverDeckResponse:
     ranked = discover_storage.get_discover_deck(db_path, current_user.id)
     cards = []
-    for party, publication, score, distance_km in ranked:
+    for party, publication, score, distance_km, why in ranked:
         host = user_storage.get_user_by_id(db_path, party.host_user_id)
         cards.append(
             DiscoverCardPublic(
@@ -38,6 +40,7 @@ def get_deck(
                 host_display_name=host.display_name if host is not None else "",
                 match_score=round(score, 3),
                 distance_km=distance_km,
+                why=why,
             )
         )
     return DiscoverDeckResponse(cards=cards)
@@ -68,6 +71,18 @@ def act_on_discover_card(
     except ValueError:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Ungültige Discover-Aktion.")
 
+    reason = ""
+    if payload.reason is not None:
+        if action != DiscoverAction.NOT_INTERESTED:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="reason ist nur bei action='not_interested' erlaubt.",
+            )
+        try:
+            reason = DiscoverNotInterestedReason(payload.reason).value
+        except ValueError:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Ungültiger reason-Wert.")
+
     membership = None
     if action in (DiscoverAction.GOING, DiscoverAction.MAYBE) and discover_storage.is_party_full(db_path, party_id):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="This party is full.")
@@ -76,7 +91,10 @@ def act_on_discover_card(
     elif action == DiscoverAction.MAYBE:
         membership = party_storage.upsert_membership(db_path, party_id, current_user.id, PartyRole.GUEST, RsvpStatus.TENTATIVE)
 
-    discover_storage.upsert_discover_action(db_path, uuid.uuid4().hex, current_user.id, party_id, action)
+    discover_storage.upsert_discover_action(db_path, uuid.uuid4().hex, current_user.id, party_id, action, reason=reason)
+    # Build-Schritt 4: reiner Schreibpfad - discover_ranking.py konsumiert
+    # diese Signale noch nicht (Build-Schritt 5, Blended Ranking).
+    discover_learning.record_signal_from_action(db_path, current_user.id, publication, action, reason=reason)
 
     if membership is not None:
         notification_storage.create_notification(
@@ -87,6 +105,7 @@ def act_on_discover_card(
     return DiscoverActionResponse(
         party_id=party_id,
         action=action.value,
+        reason=reason,
         membership_role=membership.role.value if membership is not None else None,
         membership_rsvp_status=membership.rsvp_status.value if membership is not None else None,
     )
@@ -113,3 +132,33 @@ def undo_discover_action(
         )
     party_storage.remove_membership(db_path, party_id, current_user.id)
     discover_storage.delete_discover_action(db_path, current_user.id, party_id)
+
+
+@router.post("/organizers/{organizer_id}/block", response_model=OrganizerBlockResponse)
+def block_organizer(
+    organizer_id: str,
+    current_user: User = Depends(get_current_user),
+    db_path: Path = Depends(get_db_path),
+) -> OrganizerBlockResponse:
+    """Hard-Block eines Organizers (Discover-Engine-Phase-1, Spec §40) -
+    dessen Parties verschwinden ab sofort aus jedem künftigen Deck-Fetch
+    (siehe ``discover_storage.list_candidate_publications``), unabhängig
+    vom Ranking. Idempotent (erneuter Block-Aufruf ist ein No-Op-Erfolg)."""
+    if organizer_id == current_user.id:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Du kannst dich nicht selbst blockieren.")
+    organizer = user_storage.get_user_by_id(db_path, organizer_id)
+    if organizer is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organizer nicht gefunden.")
+    discover_learning.block_organizer(db_path, current_user.id, organizer_id)
+    return OrganizerBlockResponse(organizer_id=organizer_id, blocked=True)
+
+
+@router.delete("/organizers/{organizer_id}/block", status_code=status.HTTP_204_NO_CONTENT)
+def unblock_organizer(
+    organizer_id: str,
+    current_user: User = Depends(get_current_user),
+    db_path: Path = Depends(get_db_path),
+) -> None:
+    """Hebt einen Organizer-Block wieder auf. No-Op, falls kein Block
+    existiert (mirrort das Idempotenz-Verhalten von ``block_organizer``)."""
+    discover_learning.unblock_organizer(db_path, current_user.id, organizer_id)

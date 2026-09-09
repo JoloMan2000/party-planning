@@ -74,6 +74,16 @@ class DiscoveryPreferencesNotifier extends AsyncNotifier<DiscoveryPreferences> {
     final saved = await client.updateDiscoveryPreferences(token, onRefresh(ref), preferences);
     state = AsyncData(saved);
   }
+
+  /// Build-Schritt 8: "Reset personalization" - löscht gelernte Affinitäten
+  /// serverseitig, lädt die (unveränderten) expliziten Preferences danach
+  /// neu, damit die UI konsistent bleibt.
+  Future<void> resetLearning() async {
+    final token = ref.read(requiredAccessTokenProvider);
+    final client = ref.read(apiClientProvider);
+    await client.resetLearning(token, onRefresh(ref));
+    state = AsyncData(await client.getDiscoveryPreferences(token, onRefresh(ref)));
+  }
 }
 
 final discoveryPreferencesProvider =

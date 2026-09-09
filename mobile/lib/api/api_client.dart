@@ -33,6 +33,10 @@ import '../models/guest_response_draft.dart';
 import '../models/profile.dart';
 import '../models/rsvp_response.dart';
 import '../models/spotify_status.dart';
+import '../models/friend.dart';
+import '../models/friend_request.dart';
+import '../models/social_profile.dart';
+import '../models/user_search_result.dart';
 import '../models/user_account.dart';
 import 'api_config.dart';
 
@@ -928,12 +932,15 @@ class ApiClient {
     Future<String?> Function() onRefresh,
     String partyId, {
     required String action,
+    String? reason,
   }) async {
+    final body = <String, dynamic>{'action': action};
+    if (reason != null) body['reason'] = reason;
     final resp = await _authorizedRequest(
       (token) => _http.post(
         _uri('/api/v1/discover/$partyId/action'),
         headers: _authHeaders(token),
-        body: jsonEncode({'action': action}),
+        body: jsonEncode(body),
       ),
       accessToken,
       onRefresh,
@@ -951,6 +958,39 @@ class ApiClient {
   ) async {
     final resp = await _authorizedRequest(
       (token) => _http.delete(_uri('/api/v1/discover/$partyId/action'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    if (resp.statusCode >= 400) {
+      throw ApiException(resp.statusCode, resp.body);
+    }
+  }
+
+  /// Discover-Engine-Phase-1: blockiert den Organizer (Host) einer Party
+  /// hart - dessen künftige Parties verschwinden aus jedem folgenden
+  /// Deck-Fetch (siehe `backend/app/routers/discover.py::block_organizer`).
+  Future<void> blockOrganizer(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String organizerId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.post(_uri('/api/v1/discover/organizers/$organizerId/block'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    if (resp.statusCode >= 400) {
+      throw ApiException(resp.statusCode, resp.body);
+    }
+  }
+
+  Future<void> unblockOrganizer(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String organizerId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.delete(_uri('/api/v1/discover/organizers/$organizerId/block'), headers: _authHeaders(token)),
       accessToken,
       onRefresh,
     );
@@ -1190,6 +1230,23 @@ class ApiClient {
     return DiscoveryPreferences.fromJson(_decodeObject(resp));
   }
 
+  /// Build-Schritt 8: löscht alle gelernten Affinitäten - Ranking fällt
+  /// danach auf reine explizite Preferences zurück (siehe
+  /// `backend/app/routers/discovery_preferences.py::reset_learning`).
+  Future<void> resetLearning(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.post(_uri('/api/v1/me/discovery-profile/reset-learning'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    if (resp.statusCode >= 400) {
+      throw ApiException(resp.statusCode, resp.body);
+    }
+  }
+
   /// Wirft ein 404 als `ApiException` (anders als `getPartyLocation`) - der
   /// 404-Zustand IST hier das fachliche "Onboarding noch nicht abgeschlossen"-
   /// Signal, das `ProfileScreen` explizit auffängt, kein stiller Sonderfall.
@@ -1212,10 +1269,12 @@ class ApiClient {
     Future<String?> Function() onRefresh, {
     String? gender,
     String? bio,
+    String? username,
   }) async {
     final body = <String, dynamic>{};
     if (gender != null) body['gender'] = gender;
     if (bio != null) body['bio'] = bio;
+    if (username != null) body['username'] = username;
     final resp = await _authorizedRequest(
       (token) => _http.patch(
         _uri('/api/v1/me/profile'),
@@ -1291,6 +1350,166 @@ class ApiClient {
         _uri('/api/v1/me/music-provider/spotify/disconnect'),
         headers: _authHeaders(token),
       ),
+      accessToken,
+      onRefresh,
+    );
+    if (resp.statusCode >= 400) {
+      throw ApiException(resp.statusCode, resp.body);
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Social Graph Phase 1 (Friends-Fundament) - Friend Requests, Friendship,
+  // Blocking, Friend Search (siehe `backend/app/routers/social.py`).
+  // ---------------------------------------------------------------------
+
+  Future<List<Friend>> getFriends(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/me/friends'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return _decodeList(resp).map((e) => Friend.fromJson((e as Map).cast<String, dynamic>())).toList();
+  }
+
+  Future<void> removeFriend(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String userId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.delete(_uri('/api/v1/friends/$userId'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    if (resp.statusCode >= 400) {
+      throw ApiException(resp.statusCode, resp.body);
+    }
+  }
+
+  Future<FriendRequestsInbox> getFriendRequests(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/me/friend-requests'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return FriendRequestsInbox.fromJson(_decodeObject(resp));
+  }
+
+  Future<List<UserSearchResult>> searchUsers(
+    String accessToken,
+    Future<String?> Function() onRefresh, {
+    required String q,
+  }) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/users/search', {'q': q}), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    final body = _decodeObject(resp);
+    return (body['results'] as List)
+        .map((e) => UserSearchResult.fromJson((e as Map).cast<String, dynamic>()))
+        .toList();
+  }
+
+  Future<SocialProfile> getSocialProfile(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String userId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/users/$userId/social-profile'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return SocialProfile.fromJson(_decodeObject(resp));
+  }
+
+  Future<FriendRequest> sendFriendRequest(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String userId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.post(_uri('/api/v1/users/$userId/friend-request'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    final body = _decodeObject(resp);
+    return FriendRequest.fromJson((body['request'] as Map).cast<String, dynamic>());
+  }
+
+  Future<FriendRequest> acceptFriendRequest(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String requestId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.post(_uri('/api/v1/friend-requests/$requestId/accept'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return FriendRequest.fromJson(_decodeObject(resp));
+  }
+
+  Future<void> declineFriendRequest(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String requestId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.post(_uri('/api/v1/friend-requests/$requestId/decline'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    if (resp.statusCode >= 400) {
+      throw ApiException(resp.statusCode, resp.body);
+    }
+  }
+
+  Future<void> cancelFriendRequest(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String requestId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.post(_uri('/api/v1/friend-requests/$requestId/cancel'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    if (resp.statusCode >= 400) {
+      throw ApiException(resp.statusCode, resp.body);
+    }
+  }
+
+  Future<void> blockUser(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String userId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.post(_uri('/api/v1/users/$userId/block'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    if (resp.statusCode >= 400) {
+      throw ApiException(resp.statusCode, resp.body);
+    }
+  }
+
+  Future<void> unblockUser(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String userId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.delete(_uri('/api/v1/users/$userId/block'), headers: _authHeaders(token)),
       accessToken,
       onRefresh,
     );

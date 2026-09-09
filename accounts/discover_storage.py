@@ -22,6 +22,7 @@ from accounts.domain import DiscoverAction, DiscoverActionRecord, Party, PublicE
 from accounts.party_storage import _row_to_party
 from geo.distance import bounding_box, haversine_km
 from geo.domain import GeoPoint
+import accounts.discover_learning as discover_learning
 import geo.storage as geo_storage
 
 # Geo Platform (Spec §123-124): erweiterter Radius für als "Major Event"
@@ -39,8 +40,12 @@ def init_discover_storage(db_path: str | Path) -> None:
     ``list_candidate_publications`` seit der Geo Platform hart gegen diese
     Tabelle joint (Spec §123-124) - jeder bestehende Aufrufer von
     ``init_discover_storage`` (Tests inkl.) bekommt die Tabelle damit ohne
-    eigene Anpassung."""
+    eigene Anpassung. Gleiches Prinzip fürs ``discover_learning``-Modul
+    (Discover-Engine-Phase-1): ``get_discover_deck`` schreibt seit Phase 1
+    Exposure-Zeilen, jeder bestehende Aufrufer von ``init_discover_storage``
+    bekommt diese Tabelle damit ebenfalls ohne eigene Anpassung."""
     geo_storage.init_geo_storage(db_path)
+    discover_learning.init_discover_learning_storage(db_path)
     with sqlite3.connect(db_path) as conn:
         conn.execute(
             """
@@ -79,6 +84,16 @@ def init_discover_storage(db_path: str | Path) -> None:
             )
             """
         )
+        # Schema-Migration (Build-Schritt 3, gleiches Muster wie
+        # public_events' max_guests/is_major_event oben) - reason kam nach
+        # dem initialen Rollout dazu.
+        existing_discover_action_cols = {row[1] for row in conn.execute("PRAGMA table_info(discover_actions)")}
+        discover_action_migrations = {
+            "reason": "ALTER TABLE discover_actions ADD COLUMN reason TEXT NOT NULL DEFAULT ''",
+        }
+        for column, ddl in discover_action_migrations.items():
+            if column not in existing_discover_action_cols:
+                conn.execute(ddl)
         conn.execute("CREATE INDEX IF NOT EXISTS idx_discover_actions_user ON discover_actions(user_id)")
 
 
@@ -108,6 +123,7 @@ def _row_to_discover_action(row: sqlite3.Row) -> DiscoverActionRecord:
         user_id=row["user_id"],
         party_id=row["party_id"],
         action=DiscoverAction(row["action"]),
+        reason=(row["reason"] if "reason" in row.keys() else None) or "",
         created_at=datetime.fromisoformat(row["created_at"]),
     )
 
@@ -159,20 +175,27 @@ def get_publication(db_path: str | Path, party_id: str) -> PublicEvent | None:
 
 
 def upsert_discover_action(
-    db_path: str | Path, action_id: str, user_id: str, party_id: str, action: DiscoverAction
+    db_path: str | Path, action_id: str, user_id: str, party_id: str, action: DiscoverAction, reason: str = ""
 ) -> DiscoverActionRecord:
     """Erneutes Swipen derselben Party überschreibt die vorherige Aktion
-    statt einen zweiten Datensatz anzulegen (UNIQUE(user_id, party_id))."""
+    statt einen zweiten Datensatz anzulegen (UNIQUE(user_id, party_id)).
+
+    ``reason`` (Build-Schritt 3) wird IMMER mitgeschrieben, auch als leerer
+    String bei ``GOING``/``MAYBE`` oder einem grundlosen ``NOT_INTERESTED`` -
+    die Enum-Gültigkeit ("nur bei NOT_INTERESTED, nur bekannte Werte") wird
+    an der API-Grenze geprüft (``backend/app/schemas/discover.py``), nicht
+    hier; ein erneutes Swipen ohne Grund überschreibt einen zuvor
+    gespeicherten Grund bewusst (der alte Grund gehörte zur alten Aktion)."""
     now = datetime.now().isoformat()
     with sqlite3.connect(db_path) as conn:
         conn.execute(
             """
-            INSERT INTO discover_actions (id, user_id, party_id, action, created_at)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO discover_actions (id, user_id, party_id, action, reason, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
             ON CONFLICT(user_id, party_id) DO UPDATE SET
-                action = excluded.action, created_at = excluded.created_at
+                action = excluded.action, reason = excluded.reason, created_at = excluded.created_at
             """,
-            (action_id, user_id, party_id, action.value, now),
+            (action_id, user_id, party_id, action.value, reason, now),
         )
     result = get_discover_action(db_path, user_id, party_id)
     assert result is not None
@@ -206,6 +229,7 @@ def list_candidate_publications(
     user_point: GeoPoint | None = None,
     user_radius_km: float = 25.0,
     allow_major_events_outside_radius: bool = False,
+    blocked_organizer_ids: set[str] | None = None,
 ) -> list[tuple[Party, PublicEvent]]:
     """Alle für [user_id] noch swipbaren veröffentlichten Parties - EIN
     Query kodiert drei Hard-Filter gleichzeitig: nicht die eigene Party,
@@ -223,7 +247,13 @@ def list_candidate_publications(
     wie zuvor (nur das weiche ``_city_fit``-Signal im Ranking) - siehe Plan,
     Backward-Compat-Regel. ``bounding_box`` ist NUR ein günstiges SQL-
     Prefilter; die tatsächliche Radius-Entscheidung fällt danach in Python
-    per ``haversine_km`` (Spec §50)."""
+    per ``haversine_km`` (Spec §50).
+
+    Discover-Engine-Phase-1 (Spec §40): ein FÜNFTER Hard-Filter - geblockte
+    Organizer (``accounts/discover_learning.py::get_blocked_organizer_ids``)
+    werden VOR dem Ranking entfernt, damit ein Block niemals durch
+    Diversity/Exploration überschrieben werden kann. Post-Fetch in Python
+    gefiltert, analog zum bestehenden Radius-Filter."""
     bbox_clause = ""
     bbox_params: tuple = ()
     if user_point is not None:
@@ -266,6 +296,8 @@ def list_candidate_publications(
     result = []
     for row in rows:
         party = _row_to_party(row)
+        if blocked_organizer_ids and party.host_user_id in blocked_organizer_ids:
+            continue
         publication = PublicEvent(
             id=row["public_event_id"],
             party_id=row["id"],
@@ -307,11 +339,19 @@ def is_party_full(db_path: str | Path, party_id: str) -> bool:
 
 def get_discover_deck(
     db_path: str | Path, user_id: str, limit: int = 30
-) -> list[tuple[Party, PublicEvent, float, float | None]]:
+) -> list[tuple[Party, PublicEvent, float, float | None, str]]:
     """Orchestriert Kandidaten-Auswahl + regelbasiertes Ranking (siehe
     ``accounts/discover_ranking.py``) - liefert die Top [limit] Kandidaten
     inkl. ``distance_km`` (``None``, wenn einer Seite Koordinaten fehlen -
-    Spec §83, nie eine vorgetäuschte Präzision)."""
+    Spec §83, nie eine vorgetäuschte Präzision) und ``why`` (Build-Schritt 7,
+    Explainability - siehe ``discover_ranking.explain_candidate``, nie ein
+    leerer String).
+
+    Schreibt als Nebeneffekt eine ``EventRecommendationExposure``-Zeile pro
+    zurückgegebenem Kandidaten (Discover-Engine-Phase-1, Spec §74-75) - damit
+    spätere Learning-Auswertungen "nie gezeigt" von "gezeigt, aber ignoriert"
+    unterscheiden können. Reine Protokollierung, beeinflusst das Ranking
+    dieses Aufrufs nicht."""
     import accounts.discover_ranking as discover_ranking
     import accounts.discovery_storage as discovery_storage
 
@@ -319,6 +359,8 @@ def get_discover_deck(
     user_point = None
     if preferences is not None and preferences.discovery_lat is not None and preferences.discovery_lon is not None:
         user_point = GeoPoint(latitude=preferences.discovery_lat, longitude=preferences.discovery_lon)
+
+    blocked_organizer_ids = discover_learning.get_blocked_organizer_ids(db_path, user_id)
 
     candidates = list_candidate_publications(
         db_path,
@@ -328,6 +370,7 @@ def get_discover_deck(
         allow_major_events_outside_radius=(
             preferences.allow_major_events_outside_radius if preferences is not None else False
         ),
+        blocked_organizer_ids=blocked_organizer_ids,
     )
     event_type_interests = {
         p.item_id for p in discovery_storage.get_event_interests(db_path, user_id, category="event_type")
@@ -335,16 +378,40 @@ def get_discover_deck(
     interest_tag_interests = {
         p.item_id for p in discovery_storage.get_event_interests(db_path, user_id, category="interest_tag")
     }
-    ranked = discover_ranking.rank_candidates(candidates, preferences, event_type_interests, interest_tag_interests)
+    # Build-Schritt 5 (Blended Ranking): personalized_recommendations_enabled=False
+    # ist der explizite Bypass - in diesem Fall bleibt learned_affinities None,
+    # identisch zum Cold-Start-Pfad in discover_ranking.py (kein Sonderfall
+    # dort noetig, siehe dessen Docstring). Default (kein Preferences-Datensatz)
+    # ist EIN (siehe UserDiscoveryPreferences.personalized_recommendations_enabled),
+    # daher wird ohne Preferences trotzdem personalisiert.
+    learned_affinities = None
+    if preferences is None or preferences.personalized_recommendations_enabled:
+        learned_affinities = discover_learning.get_learned_affinities_for_user(db_path, user_id)
+    ranked = discover_ranking.rank_candidates(
+        candidates, preferences, event_type_interests, interest_tag_interests, learned_affinities
+    )
 
     result = []
-    for party, publication, score in ranked[:limit]:
+    # Build-Schritt 6: Diversity + Exploration Post-Pass ersetzt das vormals
+    # nackte ranked[:limit] (siehe accounts/discover_ranking.py::apply_diversity_and_exploration).
+    top = discover_ranking.apply_diversity_and_exploration(ranked, limit)
+    for party, publication, score in top:
         distance_km = None
         if user_point is not None:
             location = geo_storage.get_party_location(db_path, party.id)
             if location is not None and location.point is not None:
                 distance_km = round(haversine_km(user_point, location.point), 1)
-        result.append((party, publication, score, distance_km))
+        why = discover_ranking.explain_candidate(
+            party, publication, preferences, event_type_interests, interest_tag_interests, learned_affinities
+        )
+        result.append((party, publication, score, distance_km, why))
+
+    discover_learning.record_exposures(
+        db_path,
+        user_id,
+        [(party.id, rank) for rank, (party, _publication, _score) in enumerate(top)],
+        discover_learning.CURRENT_MODEL_VERSION,
+    )
     return result
 
 
@@ -421,5 +488,27 @@ if __name__ == "__main__":
         # Undo: Discover-Action löschen -> Party taucht wieder im Deck auf.
         delete_discover_action(db_path, guest.id, party3.id)
         assert get_discover_action(db_path, guest.id, party3.id) is None
+
+        # reason (Build-Schritt 3): optional mitgeschrieben, per Default leer.
+        assert action.reason == ""
+        upsert_discover_action(db_path, uuid.uuid4().hex, guest.id, party3.id, DiscoverAction.NOT_INTERESTED, reason="too_far")
+        with_reason = get_discover_action(db_path, guest.id, party3.id)
+        assert with_reason.reason == "too_far"
+        # Erneutes Swipen ohne reason ueberschreibt den alten Grund (leer statt "too_far").
+        upsert_discover_action(db_path, uuid.uuid4().hex, guest.id, party3.id, DiscoverAction.GOING)
+        assert get_discover_action(db_path, guest.id, party3.id).reason == ""
+
+        # Geblockter Organizer -> dessen Parties verschwinden hart aus dem Pool.
+        import accounts.discover_learning as discover_learning
+
+        party4 = party_storage.create_party(db_path, uuid.uuid4().hex, host.id, "Warehouse Rave")
+        publish_party(db_path, party4.id, event_type="rave")
+        assert any(p.id == party4.id for p, _pe in list_candidate_publications(db_path, guest.id))
+        discover_learning.block_organizer(db_path, guest.id, host.id)
+        candidates_after_block = list_candidate_publications(
+            db_path, guest.id, blocked_organizer_ids=discover_learning.get_blocked_organizer_ids(db_path, guest.id)
+        )
+        assert all(p.host_user_id != host.id for p, _pe in candidates_after_block)
+        discover_learning.unblock_organizer(db_path, guest.id, host.id)
 
         print("accounts/discover_storage.py sanity check OK.")

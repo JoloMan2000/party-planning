@@ -22,9 +22,21 @@ from pathlib import Path
 from accounts.domain import BirthDateCorrection, UserProfile
 
 
+class UsernameAlreadyTakenError(Exception):
+    pass
+
+
 def init_profile_storage(db_path: str | Path) -> None:
     """Legt ``user_profiles``/``birth_date_corrections`` an, falls nicht
-    vorhanden. Idempotent, sicher bei jedem App-Start aufrufbar."""
+    vorhanden. Idempotent, sicher bei jedem App-Start aufrufbar.
+
+    Migriert zusätzlich ``username`` auf eine bereits existierende
+    ``user_profiles``-Tabelle (Social-Graph-Phase-1) - mirrort exakt die
+    ``user_migrations``-Technik aus ``accounts/user_storage.py::init_user_storage``.
+    SQLite kann per ``ALTER TABLE ADD COLUMN`` keine ``UNIQUE``-Constraint
+    anhängen, daher die Eindeutigkeit stattdessen über einen separaten
+    partiellen Unique-Index (``WHERE username IS NOT NULL``, damit bestehende
+    User ohne Username die Migration klaglos überstehen)."""
     with sqlite3.connect(db_path) as conn:
         conn.execute(
             """
@@ -40,6 +52,17 @@ def init_profile_storage(db_path: str | Path) -> None:
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
             """
+        )
+        existing_profile_cols = {row[1] for row in conn.execute("PRAGMA table_info(user_profiles)")}
+        profile_migrations = {
+            "username": "ALTER TABLE user_profiles ADD COLUMN username TEXT",
+        }
+        for column, ddl in profile_migrations.items():
+            if column not in existing_profile_cols:
+                conn.execute(ddl)
+        conn.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_user_profiles_username "
+            "ON user_profiles(username COLLATE NOCASE) WHERE username IS NOT NULL"
         )
         conn.execute(
             """
@@ -65,6 +88,7 @@ def _row_to_profile(row: sqlite3.Row) -> UserProfile:
         birth_date=date.fromisoformat(row["birth_date"]),
         gender=row["gender"] or "",
         bio=row["bio"] or "",
+        username=(row["username"] if "username" in row.keys() else None) or "",
         onboarding_completed_at=(
             datetime.fromisoformat(row["onboarding_completed_at"]) if row["onboarding_completed_at"] else None
         ),
@@ -81,6 +105,18 @@ def get_user_profile(db_path: str | Path, user_id: str) -> UserProfile | None:
     return _row_to_profile(row) if row is not None else None
 
 
+def is_username_available(db_path: str | Path, username: str) -> bool:
+    """Case-insensitiver Verfügbarkeits-Check (Spec §5: 'MaxM'/'maxm'/'MAXM'
+    = derselbe Handle) - liest denselben ``COLLATE NOCASE``-Index, den
+    ``upsert_user_profile`` zur Durchsetzung nutzt, daher niemals
+    inkonsistent mit dem tatsächlichen Insert/Update-Ergebnis."""
+    with sqlite3.connect(db_path) as conn:
+        row = conn.execute(
+            "SELECT 1 FROM user_profiles WHERE username = ? COLLATE NOCASE", (username,)
+        ).fetchone()
+    return row is None
+
+
 def upsert_user_profile(
     db_path: str | Path,
     user_id: str,
@@ -88,33 +124,43 @@ def upsert_user_profile(
     birth_date: date | None = None,
     gender: str | None = None,
     bio: str | None = None,
+    username: str | None = None,
 ) -> UserProfile:
     """Legt das Profil beim ersten Aufruf an (``birth_date`` dann Pflicht) oder
-    aktualisiert ``gender``/``bio`` eines bestehenden Profils. ``birth_date``
-    wird bei einem bereits existierenden Profil IGNORIERT (geschützt - siehe
-    Moduldoku), auch wenn hier übergeben - Aufrufer (Router) darf ``birth_date``
-    auf einem Update-Request ohnehin gar nicht erst entgegennehmen."""
+    aktualisiert ``gender``/``bio``/``username`` eines bestehenden Profils.
+    ``birth_date`` wird bei einem bereits existierenden Profil IGNORIERT
+    (geschützt - siehe Moduldoku), auch wenn hier übergeben - Aufrufer
+    (Router) darf ``birth_date`` auf einem Update-Request ohnehin gar nicht
+    erst entgegennehmen. ``username=None`` bedeutet "unverändert lassen"
+    (gleiche Konvention wie ``gender``/``bio``), NICHT "Username löschen".
+    Ein Verstoß gegen den ``idx_user_profiles_username``-Unique-Index wirft
+    ``UsernameAlreadyTakenError`` statt der rohen ``sqlite3.IntegrityError``
+    (mirrort ``EmailAlreadyRegisteredError`` in ``accounts/user_storage.py``)."""
     now = datetime.now().isoformat()
     existing = get_user_profile(db_path, user_id)
-    with sqlite3.connect(db_path) as conn:
-        if existing is None:
-            if birth_date is None:
-                raise ValueError("birth_date ist beim initialen Anlegen eines Profils Pflicht.")
-            conn.execute(
-                """
-                INSERT INTO user_profiles
-                    (user_id, birth_date, gender, bio, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?)
-                """,
-                (user_id, birth_date.isoformat(), gender or "", bio or "", now, now),
-            )
-        else:
-            new_gender = gender if gender is not None else existing.gender
-            new_bio = bio if bio is not None else existing.bio
-            conn.execute(
-                "UPDATE user_profiles SET gender = ?, bio = ?, updated_at = ? WHERE user_id = ?",
-                (new_gender, new_bio, now, user_id),
-            )
+    try:
+        with sqlite3.connect(db_path) as conn:
+            if existing is None:
+                if birth_date is None:
+                    raise ValueError("birth_date ist beim initialen Anlegen eines Profils Pflicht.")
+                conn.execute(
+                    """
+                    INSERT INTO user_profiles
+                        (user_id, birth_date, gender, bio, username, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (user_id, birth_date.isoformat(), gender or "", bio or "", username or None, now, now),
+                )
+            else:
+                new_gender = gender if gender is not None else existing.gender
+                new_bio = bio if bio is not None else existing.bio
+                new_username = username if username is not None else (existing.username or None)
+                conn.execute(
+                    "UPDATE user_profiles SET gender = ?, bio = ?, username = ?, updated_at = ? WHERE user_id = ?",
+                    (new_gender, new_bio, new_username, now, user_id),
+                )
+    except sqlite3.IntegrityError as exc:
+        raise UsernameAlreadyTakenError(username) from exc
     profile = get_user_profile(db_path, user_id)
     assert profile is not None
     return profile
@@ -204,5 +250,24 @@ if __name__ == "__main__":
         completed = mark_onboarding_completed(db_path, user_id, profile_completion_version=1)
         assert completed.onboarding_completed_at is not None
         assert completed.profile_completion_version == 1
+
+        # Username: unset by default, settable, case-insensitiv eindeutig.
+        assert completed.username == ""
+        assert is_username_available(db_path, "maxm") is True
+        with_username = upsert_user_profile(db_path, user_id, username="MaxM")
+        assert with_username.username == "MaxM"
+        assert is_username_available(db_path, "maxm") is False  # case-insensitiv belegt
+
+        user_id_2 = "user-2"
+        upsert_user_profile(db_path, user_id_2, birth_date=date(1990, 1, 1))
+        try:
+            upsert_user_profile(db_path, user_id_2, username="maxm")
+            assert False, "sollte UsernameAlreadyTakenError werfen"
+        except UsernameAlreadyTakenError:
+            pass
+
+        # username=None auf einem Update laesst den bestehenden Wert unveraendert.
+        unchanged = upsert_user_profile(db_path, user_id, gender="non-binary")
+        assert unchanged.username == "MaxM"
 
         print("accounts/profile_storage.py sanity check OK.")

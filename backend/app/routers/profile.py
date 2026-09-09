@@ -44,6 +44,7 @@ def _to_public(profile) -> ProfilePublic:
         age=_calculate_age(profile.birth_date),
         gender=profile.gender,
         bio=profile.bio,
+        username=profile.username,
         onboarding_completed_at=profile.onboarding_completed_at,
         profile_completion_version=profile.profile_completion_version,
     )
@@ -72,9 +73,12 @@ def update_profile(
             status_code=status.HTTP_409_CONFLICT,
             detail="Profil muss zuerst über birth-date-correction (Onboarding) angelegt werden.",
         )
-    profile = profile_storage.upsert_user_profile(
-        db_path, current_user.id, gender=payload.gender, bio=payload.bio
-    )
+    try:
+        profile = profile_storage.upsert_user_profile(
+            db_path, current_user.id, gender=payload.gender, bio=payload.bio, username=payload.username
+        )
+    except profile_storage.UsernameAlreadyTakenError:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Dieser Username ist bereits vergeben.")
     return _to_public(profile)
 
 
