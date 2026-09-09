@@ -118,6 +118,34 @@ def remove_friendship(db_path: str | Path, user_id_1: str, user_id_2: str) -> No
         conn.execute("DELETE FROM friendships WHERE user_a_id = ? AND user_b_id = ?", (user_a_id, user_b_id))
 
 
+def get_friend_user_ids(db_path: str | Path, user_id: str) -> set[str]:
+    """Mirrort ``social/blocks.py::list_blocked_user_ids`` - bare
+    ``set[str]`` statt voller ``Friendship``-Objekte, für die
+    Mutual-Friend-Berechnung (Social-Graph-Phase-3, siehe
+    ``mutual_friend_count`` unten). Da die Beziehung symmetrisch
+    gespeichert ist (kanonisches Paar, ``user_id`` kann in ``user_a_id``
+    ODER ``user_b_id`` stehen), wird pro Zeile die jeweils ANDERE Spalte
+    gewählt."""
+    with sqlite3.connect(db_path) as conn:
+        rows = conn.execute(
+            "SELECT user_a_id, user_b_id FROM friendships WHERE user_a_id = ? OR user_b_id = ?",
+            (user_id, user_id),
+        ).fetchall()
+    return {(row[1] if row[0] == user_id else row[0]) for row in rows}
+
+
+def mutual_friend_count(db_path: str | Path, my_friend_ids: set[str], other_user_id: str) -> int:
+    """Nimmt das eigene Friend-Set als Parameter entgegen statt es selbst zu
+    laden - Aufrufer (Router, z.B. ``search_users``/``get_social_profile``
+    in ``backend/app/routers/social.py``) lädt es EINMAL pro Request, nicht
+    einmal pro angezeigtem User (relevant bei bis zu 20 Suchergebnissen).
+    ``my_friend_ids`` leer -> immer 0, kein unnötiger Query."""
+    if not my_friend_ids:
+        return 0
+    other_friend_ids = get_friend_user_ids(db_path, other_user_id)
+    return len(my_friend_ids & other_friend_ids)
+
+
 if __name__ == "__main__":
     import tempfile
     import uuid
@@ -161,5 +189,24 @@ if __name__ == "__main__":
 
         # Unfreund ohne bestehende Freundschaft -> No-Op, kein Crash.
         remove_friendship(db_path, anna.id, max_.id)
+
+        # get_friend_user_ids / mutual_friend_count (Social-Graph-Phase-3):
+        # Dreiecks-Szenario anna-max-ben.
+        assert get_friend_user_ids(db_path, anna.id) == set()
+        create_friendship(db_path, uuid.uuid4().hex, anna.id, max_.id)
+        create_friendship(db_path, uuid.uuid4().hex, anna.id, ben.id)
+        create_friendship(db_path, uuid.uuid4().hex, max_.id, ben.id)
+        assert get_friend_user_ids(db_path, anna.id) == {max_.id, ben.id}
+        assert get_friend_user_ids(db_path, max_.id) == {anna.id, ben.id}
+
+        # max und ben sind beide mit anna UND miteinander befreundet -> 1 gemeinsamer Freund
+        # (der jeweils andere), egal aus wessen Sicht gemessen wird.
+        anna_friend_ids = get_friend_user_ids(db_path, anna.id)
+        assert mutual_friend_count(db_path, anna_friend_ids, max_.id) == 1  # ben gemeinsam
+        assert mutual_friend_count(db_path, anna_friend_ids, ben.id) == 1  # max gemeinsam
+
+        stranger = user_storage.create_user(db_path, uuid.uuid4().hex, "stranger@example.com", "hash", "Stranger")
+        assert mutual_friend_count(db_path, anna_friend_ids, stranger.id) == 0
+        assert mutual_friend_count(db_path, set(), max_.id) == 0  # leeres eigenes Set -> immer 0
 
         print("social/friendships.py sanity check OK.")

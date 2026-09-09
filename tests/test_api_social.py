@@ -22,6 +22,21 @@ def _onboard_username(api_client, headers, username: str) -> None:
     assert resp.status_code == 200, resp.text
 
 
+def _onboard(api_client, headers) -> None:
+    """Legt nur das Profil an (Onboarding-Vorbedingung fuer
+    ``PUT /me/social-privacy``), ohne Username."""
+    resp = api_client.post(
+        "/api/v1/me/profile/birth-date-correction", json={"birth_date": "1995-01-01"}, headers=headers
+    )
+    assert resp.status_code == 200, resp.text
+
+
+def _set_privacy(api_client, headers, **kwargs) -> dict:
+    resp = api_client.put("/api/v1/me/social-privacy", json=kwargs, headers=headers)
+    assert resp.status_code == 200, resp.text
+    return resp.json()
+
+
 def test_send_friend_request_ohne_auth_gibt_401(api_client):
     resp = api_client.post("/api/v1/users/some-id/friend-request")
     assert resp.status_code == 401
@@ -356,3 +371,192 @@ def test_unblock_user_ohne_bestehenden_block_ist_no_op(api_client, auth_headers_
     headers, _user, _ = auth_headers_factory(email="unblocknoopsocial@example.com")
     resp = api_client.delete("/api/v1/users/some-id/block", headers=headers)
     assert resp.status_code == 204
+
+
+# --- Social-Graph-Phase-3: Social Privacy ---------------------------------
+
+
+def test_get_social_privacy_ohne_auth_gibt_401(api_client):
+    resp = api_client.get("/api/v1/me/social-privacy")
+    assert resp.status_code == 401
+
+
+def test_get_social_privacy_liefert_defaults_ohne_profil(api_client, auth_headers_factory):
+    headers, _user, _ = auth_headers_factory(email="privacydefaults@example.com")
+    resp = api_client.get("/api/v1/me/social-privacy", headers=headers)
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["friend_list_visibility"] == "friends"
+    assert body["friend_request_privacy"] == "everyone"
+    assert body["discoverable_by_username"] is True
+    assert body["discoverable_by_name"] is True
+
+
+def test_put_social_privacy_ohne_auth_gibt_401(api_client):
+    resp = api_client.put("/api/v1/me/social-privacy", json={})
+    assert resp.status_code == 401
+
+
+def test_put_social_privacy_ohne_profil_gibt_409(api_client, auth_headers_factory):
+    headers, _user, _ = auth_headers_factory(email="privacynoonboarding@example.com")
+    resp = api_client.put("/api/v1/me/social-privacy", json={"friend_list_visibility": "nobody"}, headers=headers)
+    assert resp.status_code == 409
+
+
+def test_put_social_privacy_ungueltiger_wert_gibt_422(api_client, auth_headers_factory):
+    headers, _user, _ = auth_headers_factory(email="privacyinvalid@example.com")
+    _onboard(api_client, headers)
+    resp = api_client.put("/api/v1/me/social-privacy", json={"friend_list_visibility": "nonsense"}, headers=headers)
+    assert resp.status_code == 422
+
+
+def test_put_social_privacy_happy_path(api_client, auth_headers_factory):
+    headers, _user, _ = auth_headers_factory(email="privacyokuser@example.com")
+    _onboard(api_client, headers)
+    body = _set_privacy(
+        api_client, headers,
+        friend_list_visibility="everyone", friend_request_privacy="nobody",
+        discoverable_by_username=False, discoverable_by_name=False,
+    )
+    assert body == {
+        "friend_list_visibility": "everyone", "friend_request_privacy": "nobody",
+        "discoverable_by_username": False, "discoverable_by_name": False,
+    }
+
+    # Persistiert - erneutes GET liefert dieselben Werte.
+    resp = api_client.get("/api/v1/me/social-privacy", headers=headers)
+    assert resp.json() == body
+
+
+def test_put_social_privacy_partial_update_laesst_uebrige_felder_unveraendert(api_client, auth_headers_factory):
+    headers, _user, _ = auth_headers_factory(email="privacypartial@example.com")
+    _onboard(api_client, headers)
+    _set_privacy(api_client, headers, friend_list_visibility="everyone", friend_request_privacy="nobody")
+
+    body = _set_privacy(api_client, headers, discoverable_by_username=False)
+    assert body["friend_list_visibility"] == "everyone"  # unveraendert
+    assert body["friend_request_privacy"] == "nobody"  # unveraendert
+    assert body["discoverable_by_username"] is False
+
+
+# --- Social-Graph-Phase-3: GET /users/{id}/friends ------------------------
+
+
+def test_get_user_friends_ohne_auth_gibt_401(api_client):
+    resp = api_client.get("/api/v1/users/some-id/friends")
+    assert resp.status_code == 401
+
+
+def test_get_user_friends_unbekannter_user_gibt_404(api_client, auth_headers_factory):
+    headers, _user, _ = auth_headers_factory(email="userfriends404@example.com")
+    resp = api_client.get("/api/v1/users/does-not-exist/friends", headers=headers)
+    assert resp.status_code == 404
+
+
+def test_get_user_friends_geblockt_gibt_403(api_client, auth_headers_factory):
+    headers_a, _a, _ = auth_headers_factory(email="userfriendsblocka@example.com")
+    headers_b, b, _ = auth_headers_factory(email="userfriendsblockb@example.com")
+    api_client.post(f"/api/v1/users/{b['id']}/block", headers=headers_a)
+    resp = api_client.get(f"/api/v1/users/{b['id']}/friends", headers=headers_a)
+    assert resp.status_code == 403
+
+
+def test_get_user_friends_visibility_nobody_gibt_403(api_client, auth_headers_factory):
+    headers_a, _a, _ = auth_headers_factory(email="userfriendsnobodya@example.com")
+    headers_b, b, _ = auth_headers_factory(email="userfriendsnobodyb@example.com")
+    _onboard(api_client, headers_b)
+    _set_privacy(api_client, headers_b, friend_list_visibility="nobody")
+    resp = api_client.get(f"/api/v1/users/{b['id']}/friends", headers=headers_a)
+    assert resp.status_code == 403
+
+
+def test_get_user_friends_visibility_friends_ohne_freundschaft_gibt_403(api_client, auth_headers_factory):
+    headers_a, _a, _ = auth_headers_factory(email="userfriendsfriendsa@example.com")
+    headers_b, b, _ = auth_headers_factory(email="userfriendsfriendsb@example.com")
+    _onboard(api_client, headers_b)
+    _set_privacy(api_client, headers_b, friend_list_visibility="friends")
+    resp = api_client.get(f"/api/v1/users/{b['id']}/friends", headers=headers_a)
+    assert resp.status_code == 403
+
+
+def test_get_user_friends_visibility_friends_mit_freundschaft_erlaubt(api_client, auth_headers_factory):
+    headers_a, a, _ = auth_headers_factory(email="userfriendsokfrienda@example.com")
+    headers_b, b, _ = auth_headers_factory(email="userfriendsokfriendb@example.com")
+    _onboard(api_client, headers_b)
+    _set_privacy(api_client, headers_b, friend_list_visibility="friends")
+    friendships.create_friendship(api_client.db_path, uuid.uuid4().hex, a["id"], b["id"])
+    resp = api_client.get(f"/api/v1/users/{b['id']}/friends", headers=headers_a)
+    assert resp.status_code == 200
+
+
+def test_get_user_friends_visibility_everyone_erlaubt(api_client, auth_headers_factory):
+    headers_a, _a, _ = auth_headers_factory(email="userfriendseveryonea@example.com")
+    headers_b, b, _ = auth_headers_factory(email="userfriendseveryoneb@example.com")
+    _onboard(api_client, headers_b)
+    _set_privacy(api_client, headers_b, friend_list_visibility="everyone")
+    resp = api_client.get(f"/api/v1/users/{b['id']}/friends", headers=headers_a)
+    assert resp.status_code == 200
+
+
+def test_get_user_friends_self_immer_erlaubt_trotz_nobody(api_client, auth_headers_factory):
+    headers, user, _ = auth_headers_factory(email="userfriendsselfnobody@example.com")
+    _onboard(api_client, headers)
+    _set_privacy(api_client, headers, friend_list_visibility="nobody")
+    resp = api_client.get(f"/api/v1/users/{user['id']}/friends", headers=headers)
+    assert resp.status_code == 200
+
+
+# --- Social-Graph-Phase-3: mutual_friend_count -----------------------------
+
+
+def test_search_liefert_mutual_friend_count(api_client, auth_headers_factory):
+    headers_me, me, _ = auth_headers_factory(email="mutualsearchme@example.com")
+    headers_target, target, _ = auth_headers_factory(email="mutualsearchtarget@example.com")
+    headers_shared, shared, _ = auth_headers_factory(email="mutualsearchshared@example.com")
+    _onboard_username(api_client, headers_target, "MutualSearchTarget")
+    friendships.create_friendship(api_client.db_path, uuid.uuid4().hex, me["id"], shared["id"])
+    friendships.create_friendship(api_client.db_path, uuid.uuid4().hex, target["id"], shared["id"])
+
+    resp = api_client.get("/api/v1/users/search?q=mutualsearchtarget", headers=headers_me)
+    assert resp.status_code == 200
+    result = next(r for r in resp.json()["results"] if r["user_id"] == target["id"])
+    assert result["mutual_friend_count"] == 1
+
+
+def test_social_profile_liefert_mutual_friend_count(api_client, auth_headers_factory):
+    headers_me, me, _ = auth_headers_factory(email="mutualprofileme@example.com")
+    headers_target, target, _ = auth_headers_factory(email="mutualprofiletarget@example.com")
+    headers_shared, shared, _ = auth_headers_factory(email="mutualprofileshared@example.com")
+    friendships.create_friendship(api_client.db_path, uuid.uuid4().hex, me["id"], shared["id"])
+    friendships.create_friendship(api_client.db_path, uuid.uuid4().hex, target["id"], shared["id"])
+
+    resp = api_client.get(f"/api/v1/users/{target['id']}/social-profile", headers=headers_me)
+    assert resp.status_code == 200
+    assert resp.json()["mutual_friend_count"] == 1
+
+
+def test_mutual_friend_count_null_ohne_ueberschneidung(api_client, auth_headers_factory):
+    headers_me, _me, _ = auth_headers_factory(email="mutualzeroM@example.com")
+    headers_target, target, _ = auth_headers_factory(email="mutualzeroT@example.com")
+    resp = api_client.get(f"/api/v1/users/{target['id']}/social-profile", headers=headers_me)
+    assert resp.json()["mutual_friend_count"] == 0
+
+
+# --- Social-Graph-Phase-3: friend_request_privacy enforcement -------------
+
+
+def test_send_friend_request_privacy_nobody_gibt_403(api_client, auth_headers_factory):
+    headers_a, _a, _ = auth_headers_factory(email="reqprivacya@example.com")
+    headers_b, b, _ = auth_headers_factory(email="reqprivacyb@example.com")
+    _onboard(api_client, headers_b)
+    _set_privacy(api_client, headers_b, friend_request_privacy="nobody")
+
+    resp = api_client.post(f"/api/v1/users/{b['id']}/friend-request", headers=headers_a)
+    assert resp.status_code == 403
+
+
+def test_send_friend_request_privacy_everyone_default_funktioniert(api_client, auth_headers_factory):
+    headers_a, _a, _ = auth_headers_factory(email="reqprivacydefaulta@example.com")
+    headers_b, b, _ = auth_headers_factory(email="reqprivacydefaultb@example.com")
+    resp = api_client.post(f"/api/v1/users/{b['id']}/friend-request", headers=headers_a)
+    assert resp.status_code == 200

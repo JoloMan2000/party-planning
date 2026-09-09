@@ -64,6 +64,41 @@ class InvitationPublic(BaseModel):
     responded_at: datetime | None
 
 
+class FriendInviteRequest(BaseModel):
+    """Social-Graph-Phase-2: Batch-Einladung aus dem Freundeskreis - bewusst
+    ein EIGENER Request-Typ statt ``InvitationCreate`` zu erweitern, da
+    Freunde bereits per ``user_id`` bekannt sind (kein E-Mail-Lookup nötig)
+    und die Freundschafts-Prüfung eine andere Geschäftsregel ist als der
+    generische E-Mail-Invite-Pfad (siehe ``parties.py::invite_friends``)."""
+
+    friend_user_ids: list[str] = Field(min_length=1, max_length=50)
+
+
+class FriendInviteResultItem(BaseModel):
+    user_id: str
+    status: str  # "invited" | "not_a_friend" | "already_member" | "already_invited"
+    invitation_id: str | None = None
+
+
+class FriendInviteResponse(BaseModel):
+    """Ein fehlgeschlagener Eintrag (z.B. ``not_a_friend``) bricht den
+    Batch NICHT ab - jede ``friend_user_ids``-ID bekommt ihr eigenes
+    Ergebnis (siehe ``parties.py::invite_friends``)."""
+
+    results: list[FriendInviteResultItem]
+
+
+class CoHostPromoteRequest(BaseModel):
+    user_id: str
+
+
+class CoHostPromoteResponse(BaseModel):
+    user_id: str
+    party_id: str
+    role: str  # immer "co_host" bei Erfolg
+    already_co_host: bool = False
+
+
 class RsvpRequest(BaseModel):
     status: str
     version: int

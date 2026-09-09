@@ -20,9 +20,11 @@ import 'screens/profile_screen.dart';
 import 'screens/request_account_unlock_screen.dart';
 import 'screens/reset_password_screen.dart';
 import 'screens/signup_screen.dart';
+import 'screens/social_privacy_screen.dart';
 import 'screens/social_profile_screen.dart';
 import 'screens/spotify_connect_screen.dart';
 import 'screens/unlock_account_screen.dart';
+import 'screens/user_friends_screen.dart';
 import 'screens/verify_email_screen.dart';
 import 'state/auth_providers.dart';
 import 'state/geo_providers.dart';
@@ -135,6 +137,8 @@ class _PartyAppState extends ConsumerState<PartyApp> {
       final showProfile = ref.watch(showProfileProvider);
       final showFriends = ref.watch(showFriendsProvider);
       final selectedFriendProfileUserId = ref.watch(selectedFriendProfileUserIdProvider);
+      final showSocialPrivacy = ref.watch(showSocialPrivacyProvider);
+      final viewingUserFriendsUserId = ref.watch(viewingUserFriendsUserIdProvider);
       final showSpotifyConnect = ref.watch(showSpotifyConnectProvider);
       final selectedPartyId = ref.watch(selectedPartyIdProvider);
       final selectedInvitationId = ref.watch(selectedInvitationIdProvider);
@@ -164,6 +168,10 @@ class _PartyAppState extends ConsumerState<PartyApp> {
         home = const FriendsScreen();
       } else if (selectedFriendProfileUserId != null) {
         home = SocialProfileScreen(userId: selectedFriendProfileUserId);
+      } else if (showSocialPrivacy) {
+        home = const SocialPrivacyScreen();
+      } else if (viewingUserFriendsUserId != null) {
+        home = UserFriendsScreen(userId: viewingUserFriendsUserId);
       } else if (showNotifications) {
         home = const NotificationsScreen();
       } else if (showDiscoveryPreferences) {

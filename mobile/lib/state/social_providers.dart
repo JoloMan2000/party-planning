@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/friend.dart';
 import '../models/friend_request.dart';
+import '../models/social_privacy.dart';
 import '../models/social_profile.dart';
 import '../models/user_search_result.dart';
 import 'auth_providers.dart';
@@ -216,3 +217,39 @@ final unblockUserProvider = AsyncNotifierProvider<UnblockUserNotifier, void>(Unb
 /// `main.dart`).
 final showFriendsProvider = StateProvider<bool>((ref) => false);
 final selectedFriendProfileUserIdProvider = StateProvider<String?>((ref) => null);
+
+/// Social Graph Phase 3 (Friend-list privacy & social settings polish) -
+/// siehe `backend/app/routers/social.py::get_social_privacy`/`update_social_privacy`.
+
+/// Mirrort `DiscoveryPreferencesNotifier` in `state/geo_providers.dart`
+/// exakt - `build()` lädt, `save()` PUTet den vollständigen Datensatz.
+class SocialPrivacyNotifier extends AsyncNotifier<SocialPrivacy> {
+  @override
+  Future<SocialPrivacy> build() async {
+    final token = ref.watch(requiredAccessTokenProvider);
+    return ref.watch(apiClientProvider).getSocialPrivacy(token, onRefresh(ref));
+  }
+
+  Future<void> save(SocialPrivacy privacy) async {
+    final token = ref.read(requiredAccessTokenProvider);
+    final client = ref.read(apiClientProvider);
+    final saved = await client.updateSocialPrivacy(token, onRefresh(ref), privacy);
+    state = AsyncData(saved);
+  }
+}
+
+final socialPrivacyProvider = AsyncNotifierProvider<SocialPrivacyNotifier, SocialPrivacy>(SocialPrivacyNotifier.new);
+
+/// Navigations-Flag (mirrort `showFriendsProvider`).
+final showSocialPrivacyProvider = StateProvider<bool>((ref) => false);
+
+/// Freundesliste eines ANDEREN Users (Social-Graph-Phase-3) - respektiert
+/// dessen `friend_list_visibility` serverseitig (siehe
+/// `backend/app/routers/social.py::get_user_friends`).
+final userFriendsProvider = FutureProvider.family<List<Friend>, String>((ref, userId) {
+  final token = ref.watch(requiredAccessTokenProvider);
+  return ref.watch(apiClientProvider).getUserFriends(token, onRefresh(ref), userId);
+});
+
+/// Navigations-Flag mit Payload (mirrort `selectedFriendProfileUserIdProvider`).
+final viewingUserFriendsUserIdProvider = StateProvider<String?>((ref) => null);

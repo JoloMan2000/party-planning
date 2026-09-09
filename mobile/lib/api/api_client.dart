@@ -33,8 +33,11 @@ import '../models/guest_response_draft.dart';
 import '../models/profile.dart';
 import '../models/rsvp_response.dart';
 import '../models/spotify_status.dart';
+import '../models/co_host_promote_result.dart';
 import '../models/friend.dart';
+import '../models/friend_invite_result.dart';
 import '../models/friend_request.dart';
+import '../models/social_privacy.dart';
 import '../models/social_profile.dart';
 import '../models/user_search_result.dart';
 import '../models/user_account.dart';
@@ -817,6 +820,48 @@ class ApiClient {
     return Invitation.fromJson(_decodeObject(resp));
   }
 
+  /// Social-Graph-Phase-2: Batch-Einladung aus dem Freundeskreis - ein
+  /// schlechter Eintrag bricht den Batch nicht ab, siehe
+  /// `FriendInviteResponse`/`backend/app/routers/parties.py::invite_friends`.
+  Future<FriendInviteResponse> inviteFriends(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String partyId, {
+    required List<String> friendUserIds,
+  }) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.post(
+        _uri('/api/v1/parties/$partyId/invitations/friends'),
+        headers: _authHeaders(token),
+        body: jsonEncode({'friend_user_ids': friendUserIds}),
+      ),
+      accessToken,
+      onRefresh,
+    );
+    return FriendInviteResponse.fromJson(_decodeObject(resp));
+  }
+
+  /// Social-Graph-Phase-2: befördert einen bereits akzeptierten Gast zum
+  /// Co-Host - host-exklusiv (siehe
+  /// `backend/app/routers/parties.py::promote_co_host`).
+  Future<CoHostPromoteResult> promoteCoHost(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String partyId, {
+    required String userId,
+  }) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.post(
+        _uri('/api/v1/parties/$partyId/co-hosts'),
+        headers: _authHeaders(token),
+        body: jsonEncode({'user_id': userId}),
+      ),
+      accessToken,
+      onRefresh,
+    );
+    return CoHostPromoteResult.fromJson(_decodeObject(resp));
+  }
+
   Future<Invitation> getInvitation(
     String accessToken,
     Future<String?> Function() onRefresh,
@@ -1516,6 +1561,53 @@ class ApiClient {
     if (resp.statusCode >= 400) {
       throw ApiException(resp.statusCode, resp.body);
     }
+  }
+
+  // ---------------------------------------------------------------------
+  // Social Graph Phase 3 (Friend-list privacy & social settings polish) -
+  // siehe backend/app/routers/social.py::get_social_privacy/update_social_privacy/get_user_friends.
+  // ---------------------------------------------------------------------
+
+  Future<SocialPrivacy> getSocialPrivacy(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/me/social-privacy'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return SocialPrivacy.fromJson(_decodeObject(resp));
+  }
+
+  Future<SocialPrivacy> updateSocialPrivacy(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    SocialPrivacy privacy,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.put(
+        _uri('/api/v1/me/social-privacy'),
+        headers: _authHeaders(token),
+        body: jsonEncode(privacy.toJson()),
+      ),
+      accessToken,
+      onRefresh,
+    );
+    return SocialPrivacy.fromJson(_decodeObject(resp));
+  }
+
+  Future<List<Friend>> getUserFriends(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String userId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/users/$userId/friends'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return _decodeList(resp).map((e) => Friend.fromJson((e as Map).cast<String, dynamic>())).toList();
   }
 
   void close() => _http.close();

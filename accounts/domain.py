@@ -130,13 +130,28 @@ class UserProfile:
     ``user_storage.create_user``) bleibt die vom User gewählte
     Groß-/Kleinschreibung hier erhalten - Eindeutigkeit wird stattdessen
     ausschließlich über den ``COLLATE NOCASE``-Unique-Index in
-    ``accounts/profile_storage.py`` erzwungen."""
+    ``accounts/profile_storage.py`` erzwungen.
+
+    Die vier folgenden Felder (Social-Graph-Phase-3) sind bewusst
+    VERHALTENS-Policies, keine Identitäts-Felder wie ``username`` - sie
+    werden nicht vom User selbst "angezeigt", sondern steuern, was ANDERE
+    User über diesen User sehen/tun dürfen (siehe Durchsetzung in
+    ``backend/app/routers/social.py``: ``GET /users/{id}/friends``,
+    ``search_users``, ``send_friend_request``). ``friend_request_privacy``
+    kennt bewusst NUR "nobody"/"everyone" - die vom Spec vorgeschlagene
+    dritte Stufe "Friends of Friends" wurde für Phase 3 explizit
+    gestrichen, da sie eine Zwei-Hop-Graph-Query braucht, ein deutlich
+    größerer technischer Aufwand als der Rest dieser "Polish"-Phase."""
 
     user_id: str
     birth_date: date
     gender: str = ""
     bio: str = ""
     username: str = ""
+    friend_list_visibility: str = "friends"  # "nobody" | "friends" | "everyone"
+    friend_request_privacy: str = "everyone"  # "nobody" | "everyone"
+    discoverable_by_username: bool = True
+    discoverable_by_name: bool = True
     onboarding_completed_at: datetime | None = None
     profile_completion_version: int = 0
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))

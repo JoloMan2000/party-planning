@@ -31,6 +31,8 @@ from backend.app.schemas.social import (
     FriendRequestCreateResponse,
     FriendRequestPublic,
     FriendRequestsInboxResponse,
+    SocialPrivacyPublic,
+    SocialPrivacyUpdateRequest,
     SocialProfilePublic,
     UserBlockResponse,
     UserSearchResponse,
@@ -44,6 +46,44 @@ router = APIRouter(prefix="/api/v1", tags=["social"])
 def _username_for(db_path: Path, user_id: str) -> str:
     profile = profile_storage.get_user_profile(db_path, user_id)
     return profile.username if profile is not None else ""
+
+
+def _privacy_for(db_path: Path, user_id: str) -> tuple[str, str, bool, bool]:
+    """Social-Graph-Phase-3: liest die vier Privacy-Felder eines Users -
+    fällt auf die ``UserProfile``-Dataclass-Defaults zurück, falls noch
+    kein Profil existiert (kein 404/leerer Fehlerzustand nötig, mirrort
+    ``_username_for``'s graceful-missing-profile-Handling)."""
+    profile = profile_storage.get_user_profile(db_path, user_id)
+    if profile is None:
+        return "friends", "everyone", True, True
+    return (
+        profile.friend_list_visibility,
+        profile.friend_request_privacy,
+        profile.discoverable_by_username,
+        profile.discoverable_by_name,
+    )
+
+
+def _list_friends_public(db_path: Path, user_id: str) -> list[FriendPublic]:
+    """Geteilte Aufbau-Logik zwischen ``get_my_friends`` und dem neuen
+    ``GET /users/{id}/friends`` (Social-Graph-Phase-3) - beide bauen
+    dieselbe ``FriendPublic``-Liste, nur für unterschiedliche User-IDs."""
+    result = []
+    for friendship in friendships.list_friends_for_user(db_path, user_id):
+        other_id = friendship.user_b_id if friendship.user_a_id == user_id else friendship.user_a_id
+        other_user = user_storage.get_user_by_id(db_path, other_id)
+        if other_user is None:
+            continue
+        result.append(
+            FriendPublic(
+                user_id=other_id,
+                username=_username_for(db_path, other_id),
+                display_name=other_user.display_name,
+                profile_image=other_user.profile_image,
+                friends_since=friendship.created_at,
+            )
+        )
+    return result
 
 
 def _relationship_status(db_path: Path, current_user_id: str, other_user_id: str) -> str:
@@ -89,22 +129,31 @@ def _to_friend_request_public(db_path: Path, request: FriendRequest, current_use
 def get_my_friends(
     current_user: User = Depends(get_current_user), db_path: Path = Depends(get_db_path)
 ) -> list[FriendPublic]:
-    result = []
-    for friendship in friendships.list_friends_for_user(db_path, current_user.id):
-        other_id = friendship.user_b_id if friendship.user_a_id == current_user.id else friendship.user_a_id
-        other_user = user_storage.get_user_by_id(db_path, other_id)
-        if other_user is None:
-            continue
-        result.append(
-            FriendPublic(
-                user_id=other_id,
-                username=_username_for(db_path, other_id),
-                display_name=other_user.display_name,
-                profile_image=other_user.profile_image,
-                friends_since=friendship.created_at,
-            )
-        )
-    return result
+    return _list_friends_public(db_path, current_user.id)
+
+
+@router.get("/users/{user_id}/friends", response_model=list[FriendPublic])
+def get_user_friends(
+    user_id: str, current_user: User = Depends(get_current_user), db_path: Path = Depends(get_db_path)
+) -> list[FriendPublic]:
+    """Social-Graph-Phase-3: erste Möglichkeit, die Freundesliste eines
+    ANDEREN Users zu sehen - ohne diesen Endpoint wäre
+    ``friend_list_visibility`` enforced, aber für niemanden je sichtbar
+    (siehe Plan). Self-View ist immer erlaubt, unabhängig von der eigenen
+    Einstellung - die eigene Privacy-Policy beschränkt nie einen selbst."""
+    target = user_storage.get_user_by_id(db_path, user_id)
+    if target is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User nicht gefunden.")
+    if user_id == current_user.id:
+        return _list_friends_public(db_path, user_id)
+    if blocks.is_blocked(db_path, current_user.id, user_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Nicht erlaubt.")
+    visibility, _, _, _ = _privacy_for(db_path, user_id)
+    if visibility == "nobody":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Diese Freundesliste ist privat.")
+    if visibility == "friends" and not friendships.are_friends(db_path, current_user.id, user_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Diese Freundesliste ist privat.")
+    return _list_friends_public(db_path, user_id)
 
 
 @router.get("/me/friend-requests", response_model=FriendRequestsInboxResponse)
@@ -119,6 +168,50 @@ def get_my_friend_requests(
     )
 
 
+@router.get("/me/social-privacy", response_model=SocialPrivacyPublic)
+def get_social_privacy(
+    current_user: User = Depends(get_current_user), db_path: Path = Depends(get_db_path)
+) -> SocialPrivacyPublic:
+    """Kein 404 bei fehlendem Profil (anders als ``GET /me/profile``) - diese
+    Einstellungen sind nicht ans Onboarding-Gate gekoppelt, ein frischer
+    User bekommt einfach die Defaults zurück (siehe ``_privacy_for``)."""
+    visibility, request_privacy, disc_username, disc_name = _privacy_for(db_path, current_user.id)
+    return SocialPrivacyPublic(
+        friend_list_visibility=visibility,
+        friend_request_privacy=request_privacy,
+        discoverable_by_username=disc_username,
+        discoverable_by_name=disc_name,
+    )
+
+
+@router.put("/me/social-privacy", response_model=SocialPrivacyPublic)
+def update_social_privacy(
+    payload: SocialPrivacyUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    db_path: Path = Depends(get_db_path),
+) -> SocialPrivacyPublic:
+    existing = profile_storage.get_user_profile(db_path, current_user.id)
+    if existing is None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Profil muss zuerst über birth-date-correction (Onboarding) angelegt werden.",
+        )
+    profile = profile_storage.upsert_user_profile(
+        db_path,
+        current_user.id,
+        friend_list_visibility=payload.friend_list_visibility,
+        friend_request_privacy=payload.friend_request_privacy,
+        discoverable_by_username=payload.discoverable_by_username,
+        discoverable_by_name=payload.discoverable_by_name,
+    )
+    return SocialPrivacyPublic(
+        friend_list_visibility=profile.friend_list_visibility,
+        friend_request_privacy=profile.friend_request_privacy,
+        discoverable_by_username=profile.discoverable_by_username,
+        discoverable_by_name=profile.discoverable_by_name,
+    )
+
+
 @router.get("/users/search", response_model=UserSearchResponse)
 def search_users(
     q: str = Query(min_length=2),
@@ -127,6 +220,9 @@ def search_users(
     db_path: Path = Depends(get_db_path),
 ) -> UserSearchResponse:
     results = search.search_users(db_path, q, exclude_user_id=current_user.id, limit=limit)
+    # Social-Graph-Phase-3: EINMAL pro Request geladen, nicht einmal pro
+    # angezeigtem Suchtreffer (siehe friendships.mutual_friend_count-Doku).
+    my_friend_ids = friendships.get_friend_user_ids(db_path, current_user.id)
     return UserSearchResponse(
         results=[
             UserSearchResultPublic(
@@ -135,6 +231,7 @@ def search_users(
                 display_name=r.display_name,
                 profile_image=r.profile_image,
                 relationship_status=_relationship_status(db_path, current_user.id, r.user_id),
+                mutual_friend_count=friendships.mutual_friend_count(db_path, my_friend_ids, r.user_id),
             )
             for r in results
             if not blocks.is_blocked(db_path, current_user.id, r.user_id)
@@ -155,6 +252,9 @@ def get_social_profile(
         display_name=target.display_name,
         profile_image=target.profile_image,
         relationship_status=_relationship_status(db_path, current_user.id, target.id),
+        mutual_friend_count=friendships.mutual_friend_count(
+            db_path, friendships.get_friend_user_ids(db_path, current_user.id), target.id
+        ),
     )
 
 
@@ -167,6 +267,11 @@ def send_friend_request(
     target = user_storage.get_user_by_id(db_path, user_id)
     if target is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User nicht gefunden.")
+    _, request_privacy, _, _ = _privacy_for(db_path, user_id)
+    if request_privacy == "nobody":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Dieser User nimmt aktuell keine Freundschaftsanfragen an."
+        )
     try:
         result = friend_requests.create_friend_request(db_path, uuid.uuid4().hex, current_user.id, user_id)
     except friend_requests.SelfFriendRequestError:

@@ -22,6 +22,7 @@ class SocialProfile {
   final String displayName;
   final String profileImage;
   final RelationshipStatus relationshipStatus;
+  final int mutualFriendCount;
 
   const SocialProfile({
     required this.userId,
@@ -29,6 +30,7 @@ class SocialProfile {
     required this.displayName,
     required this.profileImage,
     required this.relationshipStatus,
+    required this.mutualFriendCount,
   });
 
   factory SocialProfile.fromJson(Map<String, dynamic> json) => SocialProfile(
@@ -37,5 +39,6 @@ class SocialProfile {
         displayName: json['display_name'] as String,
         profileImage: (json['profile_image'] as String?) ?? '',
         relationshipStatus: relationshipStatusFromWire(json['relationship_status'] as String),
+        mutualFriendCount: (json['mutual_friend_count'] as int?) ?? 0,
       );
 }

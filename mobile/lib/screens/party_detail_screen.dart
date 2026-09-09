@@ -12,10 +12,12 @@ import 'package:url_launcher/url_launcher.dart';
 import '../api/api_client.dart';
 import '../api/api_config.dart';
 import '../geo/geo_models.dart';
+import '../models/friend_invite_result.dart';
 import '../models/party.dart';
 import '../models/party_guests_response.dart';
 import '../state/auth_providers.dart';
 import '../state/geo_providers.dart';
+import '../widgets/friend_picker_sheet.dart';
 import '../widgets/image_source_picker.dart';
 
 // TODO(i18n): English-only strings for now, deliberately deferred per Phase-3
@@ -61,7 +63,7 @@ class PartyDetailScreen extends ConsumerWidget {
               _BlockOrganizerSection(party: party),
               _PublishToDiscoverSection(party: party),
               const SizedBox(height: 20),
-              _GuestsSection(partyId: partyId),
+              _GuestsSection(partyId: partyId, party: party),
             ],
           ),
         ),
@@ -626,7 +628,8 @@ class _PublishToDiscoverSectionState extends ConsumerState<_PublishToDiscoverSec
 
 class _GuestsSection extends ConsumerWidget {
   final String partyId;
-  const _GuestsSection({required this.partyId});
+  final Party party;
+  const _GuestsSection({required this.partyId, required this.party});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -659,7 +662,7 @@ class _GuestsSection extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 16),
-          _HostGuestsView(partyId: partyId, guests: guests),
+          _HostGuestsView(partyId: partyId, party: party, guests: guests),
         ],
       ),
     );
@@ -668,8 +671,9 @@ class _GuestsSection extends ConsumerWidget {
 
 class _HostGuestsView extends ConsumerStatefulWidget {
   final String partyId;
+  final Party party;
   final PartyGuestsResponse guests;
-  const _HostGuestsView({required this.partyId, required this.guests});
+  const _HostGuestsView({required this.partyId, required this.party, required this.guests});
 
   @override
   ConsumerState<_HostGuestsView> createState() => _HostGuestsViewState();
@@ -689,6 +693,12 @@ class _HostGuestsViewState extends ConsumerState<_HostGuestsView> {
   Widget build(BuildContext context) {
     final inviteState = ref.watch(inviteGuestProvider);
     final isLoading = inviteState.isLoading;
+    final promoteState = ref.watch(promoteCoHostProvider);
+    final currentUserAsync = ref.watch(currentUserProvider);
+    final isHost = currentUserAsync.maybeWhen(
+      data: (user) => user.id == widget.party.hostUserId,
+      orElse: () => false,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -706,7 +716,28 @@ class _HostGuestsViewState extends ConsumerState<_HostGuestsView> {
           (g) => ListTile(
             title: Text(g.displayName),
             subtitle: Text('${g.email} · ${g.role}'),
-            trailing: Text(g.rsvpStatus),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(g.rsvpStatus),
+                if (isHost && g.role == 'guest' && g.rsvpStatus == 'accepted') ...[
+                  const SizedBox(width: 8),
+                  TextButton(
+                    onPressed: promoteState.isLoading ? null : () => _promoteCoHost(g.userId),
+                    child: const Text('Make Co-Host'),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: OutlinedButton.icon(
+            onPressed: _openFriendPicker,
+            icon: const Icon(Icons.person_add),
+            label: const Text('Invite Friends'),
           ),
         ),
         const SizedBox(height: 16),
@@ -765,6 +796,29 @@ class _HostGuestsViewState extends ConsumerState<_HostGuestsView> {
           _inviteError = 'Failed to invite. Please try again.';
         }
       });
+    }
+  }
+
+  Future<void> _openFriendPicker() async {
+    final result = await showModalBottomSheet<FriendInviteResponse>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => FriendPickerSheet(partyId: widget.partyId),
+    );
+    if (result == null || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(summarizeFriendInviteResult(result))));
+  }
+
+  Future<void> _promoteCoHost(String userId) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(promoteCoHostProvider.notifier).promote(widget.partyId, userId: userId);
+      messenger.showSnackBar(const SnackBar(content: Text('Guest promoted to co-host.')));
+    } catch (e) {
+      final message = e is ApiException && e.statusCode == 409
+          ? 'Guest must accept their invitation before becoming co-host.'
+          : 'Failed to promote. Please try again.';
+      messenger.showSnackBar(SnackBar(content: Text(message)));
     }
   }
 }
