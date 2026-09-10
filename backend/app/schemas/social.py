@@ -31,6 +31,7 @@ class SocialProfilePublic(BaseModel):
 
 
 class UserSearchResultPublic(BaseModel):
+    entity_type: str = "user"  # Social-Graph-Phase-6, Spec §83 - jedes Suchergebnis trägt seinen Typ
     user_id: str
     username: str
     display_name: str
@@ -41,6 +42,51 @@ class UserSearchResultPublic(BaseModel):
 
 class UserSearchResponse(BaseModel):
     results: list[UserSearchResultPublic]
+
+
+class OrganizerSearchResultPublic(BaseModel):
+    """Social-Graph-Phase-6 (Spec §123). Abweichungen von der Spec sind
+    Codebase-Realität: ``Organizer`` hat kein ``username`` und kein
+    Foto-Feld (Phase 4 hat ``username`` bewusst weggelassen), daher sind
+    ``username``/``profile_photo_url`` hier immer leer/``None``."""
+
+    entity_type: str = "organizer"
+    organizer_id: str
+    display_name: str
+    username: str = ""
+    profile_photo_url: str | None = None
+    verified: bool  # abgeleitet aus verification_status == "verified"
+    follower_count: int  # kein §125-Leak - schon öffentlich via GET /organizers/{id}/followers
+    is_following: bool
+
+
+class EventSearchResultPublic(BaseModel):
+    """Social-Graph-Phase-6 (Spec §124). Abweichungen von der Spec:
+    ``name`` (Spec: ``title``), ``cover_image`` (Spec: ``cover_image_url``),
+    ``starts_at: datetime | None`` (Spec: nicht-nullbares ``start_datetime`` -
+    ``Party.starts_at`` ist aber nullbar, wie schon bei ``DiscoverCardPublic``).
+    ``organizer_name`` = Anzeigename des Host-Users (es gibt noch kein
+    ``Party.organizer_id``, Phase 4 deferred)."""
+
+    entity_type: str = "event"
+    party_id: str
+    name: str
+    starts_at: datetime | None
+    location: str
+    cover_image: str
+    event_type: str
+    organizer_name: str
+    is_following: bool
+
+
+class SearchResponse(BaseModel):
+    """Social-Graph-Phase-6: drei getrennte, typisierte Listen (Spec §122
+    "eigenes Response Model + Privacy Policy je Kategorie"). Alle drei Keys
+    sind immer vorhanden (ggf. leere Liste)."""
+
+    users: list[UserSearchResultPublic]
+    organizers: list[OrganizerSearchResultPublic]
+    events: list[EventSearchResultPublic]
 
 
 class FriendPublic(BaseModel):

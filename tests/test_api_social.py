@@ -8,7 +8,9 @@ from __future__ import annotations
 
 import uuid
 
+import organizers.storage as organizers_storage
 import social.friendships as friendships
+from organizers.domain import OrganizerVerificationStatus
 
 
 def _onboard_username(api_client, headers, username: str) -> None:
@@ -560,3 +562,154 @@ def test_send_friend_request_privacy_everyone_default_funktioniert(api_client, a
     headers_b, b, _ = auth_headers_factory(email="reqprivacydefaultb@example.com")
     resp = api_client.post(f"/api/v1/users/{b['id']}/friend-request", headers=headers_a)
     assert resp.status_code == 200
+
+
+# --- Social-Graph-Phase-6: unified search --------------------------------
+
+
+def _make_organizer(api_client, owner_user_id: str, *, verified: bool, name: str = "Boiler Room") -> str:
+    """Legt direkt über die Storage-Schicht einen Organizer an (dupliziert
+    aus tests/test_api_following.py, damit jene Datei unangetastet bleibt)."""
+    organizer = organizers_storage.create_organizer(api_client.db_path, uuid.uuid4().hex, owner_user_id, name)
+    if verified:
+        organizers_storage.set_verification_status(
+            api_client.db_path, organizer.id, OrganizerVerificationStatus.VERIFIED
+        )
+    return organizer.id
+
+
+def _publish_party(api_client, headers, user_id: str, name: str = "Summer Sound") -> str:
+    party_id = api_client.post("/api/v1/parties", json={"name": name}, headers=headers).json()["id"]
+    # Publish-Gate braucht Mitgliedschaft in einem verifizierten Organizer;
+    # Name bewusst OHNE Bezug zum Party-Namen, damit er die Organizer-Suche
+    # in diesen Tests nicht verschmutzt.
+    _make_organizer(api_client, user_id, verified=True, name=f"PublisherOrg {uuid.uuid4().hex}")
+    resp = api_client.post(
+        f"/api/v1/parties/{party_id}/publish",
+        json={"event_type": "club_event", "interest_tags": [], "max_guests": 0},
+        headers=headers,
+    )
+    assert resp.status_code == 200, resp.text
+    return party_id
+
+
+def test_unified_search_ohne_auth_gibt_401(api_client):
+    resp = api_client.get("/api/v1/search?q=ab")
+    assert resp.status_code == 401
+
+
+def test_unified_search_zu_kurze_query_gibt_422(api_client, auth_headers_factory):
+    headers, _u, _ = auth_headers_factory(email="usearch422@example.com")
+    resp = api_client.get("/api/v1/search?q=a", headers=headers)
+    assert resp.status_code == 422
+
+
+def test_unified_search_hat_immer_drei_listen(api_client, auth_headers_factory):
+    headers, _u, _ = auth_headers_factory(email="usearchshape@example.com")
+    body = api_client.get("/api/v1/search?q=zzznomatch", headers=headers).json()
+    assert set(body.keys()) == {"users", "organizers", "events"}
+    assert body["users"] == [] and body["organizers"] == [] and body["events"] == []
+
+
+def test_unified_search_findet_user_und_filtert_geblockte(api_client, auth_headers_factory):
+    headers_me, _me, _ = auth_headers_factory(email="usearchme@example.com")
+    headers_target, target, _ = auth_headers_factory(email="usearchtarget@example.com")
+    _onboard_username(api_client, headers_target, "UnifiedSearchTarget")
+
+    hits = api_client.get("/api/v1/search?q=unifiedsearchtarget", headers=headers_me).json()["users"]
+    assert [u["user_id"] for u in hits] == [target["id"]]
+    assert hits[0]["entity_type"] == "user"
+
+    assert api_client.post(f"/api/v1/users/{target['id']}/block", headers=headers_me).status_code == 200
+    assert api_client.get("/api/v1/search?q=unifiedsearchtarget", headers=headers_me).json()["users"] == []
+
+
+def test_unified_search_findet_verifizierten_organizer_mit_follow_status(api_client, auth_headers_factory):
+    headers_me, _me, _ = auth_headers_factory(email="usearchorgme@example.com")
+    _owner_headers, owner, _ = auth_headers_factory(email="usearchorgowner@example.com")
+    org_id = _make_organizer(api_client, owner["id"], verified=True, name="Unified Boiler Room")
+
+    hits = api_client.get("/api/v1/search?q=unified boiler", headers=headers_me).json()["organizers"]
+    assert [o["organizer_id"] for o in hits] == [org_id]
+    assert hits[0]["entity_type"] == "organizer"
+    assert hits[0]["verified"] is True
+    assert hits[0]["follower_count"] == 0
+    assert hits[0]["is_following"] is False
+
+    assert api_client.post(f"/api/v1/organizers/{org_id}/follow", headers=headers_me).status_code == 200
+    hits2 = api_client.get("/api/v1/search?q=unified boiler", headers=headers_me).json()["organizers"]
+    assert hits2[0]["is_following"] is True
+    assert hits2[0]["follower_count"] == 1
+
+
+def test_unified_search_ignoriert_unverifizierten_organizer(api_client, auth_headers_factory):
+    headers_me, _me, _ = auth_headers_factory(email="usearchunverme@example.com")
+    _owner_headers, owner, _ = auth_headers_factory(email="usearchunverowner@example.com")
+    _make_organizer(api_client, owner["id"], verified=False, name="Unified Unverified Club")
+    assert api_client.get("/api/v1/search?q=unified unverified", headers=headers_me).json()["organizers"] == []
+
+
+def test_unified_search_findet_veroeffentlichtes_event_mit_organizer_name(api_client, auth_headers_factory):
+    headers_me, _me, _ = auth_headers_factory(email="usearcheventme@example.com")
+    host_headers, host, _ = auth_headers_factory(email="usearcheventhost@example.com", display_name="Event Host Name")
+    party_id = _publish_party(api_client, host_headers, host["id"], name="Unified Sound Festival")
+
+    hits = api_client.get("/api/v1/search?q=unified sound", headers=headers_me).json()["events"]
+    assert [e["party_id"] for e in hits] == [party_id]
+    assert hits[0]["entity_type"] == "event"
+    assert hits[0]["organizer_name"] == "Event Host Name"
+    assert hits[0]["is_following"] is False
+
+    assert api_client.post(f"/api/v1/events/{party_id}/follow", headers=headers_me).status_code == 200
+    hits2 = api_client.get("/api/v1/search?q=unified sound", headers=headers_me).json()["events"]
+    assert hits2[0]["is_following"] is True
+
+
+def test_unified_search_ignoriert_unveroeffentlichte_party(api_client, auth_headers_factory):
+    headers_me, _me, _ = auth_headers_factory(email="usearchprivme@example.com")
+    host_headers, _host, _ = auth_headers_factory(email="usearchprivhost@example.com")
+    api_client.post("/api/v1/parties", json={"name": "Unified Private Party"}, headers=host_headers)
+    assert api_client.get("/api/v1/search?q=unified private", headers=headers_me).json()["events"] == []
+
+
+def test_unified_search_block_filtert_organizer_owner_und_event_host(api_client, auth_headers_factory):
+    headers_me, _me, _ = auth_headers_factory(email="usearchblockme@example.com")
+    owner_headers, owner, _ = auth_headers_factory(email="usearchblockowner@example.com")
+    org_id = _make_organizer(api_client, owner["id"], verified=True, name="Blocked Owner Room")
+    party_id = _publish_party(api_client, owner_headers, owner["id"], name="Blocked Host Fest")
+
+    assert api_client.get("/api/v1/search?q=blocked owner", headers=headers_me).json()["organizers"]
+    assert api_client.get("/api/v1/search?q=blocked host", headers=headers_me).json()["events"]
+
+    assert api_client.post(f"/api/v1/users/{owner['id']}/block", headers=headers_me).status_code == 200
+    assert api_client.get("/api/v1/search?q=blocked owner", headers=headers_me).json()["organizers"] == []
+    assert api_client.get("/api/v1/search?q=blocked host", headers=headers_me).json()["events"] == []
+    _ = org_id, party_id
+
+
+def test_unified_search_zeigt_eigenen_organizer_und_eigenes_event(api_client, auth_headers_factory):
+    headers, me, _ = auth_headers_factory(email="usearchownme@example.com")
+    org_id = _make_organizer(api_client, me["id"], verified=True, name="My Own Room")
+    party_id = _publish_party(api_client, headers, me["id"], name="My Own Fest")
+
+    body = api_client.get("/api/v1/search?q=my own", headers=headers).json()
+    assert [o["organizer_id"] for o in body["organizers"]] == [org_id]
+    assert body["organizers"][0]["is_following"] is False
+    assert [e["party_id"] for e in body["events"]] == [party_id]
+    assert body["events"][0]["is_following"] is False
+
+
+def test_unified_search_limit_wirkt_pro_kategorie(api_client, auth_headers_factory):
+    headers, me, _ = auth_headers_factory(email="usearchlimitme@example.com")
+    for i in range(3):
+        _make_organizer(api_client, me["id"], verified=True, name=f"LimitOrg {i}")
+    hits = api_client.get("/api/v1/search?q=limitorg&limit=1", headers=headers).json()["organizers"]
+    assert len(hits) == 1
+
+
+def test_users_search_ergebnisse_tragen_entity_type_user(api_client, auth_headers_factory):
+    headers_me, _me, _ = auth_headers_factory(email="entitytypeme@example.com")
+    headers_target, target, _ = auth_headers_factory(email="entitytypetarget@example.com")
+    _onboard_username(api_client, headers_target, "EntityTypeTarget")
+    hits = api_client.get("/api/v1/users/search?q=entitytypetarget", headers=headers_me).json()["results"]
+    assert hits and all(u["entity_type"] == "user" for u in hits)
