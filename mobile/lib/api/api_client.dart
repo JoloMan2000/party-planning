@@ -34,9 +34,13 @@ import '../models/profile.dart';
 import '../models/rsvp_response.dart';
 import '../models/spotify_status.dart';
 import '../models/co_host_promote_result.dart';
+import '../models/followed_event.dart';
+import '../models/follow_status.dart';
 import '../models/friend.dart';
 import '../models/friend_invite_result.dart';
 import '../models/friend_request.dart';
+import '../models/organizer.dart';
+import '../models/organizer_member.dart';
 import '../models/social_privacy.dart';
 import '../models/social_profile.dart';
 import '../models/user_search_result.dart';
@@ -1608,6 +1612,202 @@ class ApiClient {
       onRefresh,
     );
     return _decodeList(resp).map((e) => Friend.fromJson((e as Map).cast<String, dynamic>())).toList();
+  }
+
+  // ---------------------------------------------------------------------
+  // Social Graph Phase 4/5: Organizers + Following -
+  // siehe backend/app/routers/organizers.py + backend/app/routers/follows.py.
+  // ---------------------------------------------------------------------
+
+  Future<Organizer> createOrganizer(
+    String accessToken,
+    Future<String?> Function() onRefresh, {
+    required String displayName,
+    String organizerType = '',
+    String description = '',
+    String websiteUrl = '',
+  }) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.post(
+        _uri('/api/v1/organizers'),
+        headers: _authHeaders(token),
+        body: jsonEncode({
+          'display_name': displayName,
+          'organizer_type': organizerType,
+          'description': description,
+          'website_url': websiteUrl,
+        }),
+      ),
+      accessToken,
+      onRefresh,
+    );
+    return Organizer.fromJson(_decodeObject(resp));
+  }
+
+  Future<List<Organizer>> listMyOrganizers(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/organizers/mine'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return _decodeList(resp).map((e) => Organizer.fromJson((e as Map).cast<String, dynamic>())).toList();
+  }
+
+  Future<Organizer> getOrganizer(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String organizerId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/organizers/$organizerId'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return Organizer.fromJson(_decodeObject(resp));
+  }
+
+  Future<OrganizerMember> addOrganizerMember(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String organizerId, {
+    required String userId,
+    required String role,
+  }) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.post(
+        _uri('/api/v1/organizers/$organizerId/members'),
+        headers: _authHeaders(token),
+        body: jsonEncode({'user_id': userId, 'role': role}),
+      ),
+      accessToken,
+      onRefresh,
+    );
+    return OrganizerMember.fromJson(_decodeObject(resp));
+  }
+
+  Future<List<OrganizerMember>> listOrganizerMembers(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String organizerId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/organizers/$organizerId/members'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    final body = _decodeObject(resp);
+    return (body['members'] as List)
+        .map((e) => OrganizerMember.fromJson((e as Map).cast<String, dynamic>()))
+        .toList();
+  }
+
+  Future<OrganizerFollowStatus> followOrganizer(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String organizerId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.post(_uri('/api/v1/organizers/$organizerId/follow'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return OrganizerFollowStatus.fromJson(_decodeObject(resp));
+  }
+
+  Future<void> unfollowOrganizer(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String organizerId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.delete(_uri('/api/v1/organizers/$organizerId/follow'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    if (resp.statusCode >= 400) {
+      throw ApiException(resp.statusCode, resp.body);
+    }
+  }
+
+  Future<OrganizerFollowStatus> getOrganizerFollowStatus(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String organizerId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/organizers/$organizerId/followers'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return OrganizerFollowStatus.fromJson(_decodeObject(resp));
+  }
+
+  Future<EventFollowStatus> followEvent(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String partyId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.post(_uri('/api/v1/events/$partyId/follow'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return EventFollowStatus.fromJson(_decodeObject(resp));
+  }
+
+  Future<void> unfollowEvent(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String partyId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.delete(_uri('/api/v1/events/$partyId/follow'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    if (resp.statusCode >= 400) {
+      throw ApiException(resp.statusCode, resp.body);
+    }
+  }
+
+  Future<EventFollowStatus> getEventFollowStatus(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String partyId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/events/$partyId/followers'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return EventFollowStatus.fromJson(_decodeObject(resp));
+  }
+
+  Future<List<Organizer>> listFollowedOrganizers(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/me/following/organizers'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return _decodeList(resp).map((e) => Organizer.fromJson((e as Map).cast<String, dynamic>())).toList();
+  }
+
+  Future<List<FollowedEvent>> listFollowedEvents(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/me/following/events'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return _decodeList(resp).map((e) => FollowedEvent.fromJson((e as Map).cast<String, dynamic>())).toList();
   }
 
   void close() => _http.close();

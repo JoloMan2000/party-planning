@@ -17,6 +17,7 @@ import '../models/party.dart';
 import '../models/party_guests_response.dart';
 import '../state/auth_providers.dart';
 import '../state/geo_providers.dart';
+import '../state/organizer_providers.dart';
 import '../widgets/friend_picker_sheet.dart';
 import '../widgets/image_source_picker.dart';
 
@@ -59,6 +60,7 @@ class PartyDetailScreen extends ConsumerWidget {
             children: [
               _PartyHeader(party: party),
               const SizedBox(height: 20),
+              _FollowEventSection(party: party),
               _UndoDiscoverJoinSection(party: party),
               _BlockOrganizerSection(party: party),
               _PublishToDiscoverSection(party: party),
@@ -123,6 +125,75 @@ class _UndoDiscoverJoinSection extends ConsumerWidget {
       ref.read(selectedPartyIdProvider.notifier).state = null; // zurück zur Liste - Membership ist weg
     } catch (_) {
       messenger.showSnackBar(const SnackBar(content: Text('Failed to undo - please try again.')));
+    }
+  }
+}
+
+/// "Follow this event"-Sektion (Social-Graph-Phase-5, §67-72). Nur für
+/// Nicht-Hosts einer veröffentlichten Party sichtbar. `Follow Event` ist
+/// strikt getrennt von `Going`/`Maybe` (kein Kalendereintrag) - es abonniert
+/// nur Datums-/Standort-/Absage-Updates. Selbstgatend wie
+/// `_BlockOrganizerSection`.
+class _FollowEventSection extends ConsumerWidget {
+  final Party party;
+  const _FollowEventSection({required this.party});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (!party.isPublished) return const SizedBox.shrink();
+    final isHost = ref.watch(currentUserProvider).maybeWhen(
+          data: (user) => user.id == party.hostUserId,
+          orElse: () => true, // solange unbekannt: nicht anzeigen (fail-closed)
+        );
+    if (isHost) return const SizedBox.shrink();
+
+    final statusAsync = ref.watch(eventFollowStatusProvider(party.id));
+    final toggleState = ref.watch(toggleEventFollowProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.notifications_active_outlined),
+            title: const Text('Follow this event'),
+            subtitle: Text(
+              statusAsync.maybeWhen(
+                data: (s) => 'Get notified about date, location and cancellation changes. · ${s.followerCount} following',
+                orElse: () => 'Get notified about date, location and cancellation changes.',
+              ),
+            ),
+            trailing: statusAsync.when(
+              loading: () => const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+              error: (err, st) => const SizedBox.shrink(),
+              data: (s) => s.following
+                  ? OutlinedButton(
+                      onPressed: toggleState.isLoading ? null : () => _toggle(context, ref, follow: false),
+                      child: const Text('Following'),
+                    )
+                  : ElevatedButton(
+                      onPressed: toggleState.isLoading ? null : () => _toggle(context, ref, follow: true),
+                      child: const Text('Follow'),
+                    ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
+  Future<void> _toggle(BuildContext context, WidgetRef ref, {required bool follow}) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final notifier = ref.read(toggleEventFollowProvider.notifier);
+      if (follow) {
+        await notifier.follow(party.id);
+      } else {
+        await notifier.unfollow(party.id);
+      }
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(content: Text('Failed to update follow. Please try again.')));
     }
   }
 }
