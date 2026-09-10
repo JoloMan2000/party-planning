@@ -392,6 +392,7 @@ def test_get_social_privacy_liefert_defaults_ohne_profil(api_client, auth_header
     assert body["friend_request_privacy"] == "everyone"
     assert body["discoverable_by_username"] is True
     assert body["discoverable_by_name"] is True
+    assert body["following_visibility"] == "nobody"  # Social-Graph-Phase-7: Default privat
 
 
 def test_put_social_privacy_ohne_auth_gibt_401(api_client):
@@ -419,10 +420,12 @@ def test_put_social_privacy_happy_path(api_client, auth_headers_factory):
         api_client, headers,
         friend_list_visibility="everyone", friend_request_privacy="nobody",
         discoverable_by_username=False, discoverable_by_name=False,
+        following_visibility="everyone",
     )
     assert body == {
         "friend_list_visibility": "everyone", "friend_request_privacy": "nobody",
         "discoverable_by_username": False, "discoverable_by_name": False,
+        "following_visibility": "everyone",
     }
 
     # Persistiert - erneutes GET liefert dieselben Werte.
@@ -713,3 +716,173 @@ def test_users_search_ergebnisse_tragen_entity_type_user(api_client, auth_header
     _onboard_username(api_client, headers_target, "EntityTypeTarget")
     hits = api_client.get("/api/v1/users/search?q=entitytypetarget", headers=headers_me).json()["results"]
     assert hits and all(u["entity_type"] == "user" for u in hits)
+
+
+# --- Social-Graph-Phase-7: Following privacy + relationship views --------
+
+
+def _befriend(api_client, a_id: str, b_id: str) -> None:
+    friendships.create_friendship(api_client.db_path, uuid.uuid4().hex, a_id, b_id)
+
+
+def test_social_privacy_following_visibility_setzbar(api_client, auth_headers_factory):
+    headers, _u, _ = auth_headers_factory(email="fv_set@example.com")
+    _onboard(api_client, headers)
+    body = _set_privacy(api_client, headers, following_visibility="friends")
+    assert body["following_visibility"] == "friends"
+    body2 = _set_privacy(api_client, headers, following_visibility="everyone")
+    assert body2["following_visibility"] == "everyone"
+
+
+def test_social_privacy_following_visibility_ungueltig_gibt_422(api_client, auth_headers_factory):
+    headers, _u, _ = auth_headers_factory(email="fv_bad@example.com")
+    _onboard(api_client, headers)
+    resp = api_client.put("/api/v1/me/social-privacy", json={"following_visibility": "nonsense"}, headers=headers)
+    assert resp.status_code == 422
+
+
+def test_user_following_organizers_ohne_auth_gibt_401(api_client):
+    resp = api_client.get("/api/v1/users/some-id/following/organizers")
+    assert resp.status_code == 401
+
+
+def test_user_following_organizers_unbekannter_user_gibt_404(api_client, auth_headers_factory):
+    headers, _u, _ = auth_headers_factory(email="fv_404@example.com")
+    resp = api_client.get("/api/v1/users/does-not-exist/following/organizers", headers=headers)
+    assert resp.status_code == 404
+
+
+def test_user_following_organizers_self_immer_erlaubt_trotz_nobody(api_client, auth_headers_factory):
+    headers, me, _ = auth_headers_factory(email="fv_self@example.com")
+    _onboard(api_client, headers)  # following_visibility bleibt Default "nobody"
+    org_id = _make_organizer(api_client, me["id"], verified=True, name="Self View Room")
+    # Owner darf eigenem Organizer nicht folgen -> separater Follower.
+    fh, follower, _ = auth_headers_factory(email="fv_self_f@example.com")
+    _ = fh, follower
+    resp = api_client.get(f"/api/v1/users/{me['id']}/following/organizers", headers=headers)
+    assert resp.status_code == 200
+    _ = org_id
+
+
+def test_user_following_organizers_visibility_tiers(api_client, auth_headers_factory):
+    target_headers, target, _ = auth_headers_factory(email="fv_target@example.com")
+    stranger_headers, _s, _ = auth_headers_factory(email="fv_stranger@example.com")
+    friend_headers, friend, _ = auth_headers_factory(email="fv_friend@example.com")
+    _onboard(api_client, target_headers)
+
+    owner_headers, owner, _ = auth_headers_factory(email="fv_orgowner@example.com")
+    org_id = _make_organizer(api_client, owner["id"], verified=True, name="Followed By Target Room")
+    assert api_client.post(f"/api/v1/organizers/{org_id}/follow", headers=target_headers).status_code == 200
+    _befriend(api_client, target["id"], friend["id"])
+
+    # Default "nobody" -> Fremder 403.
+    assert api_client.get(f"/api/v1/users/{target['id']}/following/organizers", headers=stranger_headers).status_code == 403
+
+    # "friends" -> Fremder 403, Freund 200.
+    _set_privacy(api_client, target_headers, following_visibility="friends")
+    assert api_client.get(f"/api/v1/users/{target['id']}/following/organizers", headers=stranger_headers).status_code == 403
+    friend_resp = api_client.get(f"/api/v1/users/{target['id']}/following/organizers", headers=friend_headers)
+    assert friend_resp.status_code == 200
+    assert [o["id"] for o in friend_resp.json()] == [org_id]
+
+    # "everyone" -> Fremder 200.
+    _set_privacy(api_client, target_headers, following_visibility="everyone")
+    stranger_resp = api_client.get(f"/api/v1/users/{target['id']}/following/organizers", headers=stranger_headers)
+    assert stranger_resp.status_code == 200
+    assert [o["id"] for o in stranger_resp.json()] == [org_id]
+
+
+def test_user_following_organizers_geblockter_viewer_gibt_403(api_client, auth_headers_factory):
+    target_headers, target, _ = auth_headers_factory(email="fv_blk_target@example.com")
+    viewer_headers, viewer, _ = auth_headers_factory(email="fv_blk_viewer@example.com")
+    _onboard(api_client, target_headers)
+    _set_privacy(api_client, target_headers, following_visibility="everyone")
+    assert api_client.post(f"/api/v1/users/{viewer['id']}/block", headers=target_headers).status_code == 200
+    resp = api_client.get(f"/api/v1/users/{target['id']}/following/organizers", headers=viewer_headers)
+    assert resp.status_code == 403
+
+
+def test_user_following_events_visibility_und_inhalt(api_client, auth_headers_factory):
+    target_headers, target, _ = auth_headers_factory(email="fv_ev_target@example.com")
+    stranger_headers, _s, _ = auth_headers_factory(email="fv_ev_stranger@example.com")
+    _onboard(api_client, target_headers)
+
+    host_headers, host, _ = auth_headers_factory(email="fv_ev_host@example.com")
+    party_id = _publish_party(api_client, host_headers, host["id"], name="Followed Event Fest")
+    assert api_client.post(f"/api/v1/events/{party_id}/follow", headers=target_headers).status_code == 200
+
+    assert api_client.get(f"/api/v1/users/{target['id']}/following/events", headers=stranger_headers).status_code == 403
+    _set_privacy(api_client, target_headers, following_visibility="everyone")
+    resp = api_client.get(f"/api/v1/users/{target['id']}/following/events", headers=stranger_headers)
+    assert resp.status_code == 200
+    assert [e["party_id"] for e in resp.json()] == [party_id]
+
+    # Unpublish blendet aus (Zeile bleibt).
+    assert api_client.delete(f"/api/v1/parties/{party_id}/publish", headers=host_headers).status_code == 204
+    assert api_client.get(f"/api/v1/users/{target['id']}/following/events", headers=stranger_headers).json() == []
+
+
+def test_user_relationship_view(api_client, auth_headers_factory):
+    me_headers, _me, _ = auth_headers_factory(email="rv_me@example.com")
+    other_headers, other, _ = auth_headers_factory(email="rv_other@example.com")
+    shared_headers, shared, _ = auth_headers_factory(email="rv_shared@example.com")
+
+    assert api_client.get("/api/v1/users/does-not-exist/relationship", headers=me_headers).status_code == 404
+
+    body = api_client.get(f"/api/v1/users/{other['id']}/relationship", headers=me_headers).json()
+    assert body == {"target_user_id": other["id"], "relationship_status": "none", "mutual_friend_count": 0}
+
+    api_client.post(f"/api/v1/users/{other['id']}/friend-request", headers=me_headers)
+    body2 = api_client.get(f"/api/v1/users/{other['id']}/relationship", headers=me_headers).json()
+    assert body2["relationship_status"] == "request_sent"
+
+    req = api_client.get("/api/v1/me/friend-requests", headers=other_headers).json()["incoming"][0]
+    api_client.post(f"/api/v1/friend-requests/{req['id']}/accept", headers=other_headers)
+    _befriend(api_client, _me_id(api_client, me_headers), shared["id"])
+    _befriend(api_client, other["id"], shared["id"])
+    body3 = api_client.get(f"/api/v1/users/{other['id']}/relationship", headers=me_headers).json()
+    assert body3["relationship_status"] == "friends"
+    assert body3["mutual_friend_count"] == 1
+
+
+def _me_id(api_client, headers) -> str:
+    return api_client.get("/api/v1/me", headers=headers).json()["id"]
+
+
+def test_organizer_relationship_view(api_client, auth_headers_factory):
+    me_headers, _me, _ = auth_headers_factory(email="orv_me@example.com")
+    owner_headers, owner, _ = auth_headers_factory(email="orv_owner@example.com")
+    org_id = _make_organizer(api_client, owner["id"], verified=True, name="Relationship Room")
+
+    assert api_client.get("/api/v1/organizers/does-not-exist/relationship", headers=me_headers).status_code == 404
+
+    body = api_client.get(f"/api/v1/organizers/{org_id}/relationship", headers=me_headers).json()
+    assert body == {"organizer_id": org_id, "is_following": False, "is_blocked": False}
+
+    assert api_client.post(f"/api/v1/organizers/{org_id}/follow", headers=me_headers).status_code == 200
+    assert api_client.post(f"/api/v1/users/{owner['id']}/block", headers=me_headers).status_code == 200
+    body2 = api_client.get(f"/api/v1/organizers/{org_id}/relationship", headers=me_headers).json()
+    assert body2["is_following"] is True
+    assert body2["is_blocked"] is True
+
+
+def test_event_relationship_view(api_client, auth_headers_factory):
+    me_headers, _me, _ = auth_headers_factory(email="erv_me@example.com")
+    host_headers, host, _ = auth_headers_factory(email="erv_host@example.com")
+
+    assert api_client.get("/api/v1/events/does-not-exist/relationship", headers=me_headers).status_code == 404
+
+    private_id = api_client.post("/api/v1/parties", json={"name": "Private"}, headers=host_headers).json()["id"]
+    assert api_client.get(f"/api/v1/events/{private_id}/relationship", headers=me_headers).status_code == 404
+
+    party_id = _publish_party(api_client, host_headers, host["id"], name="Rel Event")
+    body = api_client.get(f"/api/v1/events/{party_id}/relationship", headers=me_headers).json()
+    assert body == {"party_id": party_id, "is_following": False, "interest_status": None}
+
+    assert api_client.post(f"/api/v1/events/{party_id}/follow", headers=me_headers).status_code == 200
+    assert api_client.post(
+        f"/api/v1/discover/{party_id}/action", json={"action": "going"}, headers=me_headers
+    ).status_code == 200
+    body2 = api_client.get(f"/api/v1/events/{party_id}/relationship", headers=me_headers).json()
+    assert body2["is_following"] is True
+    assert body2["interest_status"] == "going"

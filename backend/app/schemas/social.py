@@ -140,6 +140,7 @@ class SocialPrivacyPublic(BaseModel):
     friend_request_privacy: str
     discoverable_by_username: bool
     discoverable_by_name: bool
+    following_visibility: str  # Social-Graph-Phase-7 - "nobody" | "friends" | "everyone"
 
 
 class SocialPrivacyUpdateRequest(BaseModel):
@@ -150,6 +151,7 @@ class SocialPrivacyUpdateRequest(BaseModel):
     friend_request_privacy: str | None = None
     discoverable_by_username: bool | None = None
     discoverable_by_name: bool | None = None
+    following_visibility: str | None = None
 
     @field_validator("friend_list_visibility")
     @classmethod
@@ -164,3 +166,43 @@ class SocialPrivacyUpdateRequest(BaseModel):
         if value is not None and value not in _FRIEND_REQUEST_PRIVACY_VALUES:
             raise ValueError("friend_request_privacy muss 'nobody' oder 'everyone' sein.")
         return value
+
+    @field_validator("following_visibility")
+    @classmethod
+    def _gueltige_following_visibility(cls, value: str | None) -> str | None:
+        if value is not None and value not in _FRIEND_LIST_VISIBILITY_VALUES:
+            raise ValueError("following_visibility muss 'nobody', 'friends' oder 'everyone' sein.")
+        return value
+
+
+class SocialRelationshipView(BaseModel):
+    """Social-Graph-Phase-7 (Spec §94). Feldname ``relationship_status`` statt
+    des Spec-``relationship_state`` - ``relationship_status`` ist der überall
+    in der Codebase genutzte Name (``SocialProfilePublic``,
+    ``_relationship_status``)."""
+
+    target_user_id: str
+    relationship_status: str  # "self" | "friends" | "request_sent" | "request_received" | "blocked" | "none"
+    mutual_friend_count: int = 0
+
+
+class OrganizerRelationshipView(BaseModel):
+    """Social-Graph-Phase-7 (Spec §94). ``is_blocked`` = der Aufrufer hat den
+    Owner dieses Organizers geblockt (echte User-ID)."""
+
+    organizer_id: str
+    is_following: bool
+    is_blocked: bool
+
+
+class EventRelationshipView(BaseModel):
+    """Social-Graph-Phase-7 (Spec §94). Feldname ``party_id`` statt des
+    Spec-``event_id`` - Events werden in Discover durchweg über ``party_id``
+    adressiert. ``interest_status`` spiegelt den eigenen Discover-Swipe
+    ("going"/"maybe"/``None``, wie ``PartyPublic.my_discover_action``) -
+    getrennt vom Follow (Spec §117: following=True und interest_status
+    koexistieren)."""
+
+    party_id: str
+    is_following: bool
+    interest_status: str | None
