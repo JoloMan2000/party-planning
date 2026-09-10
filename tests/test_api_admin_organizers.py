@@ -14,6 +14,8 @@ ADMIN_ROUTES = [
     ("GET", "/api/v1/admin/organizers", None),
     ("POST", "/api/v1/admin/organizers/some-organizer-id/verify", None),
     ("DELETE", "/api/v1/admin/organizers/some-organizer-id/verify", None),
+    ("POST", "/api/v1/admin/organizers/some-organizer-id/suspend", None),
+    ("DELETE", "/api/v1/admin/organizers/some-organizer-id/suspend", None),
 ]
 
 
@@ -73,3 +75,29 @@ def test_admin_verify_unbekannter_organizer_gibt_404(api_client, auth_headers_fa
 
     resp = api_client.delete("/api/v1/admin/organizers/unknown-organizer-id/verify", headers=admin_headers)
     assert resp.status_code == 404
+
+
+# --- Social-Graph-Phase-9: suspend / unsuspend ------------------------
+
+
+def test_admin_kann_organizer_suspendieren_und_wieder_aufheben(api_client, auth_headers_factory, monkeypatch):
+    admin_headers, _admin, _ = auth_headers_factory(email="suspadmin-org@example.com")
+    owner_headers, _owner, _ = auth_headers_factory(email="suspowner-org@example.com")
+    organizer = _create_organizer(api_client, owner_headers)
+    monkeypatch.setattr(settings, "admin_emails", "suspadmin-org@example.com")
+
+    api_client.post(f"/api/v1/admin/organizers/{organizer['id']}/verify", headers=admin_headers)
+    susp = api_client.post(f"/api/v1/admin/organizers/{organizer['id']}/suspend", headers=admin_headers)
+    assert susp.status_code == 200
+    assert susp.json()["verification_status"] == "suspended"
+
+    unsusp = api_client.delete(f"/api/v1/admin/organizers/{organizer['id']}/suspend", headers=admin_headers)
+    assert unsusp.status_code == 200
+    assert unsusp.json()["verification_status"] == "unverified"
+
+
+def test_admin_suspend_unbekannter_organizer_gibt_404(api_client, auth_headers_factory, monkeypatch):
+    admin_headers, _admin, _ = auth_headers_factory(email="suspnotfound-org@example.com")
+    monkeypatch.setattr(settings, "admin_emails", "suspnotfound-org@example.com")
+    assert api_client.post("/api/v1/admin/organizers/nope/suspend", headers=admin_headers).status_code == 404
+    assert api_client.delete("/api/v1/admin/organizers/nope/suspend", headers=admin_headers).status_code == 404

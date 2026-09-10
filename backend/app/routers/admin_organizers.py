@@ -54,3 +54,34 @@ def unverify_organizer(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organizer nicht gefunden.")
     organizers_storage.set_verification_status(db_path, organizer_id, OrganizerVerificationStatus.UNVERIFIED)
     return _to_organizer_admin_public(organizers_storage.get_organizer(db_path, organizer_id))
+
+
+@router.post("/{organizer_id}/suspend", response_model=OrganizerAdminPublic)
+def suspend_organizer(
+    organizer_id: str, db_path: Path = Depends(get_db_path), _admin: User = Depends(require_admin)
+) -> OrganizerAdminPublic:
+    """Social-Graph-Phase-9 (Spec §105): setzt ``verification_status`` auf
+    ``suspended``. Ein suspendierter Organizer ist funktional deaktiviert -
+    Publish-Gating, Suche und "neues Event"-Notifications verlangen alle
+    ``verified``, es gibt daher keinen weiteren Code-Pfad zu ändern.
+    Follow-Zeilen bleiben bestehen (der Client rendert den Status), siehe
+    ``follows.py::list_my_followed_organizers``."""
+    organizer = organizers_storage.get_organizer(db_path, organizer_id)
+    if organizer is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organizer nicht gefunden.")
+    organizers_storage.set_verification_status(db_path, organizer_id, OrganizerVerificationStatus.SUSPENDED)
+    return _to_organizer_admin_public(organizers_storage.get_organizer(db_path, organizer_id))
+
+
+@router.delete("/{organizer_id}/suspend", response_model=OrganizerAdminPublic)
+def unsuspend_organizer(
+    organizer_id: str, db_path: Path = Depends(get_db_path), _admin: User = Depends(require_admin)
+) -> OrganizerAdminPublic:
+    """Hebt eine Suspendierung auf - zurück auf ``unverified`` (der
+    Organizer muss danach neu verifiziert werden, gleiche Semantik wie
+    ``DELETE /{id}/verify``)."""
+    organizer = organizers_storage.get_organizer(db_path, organizer_id)
+    if organizer is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organizer nicht gefunden.")
+    organizers_storage.set_verification_status(db_path, organizer_id, OrganizerVerificationStatus.UNVERIFIED)
+    return _to_organizer_admin_public(organizers_storage.get_organizer(db_path, organizer_id))
