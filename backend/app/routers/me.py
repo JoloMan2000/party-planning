@@ -3,19 +3,20 @@ from __future__ import annotations
 import io
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from PIL import Image, UnidentifiedImageError
 
+import accounts.account_deletion as account_deletion
 import accounts.discover_storage as discover_storage
 import accounts.invitation_storage as invitation_storage
 import accounts.party_storage as party_storage
 import accounts.user_storage as user_storage
 import organizers.storage as organizers_storage
 from accounts.domain import DiscoverAction, User
-from backend.app.core.auth import get_current_user
+from backend.app.core.auth import get_current_user, verify_password
 from backend.app.core.deps import get_db_path, get_media_dir
 from backend.app.schemas.accounts import InvitationPublic, PartyPublic
-from backend.app.schemas.auth import UserPublic
+from backend.app.schemas.auth import AccountDeleteRequest, UserPublic
 
 router = APIRouter(prefix="/api/v1/me", tags=["me"])
 
@@ -29,6 +30,29 @@ def get_me(current_user: User = Depends(get_current_user)) -> UserPublic:
         profile_image=current_user.profile_image, email_verified=current_user.email_verified,
         created_at=current_user.created_at,
     )
+
+
+@router.delete("", status_code=status.HTTP_204_NO_CONTENT)
+def delete_me(
+    payload: AccountDeleteRequest,
+    current_user: User = Depends(get_current_user),
+    db_path: Path = Depends(get_db_path),
+    media_dir: Path = Depends(get_media_dir),
+) -> None:
+    """Social-Graph-Phase-10 (Spec §104): irreversibler Hard-Delete des
+    eigenen Accounts samt gehosteter Parties und gehörender Organizer.
+    Verlangt das aktuelle Passwort als Re-Auth - der einzige Re-Auth-Punkt
+    der App, da die Aktion nicht rückgängig zu machen ist. Alle Sessions
+    enden sofort (Refresh-Tokens gelöscht, der Access-Token wird beim
+    nächsten Request 401, da der User nicht mehr existiert)."""
+    password_hash = user_storage.get_password_hash_by_user_id(db_path, current_user.id)
+    if password_hash is None or not verify_password(payload.password, password_hash):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Passwort falsch.")
+    account_deletion.delete_account(db_path, current_user.id)
+    try:
+        (media_dir / f"{current_user.id}.jpg").unlink()
+    except FileNotFoundError:
+        pass
 
 
 @router.get("/parties", response_model=list[PartyPublic])

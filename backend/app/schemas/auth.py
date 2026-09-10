@@ -51,6 +51,13 @@ class LogoutRequest(BaseModel):
     refresh_token: str
 
 
+class AccountDeleteRequest(BaseModel):
+    """Social-Graph-Phase-10 (Spec §104) - Re-Auth per aktuellem Passwort
+    für den irreversiblen ``DELETE /api/v1/me``."""
+
+    password: str
+
+
 class PasswordResetRequest(BaseModel):
     email: str
 
