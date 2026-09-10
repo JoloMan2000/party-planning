@@ -29,6 +29,7 @@ import music_engine.admin_settings as music_admin_settings
 import organizers.storage as organizers_storage
 import party_engine.response_storage as response_storage
 import social.blocks as social_blocks
+import social.follows as social_follows
 import social.friend_requests as social_friend_requests
 import social.friendships as social_friendships
 from backend.app.core.config import settings, warn_if_insecure_defaults
@@ -47,6 +48,7 @@ from backend.app.routers import (
     discover,
     discovery_catalogs,
     discovery_preferences,
+    follows,
     geo as geo_router,
     guest,
     invitations,
@@ -107,6 +109,7 @@ for router in (
     geo_router.router,
     party_locations.router,
     social.router,
+    follows.router,
 ):
     app.include_router(router)
 
@@ -144,6 +147,7 @@ def on_startup() -> None:
     social_blocks.init_block_storage(db_path)
     social_friendships.init_friendship_storage(db_path)
     social_friend_requests.init_friend_request_storage(db_path)
+    social_follows.init_follow_storage(db_path)
     discovery_storage.init_discovery_storage(db_path)
     discover_storage.init_discover_storage(db_path)
     discover_learning.init_discover_learning_storage(db_path)

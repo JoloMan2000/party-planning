@@ -100,3 +100,47 @@ class UserBlock:
     blocker_id: str
     blocked_id: str
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+@dataclass
+class OrganizerFollow:
+    """Einseitige Follow-Beziehung User -> ``Organizer`` (Social-Graph-Phase-5,
+    AUFGABE-Spec §45-66). Strikt GERICHTET und NEBENWIRKUNGSFREI - anders als
+    ``Friendship`` (symmetrisch, kanonisches Paar, entsteht nur über den
+    Accept-/Merge-Pfad) und anders als ``UserBlock`` (gerichtet, aber storniert
+    Requests / beendet Friendships). Ein Follow ist sofort aktiv, braucht keine
+    Zustimmung des Organizers und wird durch ein simples Unfollow (Zeile
+    löschen) beendet. Formgleich mit ``accounts.domain.BlockedOrganizer``
+    (``UNIQUE(user_id, ziel_id)``), aber gegenteilige Absicht: Follow ist ein
+    positives Interesse-Signal, kein Ausschluss.
+
+    Der Spec-Vorschlag eines ``status``-Feldes ("active") wird bewusst NICHT
+    modelliert - "gefolgt" = "Zeile existiert" (wie ``user_blocks`` /
+    ``friendships`` / ``public_events``). Ein späterer weicher
+    "suspended follow"-Zustand kann die Spalte nachrüsten."""
+
+    id: str
+    user_id: str
+    organizer_id: str
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+@dataclass
+class EventFollow:
+    """Einseitige Follow-Beziehung User -> veröffentlichtes Event
+    (Social-Graph-Phase-5, AUFGABE-Spec §67-79). Strikt getrennt von
+    ``RsvpStatus.GOING``/``MAYBE`` (Teilnahme-Absicht) und vom Discover-Swipe:
+    ein Event-Follow bedeutet nur "ich möchte Updates zu diesem Event" und
+    erzeugt KEINEN Kalendereintrag.
+
+    ``party_id`` referenziert bewusst die ``Party`` (die stabile, überall in
+    Discover genutzte Kennung), NICHT die ``public_events``-Projektion
+    (deren ``id`` ist ein synthetisches ``f"public_event:{party_id}"`` ohne
+    eigenen Lookup-Pfad). So übersteht eine Follow-Zeile ein Unpublish
+    (die ``public_events``-Zeile wird gelöscht, die Party bleibt) - sie wird
+    dann nur aus ``GET /me/following/events`` ausgeblendet, nicht entfernt."""
+
+    id: str
+    user_id: str
+    party_id: str
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
