@@ -421,6 +421,32 @@ class UploadProfileImageNotifier extends AsyncNotifier<UserAccount?> {
 final uploadProfileImageProvider =
     AsyncNotifierProvider<UploadProfileImageNotifier, UserAccount?>(UploadProfileImageNotifier.new);
 
+/// Social-Graph-Phase-10: irreversibler Hard-Delete des eigenen Accounts
+/// (`DELETE /api/v1/me`, Re-Auth per Passwort). Bei Erfolg lokaler
+/// Force-Logout (`AuthNotifier.logout` leert den Speicher + setzt
+/// `authProvider` auf `null` -> `main.dart` routet auf den `LoginScreen`).
+/// `rethrow` bei Fehler, damit der Screen 403 (falsches Passwort) anzeigen
+/// kann.
+class DeleteAccountNotifier extends AsyncNotifier<void> {
+  @override
+  Future<void> build() async {}
+
+  Future<void> delete(String password) async {
+    final token = ref.read(requiredAccessTokenProvider);
+    state = const AsyncLoading();
+    try {
+      await ref.read(apiClientProvider).deleteAccount(token, onRefresh(ref), password: password);
+      await ref.read(authProvider.notifier).logout();
+      state = const AsyncData(null);
+    } catch (e) {
+      state = AsyncError(e, StackTrace.current);
+      rethrow;
+    }
+  }
+}
+
+final deleteAccountProvider = AsyncNotifierProvider<DeleteAccountNotifier, void>(DeleteAccountNotifier.new);
+
 // ---------------------------------------------------------------------
 // Navigations-Zustand - reine `StateProvider`s statt eines Routing-Pakets,
 // mirroring den bestehenden `adminModeProvider`/`enteredIntroProvider`-Stil
@@ -442,6 +468,9 @@ final showAccountUnlockRequestProvider = StateProvider<bool>((ref) => false);
 final selectedPartyIdProvider = StateProvider<String?>((ref) => null);
 final selectedInvitationIdProvider = StateProvider<String?>((ref) => null);
 final creatingPartyProvider = StateProvider<bool>((ref) => false);
+
+/// `true` = `DeleteAccountScreen` ist geöffnet (via Kachel auf `ProfileScreen`).
+final showDeleteAccountProvider = StateProvider<bool>((ref) => false);
 
 /// Party-ID, für die das Admin-Dashboard geöffnet wurde (`null` = geschlossen).
 /// Ersetzt seit Phase 4 den alten `adminModeProvider` - "Verwalten" auf

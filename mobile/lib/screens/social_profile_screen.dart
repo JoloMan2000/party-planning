@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/social_profile.dart';
+import '../state/organizer_providers.dart';
 import '../state/social_providers.dart';
 
 // TODO(i18n): English-only strings for now, deliberately deferred per Phase-3
@@ -67,6 +68,13 @@ class SocialProfileScreen extends ConsumerWidget {
                 TextButton(
                   onPressed: () => ref.read(viewingUserFriendsUserIdProvider.notifier).state = profile.userId,
                   child: const Text('View friends'),
+                ),
+                // Social-Graph-Phase-7: Sichtbarkeit wird server-seitig via
+                // 403 auf GET /users/{id}/following/* durchgesetzt (gemäß
+                // following_visibility) - der Link wird immer gezeigt.
+                TextButton(
+                  onPressed: () => ref.read(viewingUserFollowingUserIdProvider.notifier).state = profile.userId,
+                  child: const Text('View following'),
                 ),
               ],
               const SizedBox(height: 16),

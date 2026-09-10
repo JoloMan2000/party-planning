@@ -7,9 +7,39 @@ import '../state/auth_providers.dart';
 // TODO(i18n): English-only strings for now, mirroring the deliberate Phase-3
 // scope decision on the other screens.
 
+/// Freie `kind`-Strings des Backends -> Icon. `notifications.kind` ist
+/// bewusst kein Enum (siehe `backend/app/routers/notifications.py`), daher
+/// hier ein tolerant fallendes `switch` (unbekannt -> Glocke).
+IconData _iconForKind(String kind) {
+  switch (kind) {
+    case 'invitation':
+      return Icons.mail;
+    case 'rsvp':
+      return Icons.how_to_reg;
+    case 'friend_request_received':
+      return Icons.person_add;
+    case 'friend_request_accepted':
+      return Icons.people;
+    case 'organizer_new_event':
+      return Icons.campaign;
+    case 'event_updated':
+      return Icons.edit_calendar;
+    case 'event_cancelled':
+      return Icons.event_busy;
+    case 'co_host_promoted':
+      return Icons.workspace_premium;
+    case 'location_changed':
+      return Icons.location_on;
+    case 'discover_join':
+      return Icons.celebration;
+    default:
+      return Icons.notifications;
+  }
+}
+
 /// Notification-Inbox (Phase 5) - tippt eine Notification an, um zur
-/// zugehörigen Invitation (`kind == "invitation"`) bzw. Party
-/// (`kind == "rsvp"`) zu navigieren, und markiert sie dabei als gelesen.
+/// zugehörigen Party zu navigieren (sofern `party_id` gesetzt), und
+/// markiert sie dabei als gelesen.
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
 
@@ -69,7 +99,7 @@ class _NotificationTile extends ConsumerWidget {
     return Card(
       color: notification.read ? null : Theme.of(context).colorScheme.primaryContainer,
       child: ListTile(
-        leading: Icon(notification.kind == 'invitation' ? Icons.mail : Icons.how_to_reg),
+        leading: Icon(_iconForKind(notification.kind)),
         title: Text(notification.message),
         subtitle: Text(notification.createdAt.toString()),
         onTap: () => _handleTap(ref),

@@ -21,6 +21,7 @@ import '../models/invitation.dart';
 import '../models/language_option.dart';
 import '../models/music_admin_settings.dart';
 import '../models/music_planning_result.dart';
+import '../models/notification_settings.dart';
 import '../models/party.dart';
 import '../geo/geo_models.dart';
 import '../models/party_context.dart';
@@ -41,6 +42,7 @@ import '../models/friend_invite_result.dart';
 import '../models/friend_request.dart';
 import '../models/organizer.dart';
 import '../models/organizer_member.dart';
+import '../models/search_results.dart';
 import '../models/social_privacy.dart';
 import '../models/social_profile.dart';
 import '../models/user_search_result.dart';
@@ -1808,6 +1810,98 @@ class ApiClient {
       onRefresh,
     );
     return _decodeList(resp).map((e) => FollowedEvent.fromJson((e as Map).cast<String, dynamic>())).toList();
+  }
+
+  // ---------------------------------------------------------------------
+  // Social Graph Phase 6/7/8/10: unified search, another user's following
+  // lists, notification-category settings, account deletion.
+  // ---------------------------------------------------------------------
+
+  Future<SearchResults> unifiedSearch(
+    String accessToken,
+    Future<String?> Function() onRefresh, {
+    required String q,
+  }) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/search', {'q': q}), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return SearchResults.fromJson(_decodeObject(resp));
+  }
+
+  Future<List<Organizer>> getUserFollowedOrganizers(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String userId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/users/$userId/following/organizers'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return _decodeList(resp).map((e) => Organizer.fromJson((e as Map).cast<String, dynamic>())).toList();
+  }
+
+  Future<List<FollowedEvent>> getUserFollowedEvents(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String userId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/users/$userId/following/events'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return _decodeList(resp).map((e) => FollowedEvent.fromJson((e as Map).cast<String, dynamic>())).toList();
+  }
+
+  Future<NotificationSettings> getNotificationSettings(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/me/notification-settings'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return NotificationSettings.fromJson(_decodeObject(resp));
+  }
+
+  Future<NotificationSettings> updateNotificationSettings(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    NotificationSettings settings,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.put(
+        _uri('/api/v1/me/notification-settings'),
+        headers: _authHeaders(token),
+        body: jsonEncode(settings.toJson()),
+      ),
+      accessToken,
+      onRefresh,
+    );
+    return NotificationSettings.fromJson(_decodeObject(resp));
+  }
+
+  Future<void> deleteAccount(
+    String accessToken,
+    Future<String?> Function() onRefresh, {
+    required String password,
+  }) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.delete(
+        _uri('/api/v1/me'),
+        headers: _authHeaders(token),
+        body: jsonEncode({'password': password}),
+      ),
+      accessToken,
+      onRefresh,
+    );
+    if (resp.statusCode >= 400) {
+      throw ApiException(resp.statusCode, resp.body);
+    }
   }
 
   void close() => _http.close();
