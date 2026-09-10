@@ -167,3 +167,32 @@ def test_unbekannte_ids_liefern_leere_defaults(db_path):
     assert follows.count_event_followers(db_path, "unknown") == 0
     assert follows.is_following_organizer(db_path, "unknown", "unknown") is False
     assert follows.is_following_event(db_path, "unknown", "unknown") is False
+
+
+# --- Social-Graph-Phase-8: reverse follower-id lookups -----------------
+
+
+def test_list_organizer_follower_ids_leer(db_path, organizer_a):
+    assert follows.list_organizer_follower_ids(db_path, organizer_a.id) == []
+
+
+def test_list_organizer_follower_ids_mehrere_und_isoliert_pro_organizer(db_path, anna, max_, organizer_a, organizer_b):
+    follows.follow_organizer(db_path, uuid.uuid4().hex, anna.id, organizer_a.id)
+    follows.follow_organizer(db_path, uuid.uuid4().hex, max_.id, organizer_a.id)
+    follows.follow_organizer(db_path, uuid.uuid4().hex, anna.id, organizer_b.id)
+    assert set(follows.list_organizer_follower_ids(db_path, organizer_a.id)) == {anna.id, max_.id}
+    assert follows.list_organizer_follower_ids(db_path, organizer_b.id) == [anna.id]
+    assert follows.list_organizer_follower_ids(db_path, "unknown") == []
+
+
+def test_list_event_follower_ids_leer(db_path, party):
+    assert follows.list_event_follower_ids(db_path, party.id) == []
+
+
+def test_list_event_follower_ids_mehrere_und_isoliert_pro_event(db_path, anna, max_, party, party_b):
+    follows.follow_event(db_path, uuid.uuid4().hex, anna.id, party.id)
+    follows.follow_event(db_path, uuid.uuid4().hex, max_.id, party.id)
+    follows.follow_event(db_path, uuid.uuid4().hex, max_.id, party_b.id)
+    assert set(follows.list_event_follower_ids(db_path, party.id)) == {anna.id, max_.id}
+    assert follows.list_event_follower_ids(db_path, party_b.id) == [max_.id]
+    assert follows.list_event_follower_ids(db_path, "unknown") == []

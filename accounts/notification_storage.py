@@ -9,7 +9,7 @@ Bewusst poll-basiert statt echtem Push (FCM/APNs) - siehe TODO in
 from __future__ import annotations
 
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from accounts.domain import Notification
@@ -78,6 +78,25 @@ def list_notifications(db_path: str | Path, user_id: str) -> list[Notification]:
     return [_row_to_notification(r) for r in rows]
 
 
+def has_recent_notification(
+    db_path: str | Path, user_id: str, kind: str, party_id: str, within_minutes: int
+) -> bool:
+    """Social-Graph-Phase-8: True, wenn für ``(user_id, kind, party_id)``
+    in den letzten ``within_minutes`` Minuten schon eine Notification
+    erzeugt wurde - Frequency-Guard gegen Spam bei schnell
+    aufeinanderfolgenden Edits desselben Events (Spec §65/§90). ``created_at``
+    wird von ``create_notification`` als NAIVE lokale Zeit geschrieben,
+    daher hier ebenfalls naive ``datetime.now()`` für den Cutoff (lexikaler
+    ISO-8601-Vergleich)."""
+    cutoff = (datetime.now() - timedelta(minutes=within_minutes)).isoformat()
+    with sqlite3.connect(db_path) as conn:
+        row = conn.execute(
+            "SELECT 1 FROM notifications WHERE user_id = ? AND kind = ? AND party_id = ? AND created_at > ? LIMIT 1",
+            (user_id, kind, party_id, cutoff),
+        ).fetchone()
+    return row is not None
+
+
 def mark_read(db_path: str | Path, notification_id: str, user_id: str) -> Notification | None:
     """Setzt ``read = 1``, aber nur wenn die Notification [user_id] gehört
     (kein Cross-User-Zugriff auf fremde Notifications). ``None`` wenn nicht
@@ -129,5 +148,12 @@ if __name__ == "__main__":
         assert now_read[0].read is True
 
         assert list_notifications(db_path, other.id) == []
+
+        # Social-Graph-Phase-8: has_recent_notification
+        assert has_recent_notification(db_path, user.id, "invitation", "party-1", within_minutes=60) is True
+        assert has_recent_notification(db_path, user.id, "invitation", "party-1", within_minutes=0) is False  # Cutoff jetzt
+        assert has_recent_notification(db_path, user.id, "event_updated", "party-1", within_minutes=60) is False  # anderes kind
+        assert has_recent_notification(db_path, user.id, "invitation", "party-2", within_minutes=60) is False  # andere party
+        assert has_recent_notification(db_path, other.id, "invitation", "party-1", within_minutes=60) is False  # anderer user
 
         print("accounts/notification_storage.py sanity check OK.")

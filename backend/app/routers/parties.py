@@ -9,10 +9,12 @@ from PIL import Image, UnidentifiedImageError
 
 import accounts.discover_storage as discover_storage
 import accounts.invitation_storage as invitation_storage
+import accounts.notification_settings_storage as notification_settings_storage
 import accounts.notification_storage as notification_storage
 import accounts.party_storage as party_storage
 import accounts.user_storage as user_storage
 import organizers.storage as organizers_storage
+import social.follows as follows
 import social.friendships as friendships
 from accounts.domain import DiscoverAction, PartyRole, RsvpStatus, User
 from backend.app.core.auth import get_current_user, require_party_role
@@ -68,6 +70,74 @@ def _my_discover_action(db_path: Path, user_id: str, party_id: str) -> str | Non
     return None
 
 
+# --- Social-Graph-Phase-8: Followed-Entity-Notification-Fan-out ---------
+# Inline im Router (gleiches Muster wie ``party_locations.py``/``invite_friends``:
+# Empfänger auflisten, Akteur überspringen, nur bei echtem State-Übergang feuern).
+
+_EVENT_UPDATE_DEDUP_MINUTES = 5
+
+
+def _notify_new_publication(db_path: Path, party) -> None:
+    """Ein Host hat eine Party ZUM ERSTEN MAL veröffentlicht -> alle Follower
+    der verifizierten Organizer, in denen der Host Mitglied ist, bekommen
+    eine Notification (Spec §64/§91).
+
+    ACHTUNG - Attribution ist NÄHERUNGSWEISE: es gibt kein
+    ``Party.organizer_id`` (seit Phase 4 deferred), daher der Umweg über
+    "Follower irgendeines verifizierten Organizers des Hosts". Ein Host, der
+    in mehreren Organizern Mitglied ist, pingt für eine unabhängige private
+    Party alle deren Follower. Präzise Event->Organizer-Zuordnung gehört in
+    eine spätere Phase mit echtem Event-Erstellungs-Flow."""
+    notified: set[str] = set()
+    for organizer, _membership in organizers_storage.list_organizers_for_user(db_path, party.host_user_id):
+        if organizer.verification_status.value != "verified":
+            continue
+        for follower_id in follows.list_organizer_follower_ids(db_path, organizer.id):
+            if follower_id in notified or follower_id == party.host_user_id:
+                continue
+            if not notification_settings_storage.get_notification_settings(db_path, follower_id).organizer_updates:
+                continue
+            notification_storage.create_notification(
+                db_path, uuid.uuid4().hex, follower_id, party.id, "organizer_new_event",
+                f"{organizer.display_name} just published a new event: {party.name}.",
+            )
+            notified.add(follower_id)
+
+
+def _notify_event_changed(db_path: Path, party, changes: list[str], actor_id: str) -> None:
+    """Datum/Ort eines gefolgten (noch veröffentlichten) Events hat sich
+    geändert (Spec §72/§90). ``_EVENT_UPDATE_DEDUP_MINUTES`` unterdrückt
+    Doppel-Notifications bei schnell aufeinanderfolgenden Edits."""
+    label = " and ".join(changes)
+    for follower_id in follows.list_event_follower_ids(db_path, party.id):
+        if follower_id == actor_id:
+            continue
+        if not notification_settings_storage.get_notification_settings(db_path, follower_id).followed_event_updates:
+            continue
+        if notification_storage.has_recent_notification(
+            db_path, follower_id, "event_updated", party.id, _EVENT_UPDATE_DEDUP_MINUTES
+        ):
+            continue
+        notification_storage.create_notification(
+            db_path, uuid.uuid4().hex, follower_id, party.id, "event_updated",
+            f"{party.name}: {label} changed.",
+        )
+
+
+def _notify_event_cancelled(db_path: Path, party_id: str, party_name: str, actor_id: str) -> None:
+    """Ein gefolgtes, veröffentlichtes Event wurde depubliziert = abgesagt
+    (Spec §106). Danach keine weiteren normalen Follow-Updates."""
+    for follower_id in follows.list_event_follower_ids(db_path, party_id):
+        if follower_id == actor_id:
+            continue
+        if not notification_settings_storage.get_notification_settings(db_path, follower_id).followed_event_updates:
+            continue
+        notification_storage.create_notification(
+            db_path, uuid.uuid4().hex, follower_id, party_id, "event_cancelled",
+            f"{party_name} has been cancelled.",
+        )
+
+
 @router.post("", response_model=PartyPublic, status_code=status.HTTP_201_CREATED)
 def create_party(
     payload: PartyCreate, current_user: User = Depends(get_current_user), db_path: Path = Depends(get_db_path)
@@ -104,9 +174,21 @@ def update_party(
     party_id: str,
     payload: PartyUpdate,
     db_path: Path = Depends(get_db_path),
-    _membership=Depends(require_party_role({PartyRole.HOST, PartyRole.CO_HOST})),
+    membership=Depends(require_party_role({PartyRole.HOST, PartyRole.CO_HOST})),
 ) -> PartyPublic:
+    before = party_storage.get_party(db_path, party_id)
     party = party_storage.update_party(db_path, party_id, **payload.model_dump(exclude_unset=True))
+    # Social-Graph-Phase-8: Datums-/Ort-Änderung an Event-Follower melden -
+    # nur wenn das Event aktuell veröffentlicht ist (Spec §106: ein
+    # abgesagtes Event erzeugt keine weiteren Updates).
+    if before is not None:
+        changes: list[str] = []
+        if before.starts_at != party.starts_at:
+            changes.append("date")
+        if before.location != party.location:
+            changes.append("location")
+        if changes and discover_storage.get_publication(db_path, party_id) is not None:
+            _notify_event_changed(db_path, party, changes, membership.user_id)
     return _to_party_public(
         party, discover_storage.get_publication(db_path, party_id), _host_is_verified(db_path, party.host_user_id)
     )
@@ -133,11 +215,17 @@ def publish_party(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You must be a member of a verified organizer before you can publish parties.",
         )
+    # Social-Graph-Phase-8: nur ein echter None->published-Übergang löst den
+    # Follower-Fan-out aus (Publish ist ein Upsert, ein Re-Publish zum Ändern
+    # der Tags darf keine zweite "neues Event"-Notification erzeugen).
+    newly_published = discover_storage.get_publication(db_path, party_id) is None
     discover_storage.publish_party(
         db_path, party_id, event_type=payload.event_type, interest_tags=payload.interest_tags,
         max_guests=payload.max_guests, is_major_event=payload.is_major_event,
     )
     party = party_storage.get_party(db_path, party_id)
+    if newly_published and party is not None:
+        _notify_new_publication(db_path, party)
     return _to_party_public(
         party, discover_storage.get_publication(db_path, party_id),
         organizers_storage.is_user_verified_organizer_member(db_path, current_user.id),
@@ -148,9 +236,16 @@ def publish_party(
 def unpublish_party(
     party_id: str,
     db_path: Path = Depends(get_db_path),
-    _membership=Depends(require_party_role({PartyRole.HOST})),
+    membership=Depends(require_party_role({PartyRole.HOST})),
 ) -> None:
+    # Social-Graph-Phase-8: Name + Veröffentlichungs-Status VOR dem
+    # Hard-Delete lesen; nur wenn tatsächlich veröffentlicht war, feuert die
+    # Absage-Notification (kein Spam bei doppeltem Unpublish).
+    was_published = discover_storage.get_publication(db_path, party_id) is not None
+    party = party_storage.get_party(db_path, party_id)
     discover_storage.unpublish_party(db_path, party_id)
+    if was_published and party is not None:
+        _notify_event_cancelled(db_path, party_id, party.name, membership.user_id)
 
 
 @router.post("/{party_id}/cover-image", response_model=PartyPublic)

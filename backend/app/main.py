@@ -18,6 +18,7 @@ import accounts.discover_learning as discover_learning
 import accounts.discover_storage as discover_storage
 import accounts.discovery_storage as discovery_storage
 import accounts.invitation_storage as invitation_storage
+import accounts.notification_settings_storage as notification_settings_storage
 import accounts.notification_storage as notification_storage
 import accounts.party_storage as party_storage
 import accounts.profile_storage as profile_storage
@@ -53,6 +54,7 @@ from backend.app.routers import (
     guest,
     invitations,
     me,
+    notification_settings,
     notifications,
     organizers,
     parties,
@@ -86,6 +88,7 @@ for router in (
     auth.router,
     me.router,
     notifications.router,
+    notification_settings.router,
     parties.router,
     organizers.router,
     invitations.router,
@@ -139,6 +142,7 @@ def on_startup() -> None:
     organizers_storage.init_organizer_storage(db_path)
     invitation_storage.init_invitation_storage(db_path)
     notification_storage.init_notifications(db_path)
+    notification_settings_storage.init_notification_settings_storage(db_path)
     event_theme.init_party_settings(db_path)
     music_admin_settings.init_music_admin_settings(db_path)
     party_context_storage.init_party_context_storage(db_path)

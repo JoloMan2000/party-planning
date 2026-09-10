@@ -113,6 +113,24 @@ class Notification:
 
 
 @dataclass
+class NotificationSettings:
+    """Pro-User-Notification-Kategorie-Schalter (Social-Graph-Phase-8, Spec
+    §109/§156). Eine Zeile pro User, jede Kategorie standardmäßig AN. In
+    Phase 8 sind nur ``organizer_updates`` und ``followed_event_updates``
+    tatsächlich an eine Emission verdrahtet (siehe
+    ``backend/app/routers/parties.py::_notify_*``); die anderen drei werden
+    schon gespeichert (Client/Mobile + spätere Phasen). Rein In-App -
+    getrennt von Marketing-Consent (Spec §112)."""
+
+    user_id: str
+    friend_requests: bool = True
+    party_invitations: bool = True
+    organizer_updates: bool = True
+    followed_event_updates: bool = True
+    nearby_discover: bool = True
+
+
+@dataclass
 class UserProfile:
     """Social-Profile-/Onboarding-Layer (Onboarding-Spec, Phase 6) - bewusst
     GETRENNT von ``User`` (Account Identity, ``accounts/user_storage.py``):

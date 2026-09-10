@@ -149,6 +149,18 @@ def count_organizer_followers(db_path: str | Path, organizer_id: str) -> int:
     return count
 
 
+def list_organizer_follower_ids(db_path: str | Path, organizer_id: str) -> list[str]:
+    """Social-Graph-Phase-8: die User-IDs, die diesem Organizer folgen -
+    Gegenrichtung zu ``list_organizer_follows`` (per Follower), gebraucht
+    für den Notification-Fan-out bei einem neu veröffentlichten Event.
+    Nutzt ``idx_organizer_follows_organizer``."""
+    with sqlite3.connect(db_path) as conn:
+        rows = conn.execute(
+            "SELECT user_id FROM organizer_follows WHERE organizer_id = ? ORDER BY created_at", (organizer_id,)
+        ).fetchall()
+    return [row[0] for row in rows]
+
+
 # --- Event follows -----------------------------------------------------
 
 
@@ -204,6 +216,18 @@ def count_event_followers(db_path: str | Path, party_id: str) -> int:
     return count
 
 
+def list_event_follower_ids(db_path: str | Path, party_id: str) -> list[str]:
+    """Social-Graph-Phase-8: die User-IDs, die diesem Event folgen -
+    Gegenrichtung zu ``list_event_follows``, gebraucht für den
+    Notification-Fan-out bei Datums-/Ort-Änderung oder Absage. Nutzt
+    ``idx_event_follows_party``."""
+    with sqlite3.connect(db_path) as conn:
+        rows = conn.execute(
+            "SELECT user_id FROM event_follows WHERE party_id = ? ORDER BY created_at", (party_id,)
+        ).fetchall()
+    return [row[0] for row in rows]
+
+
 if __name__ == "__main__":
     import tempfile
     import uuid
@@ -246,6 +270,10 @@ if __name__ == "__main__":
         follow_organizer(db_path, uuid.uuid4().hex, max_.id, organizer_a.id)
         assert count_organizer_followers(db_path, organizer_a.id) == 2
 
+        # Social-Graph-Phase-8: Gegenrichtung - Follower-IDs eines Organizers.
+        assert set(list_organizer_follower_ids(db_path, organizer_a.id)) == {anna.id, max_.id}
+        assert list_organizer_follower_ids(db_path, organizer_b.id) == []
+
         # Neueste zuerst.
         follow_organizer(db_path, uuid.uuid4().hex, anna.id, organizer_b.id)
         annas_follows = list_organizer_follows(db_path, anna.id)
@@ -268,6 +296,12 @@ if __name__ == "__main__":
         event_follow_again = follow_event(db_path, uuid.uuid4().hex, anna.id, party.id)
         assert event_follow_again.id == event_follow.id
         assert count_event_followers(db_path, party.id) == 1
+
+        # Social-Graph-Phase-8: Gegenrichtung - Follower-IDs eines Events.
+        follow_event(db_path, uuid.uuid4().hex, max_.id, party.id)
+        assert set(list_event_follower_ids(db_path, party.id)) == {anna.id, max_.id}
+        assert list_event_follower_ids(db_path, "unknown-party") == []
+        unfollow_event(db_path, max_.id, party.id)
 
         unfollow_event(db_path, anna.id, party.id)
         assert is_following_event(db_path, anna.id, party.id) is False
