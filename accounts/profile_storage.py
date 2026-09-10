@@ -64,6 +64,9 @@ def init_profile_storage(db_path: str | Path) -> None:
             "friend_request_privacy": "ALTER TABLE user_profiles ADD COLUMN friend_request_privacy TEXT NOT NULL DEFAULT 'everyone'",
             "discoverable_by_username": "ALTER TABLE user_profiles ADD COLUMN discoverable_by_username INTEGER NOT NULL DEFAULT 1",
             "discoverable_by_name": "ALTER TABLE user_profiles ADD COLUMN discoverable_by_name INTEGER NOT NULL DEFAULT 1",
+            # Social-Graph-Phase-7: sichtbar-für-andere-Policy der Following-Listen.
+            # Default die restriktivste Stufe (Spec §110 "Empfehlung Default: private").
+            "following_visibility": "ALTER TABLE user_profiles ADD COLUMN following_visibility TEXT NOT NULL DEFAULT 'nobody'",
         }
         for column, ddl in profile_migrations.items():
             if column not in existing_profile_cols:
@@ -103,6 +106,7 @@ def _row_to_profile(row: sqlite3.Row) -> UserProfile:
             bool(row["discoverable_by_username"]) if "discoverable_by_username" in row.keys() else True
         ),
         discoverable_by_name=bool(row["discoverable_by_name"]) if "discoverable_by_name" in row.keys() else True,
+        following_visibility=row["following_visibility"] if "following_visibility" in row.keys() else "nobody",
         onboarding_completed_at=(
             datetime.fromisoformat(row["onboarding_completed_at"]) if row["onboarding_completed_at"] else None
         ),
@@ -143,10 +147,12 @@ def upsert_user_profile(
     friend_request_privacy: str | None = None,
     discoverable_by_username: bool | None = None,
     discoverable_by_name: bool | None = None,
+    following_visibility: str | None = None,
 ) -> UserProfile:
     """Legt das Profil beim ersten Aufruf an (``birth_date`` dann Pflicht) oder
     aktualisiert ``gender``/``bio``/``username``/die vier Social-Graph-Phase-3-
-    Privacy-Felder eines bestehenden Profils. ``birth_date`` wird bei einem
+    Privacy-Felder + ``following_visibility`` (Phase 7) eines bestehenden
+    Profils. ``birth_date`` wird bei einem
     bereits existierenden Profil IGNORIERT (geschützt - siehe Moduldoku),
     auch wenn hier übergeben - Aufrufer (Router) darf ``birth_date`` auf
     einem Update-Request ohnehin gar nicht erst entgegennehmen.
@@ -170,14 +176,15 @@ def upsert_user_profile(
                     INSERT INTO user_profiles
                         (user_id, birth_date, gender, bio, username, friend_list_visibility,
                          friend_request_privacy, discoverable_by_username, discoverable_by_name,
-                         created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                         following_visibility, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         user_id, birth_date.isoformat(), gender or "", bio or "", username or None,
                         friend_list_visibility or "friends", friend_request_privacy or "everyone",
                         1 if discoverable_by_username is None or discoverable_by_username else 0,
                         1 if discoverable_by_name is None or discoverable_by_name else 0,
+                        following_visibility or "nobody",
                         now, now,
                     ),
                 )
@@ -197,17 +204,20 @@ def upsert_user_profile(
                 new_discoverable_by_name = (
                     discoverable_by_name if discoverable_by_name is not None else existing.discoverable_by_name
                 )
+                new_following_visibility = (
+                    following_visibility if following_visibility is not None else existing.following_visibility
+                )
                 conn.execute(
                     """
                     UPDATE user_profiles SET gender = ?, bio = ?, username = ?, friend_list_visibility = ?,
                         friend_request_privacy = ?, discoverable_by_username = ?, discoverable_by_name = ?,
-                        updated_at = ?
+                        following_visibility = ?, updated_at = ?
                     WHERE user_id = ?
                     """,
                     (
                         new_gender, new_bio, new_username, new_friend_list_visibility, new_friend_request_privacy,
                         1 if new_discoverable_by_username else 0, 1 if new_discoverable_by_name else 0,
-                        now, user_id,
+                        new_following_visibility, now, user_id,
                     ),
                 )
     except sqlite3.IntegrityError as exc:
@@ -326,6 +336,8 @@ if __name__ == "__main__":
         assert with_username.friend_request_privacy == "everyone"
         assert with_username.discoverable_by_username is True
         assert with_username.discoverable_by_name is True
+        # Social-Graph-Phase-7: following_visibility defaultet auf "nobody" (privat).
+        assert with_username.following_visibility == "nobody"
 
         # Jedes Feld unabhaengig setzbar, uebrige bleiben unveraendert.
         privacy_updated = upsert_user_profile(db_path, user_id, friend_list_visibility="nobody")
@@ -337,10 +349,18 @@ if __name__ == "__main__":
         assert privacy_updated2.discoverable_by_name is True  # unveraendert
         assert privacy_updated2.friend_list_visibility == "nobody"  # unveraendert vom vorigen Aufruf
 
+        # Social-Graph-Phase-7: following_visibility unabhaengig setzbar, uebrige bleiben.
+        fv_updated = upsert_user_profile(db_path, user_id, following_visibility="everyone")
+        assert fv_updated.following_visibility == "everyone"
+        assert fv_updated.friend_list_visibility == "nobody"  # unveraendert
+        unchanged_fv = upsert_user_profile(db_path, user_id, gender="non-binary")
+        assert unchanged_fv.following_visibility == "everyone"  # None laesst unveraendert
+
         # Migrations-Idempotenz: init nochmal aufrufen, bereits gesetzte Werte ueberleben.
         init_profile_storage(db_path)
         survived = get_user_profile(db_path, user_id)
         assert survived.friend_list_visibility == "nobody"
         assert survived.discoverable_by_username is False
+        assert survived.following_visibility == "everyone"
 
         print("accounts/profile_storage.py sanity check OK.")

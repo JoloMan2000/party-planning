@@ -16,28 +16,36 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+import accounts.discover_storage as discover_storage
 import accounts.notification_storage as notification_storage
+import accounts.party_storage as party_storage
 import accounts.profile_storage as profile_storage
 import accounts.user_storage as user_storage
+import organizers.storage as organizers_storage
 import social.blocks as blocks
 import social.follows as follows
 import social.friend_requests as friend_requests
 import social.friendships as friendships
 import social.search as search
-from accounts.domain import User
+from accounts.domain import DiscoverAction, User
 from backend.app.core.auth import get_current_user
 from backend.app.core.deps import get_db_path
+from backend.app.schemas.following import FollowedEventPublic
+from backend.app.schemas.organizers import OrganizerPublic
 from backend.app.schemas.social import (
+    EventRelationshipView,
     EventSearchResultPublic,
     FriendPublic,
     FriendRequestCreateResponse,
     FriendRequestPublic,
     FriendRequestsInboxResponse,
+    OrganizerRelationshipView,
     OrganizerSearchResultPublic,
     SearchResponse,
     SocialPrivacyPublic,
     SocialPrivacyUpdateRequest,
     SocialProfilePublic,
+    SocialRelationshipView,
     UserBlockResponse,
     UserSearchResponse,
     UserSearchResultPublic,
@@ -52,19 +60,22 @@ def _username_for(db_path: Path, user_id: str) -> str:
     return profile.username if profile is not None else ""
 
 
-def _privacy_for(db_path: Path, user_id: str) -> tuple[str, str, bool, bool]:
-    """Social-Graph-Phase-3: liest die vier Privacy-Felder eines Users -
+def _privacy_for(db_path: Path, user_id: str) -> tuple[str, str, bool, bool, str]:
+    """Social-Graph-Phase-3/7: liest die Privacy-Felder eines Users -
     fällt auf die ``UserProfile``-Dataclass-Defaults zurück, falls noch
     kein Profil existiert (kein 404/leerer Fehlerzustand nötig, mirrort
-    ``_username_for``'s graceful-missing-profile-Handling)."""
+    ``_username_for``'s graceful-missing-profile-Handling). Tupel:
+    (friend_list_visibility, friend_request_privacy, discoverable_by_username,
+    discoverable_by_name, following_visibility)."""
     profile = profile_storage.get_user_profile(db_path, user_id)
     if profile is None:
-        return "friends", "everyone", True, True
+        return "friends", "everyone", True, True, "nobody"
     return (
         profile.friend_list_visibility,
         profile.friend_request_privacy,
         profile.discoverable_by_username,
         profile.discoverable_by_name,
+        profile.following_visibility,
     )
 
 
@@ -107,6 +118,62 @@ def _relationship_status(db_path: Path, current_user_id: str, other_user_id: str
     if friend_requests.get_pending_request(db_path, other_user_id, current_user_id) is not None:
         return "request_received"
     return "none"
+
+
+def _can_view_following(db_path: Path, viewer_id: str, target_id: str) -> None:
+    """Social-Graph-Phase-7: Gate für ``GET /users/{id}/following/*`` -
+    strukturgleich zum ``friend_list_visibility``-Gate in
+    ``get_user_friends``. Self-View immer erlaubt (die eigene Policy
+    beschränkt nie einen selbst). Wirft ``HTTPException``, gibt sonst
+    ``None`` zurück (= erlaubt)."""
+    if viewer_id == target_id:
+        return
+    if blocks.is_blocked(db_path, viewer_id, target_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Nicht erlaubt.")
+    _, _, _, _, following_visibility = _privacy_for(db_path, target_id)
+    if following_visibility == "nobody":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Diese Following-Liste ist privat.")
+    if following_visibility == "friends" and not friendships.are_friends(db_path, viewer_id, target_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Diese Following-Liste ist privat.")
+
+
+def _followed_organizers_public(db_path: Path, user_id: str) -> list[OrganizerPublic]:
+    """Gefolgte Organizer eines Users, neueste zuerst - dieselbe Aufbau-Logik
+    wie ``follows.py::list_my_followed_organizers``, nur für eine beliebige
+    ``user_id``. Verschwundene Organizer werden übersprungen."""
+    result: list[OrganizerPublic] = []
+    for follow in follows.list_organizer_follows(db_path, user_id):
+        organizer = organizers_storage.get_organizer(db_path, follow.organizer_id)
+        if organizer is None:
+            continue
+        result.append(
+            OrganizerPublic(
+                id=organizer.id, owner_user_id=organizer.owner_user_id, display_name=organizer.display_name,
+                organizer_type=organizer.organizer_type, verification_status=organizer.verification_status.value,
+                description=organizer.description, website_url=organizer.website_url, my_role=None,
+                created_at=organizer.created_at, updated_at=organizer.updated_at,
+            )
+        )
+    return result
+
+
+def _followed_events_public(db_path: Path, user_id: str) -> list[FollowedEventPublic]:
+    """Gefolgte Events eines Users, neueste zuerst - dieselbe Aufbau-Logik
+    wie ``follows.py::list_my_followed_events``. Follows auf inzwischen
+    unveröffentlichte Partys werden ausgeblendet (nicht gelöscht)."""
+    result: list[FollowedEventPublic] = []
+    for follow in follows.list_event_follows(db_path, user_id):
+        party = party_storage.get_party(db_path, follow.party_id)
+        publication = discover_storage.get_publication(db_path, follow.party_id)
+        if party is None or publication is None:
+            continue
+        result.append(
+            FollowedEventPublic(
+                party_id=party.id, name=party.name, starts_at=party.starts_at, location=party.location,
+                event_type=publication.event_type, followed_at=follow.created_at,
+            )
+        )
+    return result
 
 
 def _to_friend_request_public(db_path: Path, request: FriendRequest, current_user_id: str) -> FriendRequestPublic:
@@ -152,7 +219,7 @@ def get_user_friends(
         return _list_friends_public(db_path, user_id)
     if blocks.is_blocked(db_path, current_user.id, user_id):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Nicht erlaubt.")
-    visibility, _, _, _ = _privacy_for(db_path, user_id)
+    visibility, _, _, _, _ = _privacy_for(db_path, user_id)
     if visibility == "nobody":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Diese Freundesliste ist privat.")
     if visibility == "friends" and not friendships.are_friends(db_path, current_user.id, user_id):
@@ -179,12 +246,13 @@ def get_social_privacy(
     """Kein 404 bei fehlendem Profil (anders als ``GET /me/profile``) - diese
     Einstellungen sind nicht ans Onboarding-Gate gekoppelt, ein frischer
     User bekommt einfach die Defaults zurück (siehe ``_privacy_for``)."""
-    visibility, request_privacy, disc_username, disc_name = _privacy_for(db_path, current_user.id)
+    visibility, request_privacy, disc_username, disc_name, following_visibility = _privacy_for(db_path, current_user.id)
     return SocialPrivacyPublic(
         friend_list_visibility=visibility,
         friend_request_privacy=request_privacy,
         discoverable_by_username=disc_username,
         discoverable_by_name=disc_name,
+        following_visibility=following_visibility,
     )
 
 
@@ -207,12 +275,14 @@ def update_social_privacy(
         friend_request_privacy=payload.friend_request_privacy,
         discoverable_by_username=payload.discoverable_by_username,
         discoverable_by_name=payload.discoverable_by_name,
+        following_visibility=payload.following_visibility,
     )
     return SocialPrivacyPublic(
         friend_list_visibility=profile.friend_list_visibility,
         friend_request_privacy=profile.friend_request_privacy,
         discoverable_by_username=profile.discoverable_by_username,
         discoverable_by_name=profile.discoverable_by_name,
+        following_visibility=profile.following_visibility,
     )
 
 
@@ -322,6 +392,91 @@ def get_social_profile(
     )
 
 
+# --- Social-Graph-Phase-7: Following privacy + relationship views -------
+
+
+@router.get("/users/{user_id}/following/organizers", response_model=list[OrganizerPublic])
+def get_user_followed_organizers(
+    user_id: str, current_user: User = Depends(get_current_user), db_path: Path = Depends(get_db_path)
+) -> list[OrganizerPublic]:
+    """Social-Graph-Phase-7 (Spec §110): die Liste der gefolgten Organizer
+    eines ANDEREN Users - gegated über dessen ``following_visibility``
+    (Default "nobody" = privat). Self-View ist immer erlaubt."""
+    if user_storage.get_user_by_id(db_path, user_id) is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User nicht gefunden.")
+    _can_view_following(db_path, current_user.id, user_id)
+    return _followed_organizers_public(db_path, user_id)
+
+
+@router.get("/users/{user_id}/following/events", response_model=list[FollowedEventPublic])
+def get_user_followed_events(
+    user_id: str, current_user: User = Depends(get_current_user), db_path: Path = Depends(get_db_path)
+) -> list[FollowedEventPublic]:
+    """Social-Graph-Phase-7 (Spec §110): wie oben, für gefolgte Events."""
+    if user_storage.get_user_by_id(db_path, user_id) is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User nicht gefunden.")
+    _can_view_following(db_path, current_user.id, user_id)
+    return _followed_events_public(db_path, user_id)
+
+
+@router.get("/users/{user_id}/relationship", response_model=SocialRelationshipView)
+def get_user_relationship(
+    user_id: str, current_user: User = Depends(get_current_user), db_path: Path = Depends(get_db_path)
+) -> SocialRelationshipView:
+    """Social-Graph-Phase-7 (Spec §94): kompakte "was ist meine Beziehung zu
+    diesem User"-Sicht - Teilmenge von ``GET /users/{id}/social-profile``
+    ohne die Anzeige-Felder."""
+    if user_storage.get_user_by_id(db_path, user_id) is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User nicht gefunden.")
+    return SocialRelationshipView(
+        target_user_id=user_id,
+        relationship_status=_relationship_status(db_path, current_user.id, user_id),
+        mutual_friend_count=friendships.mutual_friend_count(
+            db_path, friendships.get_friend_user_ids(db_path, current_user.id), user_id
+        ),
+    )
+
+
+@router.get("/organizers/{organizer_id}/relationship", response_model=OrganizerRelationshipView)
+def get_organizer_relationship(
+    organizer_id: str, current_user: User = Depends(get_current_user), db_path: Path = Depends(get_db_path)
+) -> OrganizerRelationshipView:
+    """Social-Graph-Phase-7 (Spec §94). ``is_blocked`` = der Aufrufer hat den
+    Owner dieses Organizers geblockt."""
+    organizer = organizers_storage.get_organizer(db_path, organizer_id)
+    if organizer is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organizer nicht gefunden.")
+    return OrganizerRelationshipView(
+        organizer_id=organizer_id,
+        is_following=follows.is_following_organizer(db_path, current_user.id, organizer_id),
+        is_blocked=blocks.is_blocked(db_path, current_user.id, organizer.owner_user_id),
+    )
+
+
+@router.get("/events/{party_id}/relationship", response_model=EventRelationshipView)
+def get_event_relationship(
+    party_id: str, current_user: User = Depends(get_current_user), db_path: Path = Depends(get_db_path)
+) -> EventRelationshipView:
+    """Social-Graph-Phase-7 (Spec §94). Nur für veröffentlichte Events.
+    ``interest_status`` = eigener Discover-Swipe ("going"/"maybe"/``None``),
+    getrennt vom Follow (Spec §117)."""
+    if party_storage.get_party(db_path, party_id) is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Party nicht gefunden.")
+    if discover_storage.get_publication(db_path, party_id) is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Diese Party ist nicht öffentlich sichtbar.")
+    record = discover_storage.get_discover_action(db_path, current_user.id, party_id)
+    interest_status = (
+        record.action.value
+        if record is not None and record.action in (DiscoverAction.GOING, DiscoverAction.MAYBE)
+        else None
+    )
+    return EventRelationshipView(
+        party_id=party_id,
+        is_following=follows.is_following_event(db_path, current_user.id, party_id),
+        interest_status=interest_status,
+    )
+
+
 @router.post("/users/{user_id}/friend-request", response_model=FriendRequestCreateResponse)
 def send_friend_request(
     user_id: str, current_user: User = Depends(get_current_user), db_path: Path = Depends(get_db_path)
@@ -331,7 +486,7 @@ def send_friend_request(
     target = user_storage.get_user_by_id(db_path, user_id)
     if target is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User nicht gefunden.")
-    _, request_privacy, _, _ = _privacy_for(db_path, user_id)
+    _, request_privacy, _, _, _ = _privacy_for(db_path, user_id)
     if request_privacy == "nobody":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Dieser User nimmt aktuell keine Freundschaftsanfragen an."

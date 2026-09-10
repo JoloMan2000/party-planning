@@ -137,3 +137,38 @@ def test_init_profile_storage_migration_ist_idempotent_mit_privacy_feldern(db_pa
     profile_storage.init_profile_storage(db_path)  # erneuter Aufruf darf Werte nicht zuruecksetzen
     survived = profile_storage.get_user_profile(db_path, "user-1")
     assert survived.friend_list_visibility == "nobody"
+
+
+# --- Social-Graph-Phase-7: following_visibility --------------------------
+
+
+def test_neues_profil_hat_following_visibility_default_nobody(db_path):
+    profile = profile_storage.upsert_user_profile(db_path, "user-1", birth_date=date(1995, 1, 1))
+    assert profile.following_visibility == "nobody"
+
+
+def test_following_visibility_kann_gesetzt_werden(db_path):
+    profile_storage.upsert_user_profile(db_path, "user-1", birth_date=date(1995, 1, 1))
+    updated = profile_storage.upsert_user_profile(db_path, "user-1", following_visibility="friends")
+    assert updated.following_visibility == "friends"
+    updated2 = profile_storage.upsert_user_profile(db_path, "user-1", following_visibility="everyone")
+    assert updated2.following_visibility == "everyone"
+
+
+def test_following_visibility_none_laesst_bestehenden_wert_unveraendert(db_path):
+    profile_storage.upsert_user_profile(
+        db_path, "user-1", birth_date=date(1995, 1, 1), following_visibility="everyone",
+        friend_list_visibility="nobody",
+    )
+    unchanged = profile_storage.upsert_user_profile(db_path, "user-1", gender="woman")
+    assert unchanged.following_visibility == "everyone"
+    assert unchanged.friend_list_visibility == "nobody"  # unabhaengiges Feld unberuehrt
+
+
+def test_init_profile_storage_migration_ist_idempotent_mit_following_visibility(db_path):
+    profile_storage.upsert_user_profile(
+        db_path, "user-1", birth_date=date(1995, 1, 1), following_visibility="everyone"
+    )
+    profile_storage.init_profile_storage(db_path)
+    survived = profile_storage.get_user_profile(db_path, "user-1")
+    assert survived.following_visibility == "everyone"

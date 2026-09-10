@@ -132,16 +132,24 @@ class UserProfile:
     ausschließlich über den ``COLLATE NOCASE``-Unique-Index in
     ``accounts/profile_storage.py`` erzwungen.
 
-    Die vier folgenden Felder (Social-Graph-Phase-3) sind bewusst
+    Die fünf folgenden Felder (Social-Graph-Phase-3 + Phase-7) sind bewusst
     VERHALTENS-Policies, keine Identitäts-Felder wie ``username`` - sie
     werden nicht vom User selbst "angezeigt", sondern steuern, was ANDERE
     User über diesen User sehen/tun dürfen (siehe Durchsetzung in
     ``backend/app/routers/social.py``: ``GET /users/{id}/friends``,
-    ``search_users``, ``send_friend_request``). ``friend_request_privacy``
-    kennt bewusst NUR "nobody"/"everyone" - die vom Spec vorgeschlagene
-    dritte Stufe "Friends of Friends" wurde für Phase 3 explizit
-    gestrichen, da sie eine Zwei-Hop-Graph-Query braucht, ein deutlich
-    größerer technischer Aufwand als der Rest dieser "Polish"-Phase."""
+    ``search_users``, ``send_friend_request``, ``GET /users/{id}/following/*``).
+    ``friend_request_privacy`` kennt bewusst NUR "nobody"/"everyone" - die
+    vom Spec vorgeschlagene dritte Stufe "Friends of Friends" wurde für
+    Phase 3 explizit gestrichen, da sie eine Zwei-Hop-Graph-Query braucht,
+    ein deutlich größerer technischer Aufwand als der Rest dieser
+    "Polish"-Phase.
+
+    ``following_visibility`` (Social-Graph-Phase-7, Spec §110) steuert, ob
+    ANDERE die Listen der gefolgten Organizer/Events dieses Users sehen
+    dürfen. Default ist bewusst die restriktivste Stufe ("nobody" =
+    "privat", genau die Empfehlung des Spec: "Ob andere sehen dürfen ...
+    soll nicht automatisch öffentlich sein. Empfehlung Default: private").
+    Durchgesetzt identisch zu ``friend_list_visibility``."""
 
     user_id: str
     birth_date: date
@@ -152,6 +160,7 @@ class UserProfile:
     friend_request_privacy: str = "everyone"  # "nobody" | "everyone"
     discoverable_by_username: bool = True
     discoverable_by_name: bool = True
+    following_visibility: str = "nobody"  # "nobody" (= Spec "private") | "friends" | "everyone"
     onboarding_completed_at: datetime | None = None
     profile_completion_version: int = 0
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
