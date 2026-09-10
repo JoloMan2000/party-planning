@@ -20,6 +20,7 @@ import accounts.notification_storage as notification_storage
 import accounts.profile_storage as profile_storage
 import accounts.user_storage as user_storage
 import social.blocks as blocks
+import social.follows as follows
 import social.friend_requests as friend_requests
 import social.friendships as friendships
 import social.search as search
@@ -27,10 +28,13 @@ from accounts.domain import User
 from backend.app.core.auth import get_current_user
 from backend.app.core.deps import get_db_path
 from backend.app.schemas.social import (
+    EventSearchResultPublic,
     FriendPublic,
     FriendRequestCreateResponse,
     FriendRequestPublic,
     FriendRequestsInboxResponse,
+    OrganizerSearchResultPublic,
+    SearchResponse,
     SocialPrivacyPublic,
     SocialPrivacyUpdateRequest,
     SocialProfilePublic,
@@ -212,6 +216,28 @@ def update_social_privacy(
     )
 
 
+def _user_search_results_public(
+    db_path: Path, current_user_id: str, rows: list, my_friend_ids: set[str]
+) -> list[UserSearchResultPublic]:
+    """Gemeinsame Aufbereitung für ``GET /users/search`` und den People-Teil
+    von ``GET /search`` (Social-Graph-Phase-6): Blockierte rausfiltern,
+    ``relationship_status`` + ``mutual_friend_count`` je Treffer anreichern.
+    ``my_friend_ids`` wird vom Aufrufer EINMAL pro Request geladen (siehe
+    ``friendships.mutual_friend_count``-Doku)."""
+    return [
+        UserSearchResultPublic(
+            user_id=r.user_id,
+            username=r.username,
+            display_name=r.display_name,
+            profile_image=r.profile_image,
+            relationship_status=_relationship_status(db_path, current_user_id, r.user_id),
+            mutual_friend_count=friendships.mutual_friend_count(db_path, my_friend_ids, r.user_id),
+        )
+        for r in rows
+        if not blocks.is_blocked(db_path, current_user_id, r.user_id)
+    ]
+
+
 @router.get("/users/search", response_model=UserSearchResponse)
 def search_users(
     q: str = Query(min_length=2),
@@ -219,24 +245,62 @@ def search_users(
     current_user: User = Depends(get_current_user),
     db_path: Path = Depends(get_db_path),
 ) -> UserSearchResponse:
-    results = search.search_users(db_path, q, exclude_user_id=current_user.id, limit=limit)
-    # Social-Graph-Phase-3: EINMAL pro Request geladen, nicht einmal pro
-    # angezeigtem Suchtreffer (siehe friendships.mutual_friend_count-Doku).
+    rows = search.search_users(db_path, q, exclude_user_id=current_user.id, limit=limit)
     my_friend_ids = friendships.get_friend_user_ids(db_path, current_user.id)
-    return UserSearchResponse(
-        results=[
-            UserSearchResultPublic(
-                user_id=r.user_id,
-                username=r.username,
-                display_name=r.display_name,
-                profile_image=r.profile_image,
-                relationship_status=_relationship_status(db_path, current_user.id, r.user_id),
-                mutual_friend_count=friendships.mutual_friend_count(db_path, my_friend_ids, r.user_id),
+    return UserSearchResponse(results=_user_search_results_public(db_path, current_user.id, rows, my_friend_ids))
+
+
+@router.get("/search", response_model=SearchResponse)
+def unified_search(
+    q: str = Query(min_length=2),
+    limit: int = 20,
+    current_user: User = Depends(get_current_user),
+    db_path: Path = Depends(get_db_path),
+) -> SearchResponse:
+    """Social-Graph-Phase-6 (Spec §82-83, §122-125): eine Suche über People +
+    Organizers + Events, jede Kategorie mit eigenem Response-Model. ``limit``
+    wirkt PRO Kategorie (max. ``3 * limit`` Items). Nur ``verified``
+    Organizer und nur veröffentlichte Events sind auffindbar (in der Query,
+    siehe ``social.search``); Block-Filter (symmetrisch, über die echte
+    Owner-/Host-User-ID) passiert hier im Router."""
+    # People
+    user_rows = search.search_users(db_path, q, exclude_user_id=current_user.id, limit=limit)
+    my_friend_ids = friendships.get_friend_user_ids(db_path, current_user.id)
+    users = _user_search_results_public(db_path, current_user.id, user_rows, my_friend_ids)
+
+    # Organizers - Block-Filter über den echten Owner-User (symmetrisch)
+    organizers_out = [
+        OrganizerSearchResultPublic(
+            organizer_id=o.organizer_id,
+            display_name=o.display_name,
+            verified=o.verification_status == "verified",
+            follower_count=follows.count_organizer_followers(db_path, o.organizer_id),
+            is_following=follows.is_following_organizer(db_path, current_user.id, o.organizer_id),
+        )
+        for o in search.search_organizers(db_path, q, limit=limit)
+        if not blocks.is_blocked(db_path, current_user.id, o.owner_user_id)
+    ]
+
+    # Events - Block-Filter über den echten Host-User (symmetrisch)
+    events_out = []
+    for e in search.search_public_events(db_path, q, limit=limit):
+        if blocks.is_blocked(db_path, current_user.id, e.host_user_id):
+            continue
+        host = user_storage.get_user_by_id(db_path, e.host_user_id)
+        events_out.append(
+            EventSearchResultPublic(
+                party_id=e.party_id,
+                name=e.name,
+                starts_at=e.starts_at,
+                location=e.location,
+                cover_image=e.cover_image,
+                event_type=e.event_type,
+                organizer_name=host.display_name if host is not None else "",
+                is_following=follows.is_following_event(db_path, current_user.id, e.party_id),
             )
-            for r in results
-            if not blocks.is_blocked(db_path, current_user.id, r.user_id)
-        ]
-    )
+        )
+
+    return SearchResponse(users=users, organizers=organizers_out, events=events_out)
 
 
 @router.get("/users/{user_id}/social-profile", response_model=SocialProfilePublic)
