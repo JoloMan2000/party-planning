@@ -69,12 +69,19 @@ def create_notification(
     )
 
 
-def list_notifications(db_path: str | Path, user_id: str) -> list[Notification]:
+def list_notifications(db_path: str | Path, user_id: str, limit: int | None = None) -> list[Notification]:
+    """Neueste zuerst. ``limit=None`` liefert alle (Rückwärtskompatibilität
+    für den ``__main__``-Selbsttest); der Router übergibt immer einen
+    beschränkten Wert, damit eine wachsende Inbox nicht die komplette
+    Historie in einer Antwort zurückgibt."""
+    sql = "SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC"
+    params: tuple = (user_id,)
+    if limit is not None:
+        sql += " LIMIT ?"
+        params = (user_id, limit)
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
-        rows = conn.execute(
-            "SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC", (user_id,)
-        ).fetchall()
+        rows = conn.execute(sql, params).fetchall()
     return [_row_to_notification(r) for r in rows]
 
 

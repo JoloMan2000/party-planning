@@ -311,7 +311,7 @@ def _user_search_results_public(
 @router.get("/users/search", response_model=UserSearchResponse)
 def search_users(
     q: str = Query(min_length=2),
-    limit: int = 20,
+    limit: int = Query(20, ge=1, le=100),
     current_user: User = Depends(get_current_user),
     db_path: Path = Depends(get_db_path),
 ) -> UserSearchResponse:
@@ -323,7 +323,7 @@ def search_users(
 @router.get("/search", response_model=SearchResponse)
 def unified_search(
     q: str = Query(min_length=2),
-    limit: int = 20,
+    limit: int = Query(20, ge=1, le=100),
     current_user: User = Depends(get_current_user),
     db_path: Path = Depends(get_db_path),
 ) -> SearchResponse:
