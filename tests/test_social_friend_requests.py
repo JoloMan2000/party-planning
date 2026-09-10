@@ -10,7 +10,9 @@ import pytest
 
 import accounts.party_storage as party_storage
 import accounts.user_storage as user_storage
+import organizers.storage as organizers_storage
 import social.blocks as blocks
+import social.follows as follows
 import social.friend_requests as friend_requests
 import social.friendships as friendships
 from social.domain import FriendRequestStatus
@@ -21,6 +23,8 @@ def db_path(tmp_path):
     path = tmp_path / "friend_requests_test.db"
     user_storage.init_user_storage(path)
     party_storage.init_party_storage(path)
+    organizers_storage.init_organizer_storage(path)
+    follows.init_follow_storage(path)
     friendships.init_friendship_storage(path)
     blocks.init_block_storage(path)
     friend_requests.init_friend_request_storage(path)

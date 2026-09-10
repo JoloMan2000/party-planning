@@ -301,13 +301,17 @@ if __name__ == "__main__":
 
     import accounts.party_storage as party_storage
     import accounts.user_storage as user_storage
+    import organizers.storage as organizers_module
     import social.blocks as blocks_module
+    import social.follows as follows_module
     import social.friendships as friendships_module
 
     with tempfile.TemporaryDirectory() as tmp:
         db_path = Path(tmp) / "test_friend_requests.db"
         user_storage.init_user_storage(db_path)
         party_storage.init_party_storage(db_path)
+        organizers_module.init_organizer_storage(db_path)
+        follows_module.init_follow_storage(db_path)
         friendships_module.init_friendship_storage(db_path)
         blocks_module.init_block_storage(db_path)
         init_friend_request_storage(db_path)

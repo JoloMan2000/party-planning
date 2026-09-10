@@ -862,7 +862,8 @@ def test_organizer_relationship_view(api_client, auth_headers_factory):
     assert api_client.post(f"/api/v1/organizers/{org_id}/follow", headers=me_headers).status_code == 200
     assert api_client.post(f"/api/v1/users/{owner['id']}/block", headers=me_headers).status_code == 200
     body2 = api_client.get(f"/api/v1/organizers/{org_id}/relationship", headers=me_headers).json()
-    assert body2["is_following"] is True
+    # Social-Graph-Phase-9: Block entfernt den Follow (§80/§128), daher is_following jetzt False.
+    assert body2["is_following"] is False
     assert body2["is_blocked"] is True
 
 

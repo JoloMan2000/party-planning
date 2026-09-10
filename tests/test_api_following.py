@@ -260,3 +260,43 @@ def test_event_followers_unbekannt_gibt_404(api_client, auth_headers_factory):
     headers, _u, _ = auth_headers_factory(email="foleventfollower9@example.com")
     resp = api_client.get("/api/v1/events/unknown-party/followers", headers=headers)
     assert resp.status_code == 404
+
+
+# --- Social-Graph-Phase-9: block cascade + block-gate on follow -------
+
+
+def test_follow_organizer_von_geblocktem_owner_gibt_403(api_client, auth_headers_factory):
+    me_headers, _me, _ = auth_headers_factory(email="p9blkorg_me@example.com")
+    owner_headers, owner, _ = auth_headers_factory(email="p9blkorg_owner@example.com")
+    org_id = _make_organizer(api_client, owner["id"], verified=True, name="Blocked Owner Org")
+    assert api_client.post(f"/api/v1/users/{owner['id']}/block", headers=me_headers).status_code == 200
+
+    resp = api_client.post(f"/api/v1/organizers/{org_id}/follow", headers=me_headers)
+    assert resp.status_code == 403
+
+
+def test_follow_event_von_geblocktem_host_gibt_403(api_client, auth_headers_factory):
+    me_headers, _me, _ = auth_headers_factory(email="p9blkevt_me@example.com")
+    host_headers, host, _ = auth_headers_factory(email="p9blkevt_host@example.com")
+    party_id = _publish_party(api_client, host_headers, host["id"], name="Blocked Host Party")
+    assert api_client.post(f"/api/v1/users/{host['id']}/block", headers=me_headers).status_code == 200
+
+    resp = api_client.post(f"/api/v1/events/{party_id}/follow", headers=me_headers)
+    assert resp.status_code == 403
+
+
+def test_block_entfernt_organizer_und_event_follow(api_client, auth_headers_factory):
+    me_headers, _me, _ = auth_headers_factory(email="p9casc_me@example.com")
+    b_headers, b, _ = auth_headers_factory(email="p9casc_b@example.com")
+    org_id = _make_organizer(api_client, b["id"], verified=True, name="Cascade Org")
+    party_id = _publish_party(api_client, b_headers, b["id"], name="Cascade Party")
+
+    assert api_client.post(f"/api/v1/organizers/{org_id}/follow", headers=me_headers).status_code == 200
+    assert api_client.post(f"/api/v1/events/{party_id}/follow", headers=me_headers).status_code == 200
+    assert api_client.get(f"/api/v1/organizers/{org_id}/followers", headers=me_headers).json()["follower_count"] == 1
+
+    assert api_client.post(f"/api/v1/users/{b['id']}/block", headers=me_headers).status_code == 200
+
+    assert api_client.get("/api/v1/me/following/organizers", headers=me_headers).json() == []
+    assert api_client.get("/api/v1/me/following/events", headers=me_headers).json() == []
+    assert api_client.get(f"/api/v1/organizers/{org_id}/followers", headers=me_headers).json()["follower_count"] == 0

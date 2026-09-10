@@ -34,6 +34,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 import accounts.discover_storage as discover_storage
 import accounts.party_storage as party_storage
 import organizers.storage as organizers_storage
+import social.blocks as blocks
 import social.follows as follows
 from accounts.domain import User
 from backend.app.core.auth import get_current_user
@@ -93,6 +94,8 @@ def follow_organizer(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Du kannst deinem eigenen Organizer nicht folgen."
         )
     if not follows.is_following_organizer(db_path, current_user.id, organizer_id):
+        if blocks.is_blocked(db_path, current_user.id, organizer.owner_user_id):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Nicht erlaubt.")
         if organizer.verification_status != OrganizerVerificationStatus.VERIFIED:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Dieser Organizer ist noch nicht verifiziert."
@@ -147,6 +150,8 @@ def follow_event(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Du kannst deinem eigenen Event nicht folgen."
         )
     if not follows.is_following_event(db_path, current_user.id, party_id):
+        if blocks.is_blocked(db_path, current_user.id, party.host_user_id):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Nicht erlaubt.")
         if discover_storage.get_publication(db_path, party_id) is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Diese Party ist nicht öffentlich sichtbar."
