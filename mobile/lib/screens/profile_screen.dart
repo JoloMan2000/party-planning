@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../api/api_client.dart';
 import '../models/profile.dart';
+import '../state/organizer_providers.dart';
 import '../state/profile_providers.dart';
 import '../state/social_providers.dart';
 import '../state/spotify_providers.dart';
@@ -199,6 +200,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     title: const Text('Social Privacy'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => ref.read(showSocialPrivacyProvider.notifier).state = true,
+                  ),
+                ),
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.groups),
+                    title: const Text('My Organizers'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => ref.read(showMyOrganizersProvider.notifier).state = true,
+                  ),
+                ),
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.rss_feed),
+                    title: const Text('Following'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => ref.read(showFollowingProvider.notifier).state = true,
                   ),
                 ),
               ],

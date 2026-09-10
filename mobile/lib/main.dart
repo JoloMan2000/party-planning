@@ -6,15 +6,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'screens/admin_dashboard_screen.dart';
 import 'screens/confirm_party_location_screen.dart';
+import 'screens/create_organizer_screen.dart';
 import 'screens/create_party_screen.dart';
 import 'screens/discovery_preferences_screen.dart';
 import 'screens/edit_party_screen.dart';
+import 'screens/following_screen.dart';
 import 'screens/forgot_password_screen.dart';
 import 'screens/friends_screen.dart';
 import 'screens/home_shell.dart';
 import 'screens/invitation_detail_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/my_organizers_screen.dart';
 import 'screens/notifications_screen.dart';
+import 'screens/organizer_detail_screen.dart';
 import 'screens/party_detail_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/request_account_unlock_screen.dart';
@@ -28,6 +32,7 @@ import 'screens/user_friends_screen.dart';
 import 'screens/verify_email_screen.dart';
 import 'state/auth_providers.dart';
 import 'state/geo_providers.dart';
+import 'state/organizer_providers.dart';
 import 'state/profile_providers.dart';
 import 'state/social_providers.dart';
 import 'state/spotify_providers.dart';
@@ -139,6 +144,10 @@ class _PartyAppState extends ConsumerState<PartyApp> {
       final selectedFriendProfileUserId = ref.watch(selectedFriendProfileUserIdProvider);
       final showSocialPrivacy = ref.watch(showSocialPrivacyProvider);
       final viewingUserFriendsUserId = ref.watch(viewingUserFriendsUserIdProvider);
+      final showMyOrganizers = ref.watch(showMyOrganizersProvider);
+      final creatingOrganizer = ref.watch(creatingOrganizerProvider);
+      final selectedOrganizerId = ref.watch(selectedOrganizerIdProvider);
+      final showFollowing = ref.watch(showFollowingProvider);
       final showSpotifyConnect = ref.watch(showSpotifyConnectProvider);
       final selectedPartyId = ref.watch(selectedPartyIdProvider);
       final selectedInvitationId = ref.watch(selectedInvitationIdProvider);
@@ -172,6 +181,14 @@ class _PartyAppState extends ConsumerState<PartyApp> {
         home = const SocialPrivacyScreen();
       } else if (viewingUserFriendsUserId != null) {
         home = UserFriendsScreen(userId: viewingUserFriendsUserId);
+      } else if (creatingOrganizer) {
+        home = const CreateOrganizerScreen();
+      } else if (selectedOrganizerId != null) {
+        home = OrganizerDetailScreen(organizerId: selectedOrganizerId);
+      } else if (showMyOrganizers) {
+        home = const MyOrganizersScreen();
+      } else if (showFollowing) {
+        home = const FollowingScreen();
       } else if (showNotifications) {
         home = const NotificationsScreen();
       } else if (showDiscoveryPreferences) {
