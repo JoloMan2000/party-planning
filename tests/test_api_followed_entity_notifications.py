@@ -176,3 +176,33 @@ def test_unveroeffentlichtes_event_edit_erzeugt_kein_event_updated(api_client, a
 
     api_client.patch(f"/api/v1/parties/{party_id}", json={"starts_at": "2028-01-01T20:00:00"}, headers=host_headers)
     assert "event_updated" not in _kinds(api_client, follower_headers)
+
+
+# --- Robustness: block-aware suppression ------------------------------
+
+
+def test_geblockter_follower_bekommt_keine_organizer_new_event(api_client, auth_headers_factory):
+    host_headers, host, _ = auth_headers_factory(email="fen_blk_host1@example.com")
+    follower_headers, follower, _ = auth_headers_factory(email="fen_blk_follower1@example.com")
+    org_id = _make_verified_org(api_client, host["id"], name="Blk Org 1")
+    api_client.post(f"/api/v1/organizers/{org_id}/follow", headers=follower_headers)
+    # Follower blockt den Host.
+    assert api_client.post(f"/api/v1/users/{host['id']}/block", headers=follower_headers).status_code == 200
+
+    _create_and_publish(api_client, host_headers, name="Blk Fest 1")
+    assert "organizer_new_event" not in _kinds(api_client, follower_headers)
+
+
+def test_geblockter_follower_bekommt_keine_event_updates(api_client, auth_headers_factory):
+    host_headers, host, _ = auth_headers_factory(email="fen_blk_host2@example.com")
+    follower_headers, follower, _ = auth_headers_factory(email="fen_blk_follower2@example.com")
+    _make_verified_org(api_client, host["id"], name="Blk Org 2")
+    party_id = _create_and_publish(api_client, host_headers, name="Blk Fest 2")
+    api_client.post(f"/api/v1/events/{party_id}/follow", headers=follower_headers)
+    assert api_client.post(f"/api/v1/users/{host['id']}/block", headers=follower_headers).status_code == 200
+
+    api_client.patch(f"/api/v1/parties/{party_id}", json={"starts_at": "2027-06-01T20:00:00"}, headers=host_headers)
+    assert "event_updated" not in _kinds(api_client, follower_headers)
+
+    assert api_client.delete(f"/api/v1/parties/{party_id}/publish", headers=host_headers).status_code == 204
+    assert "event_cancelled" not in _kinds(api_client, follower_headers)

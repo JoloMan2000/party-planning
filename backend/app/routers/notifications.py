@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 import accounts.notification_storage as notification_storage
 from accounts.domain import User
@@ -29,9 +29,11 @@ def _to_public(notification) -> NotificationPublic:
 
 @router.get("", response_model=list[NotificationPublic])
 def list_notifications(
-    current_user: User = Depends(get_current_user), db_path: Path = Depends(get_db_path)
+    limit: int = Query(50, ge=1, le=200),
+    current_user: User = Depends(get_current_user),
+    db_path: Path = Depends(get_db_path),
 ) -> list[NotificationPublic]:
-    notifications = notification_storage.list_notifications(db_path, current_user.id)
+    notifications = notification_storage.list_notifications(db_path, current_user.id, limit=limit)
     return [_to_public(n) for n in notifications]
 
 

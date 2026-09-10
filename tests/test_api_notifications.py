@@ -78,3 +78,26 @@ def test_mark_read_fuer_fremde_notification_gibt_404(api_client, auth_headers_fa
 def test_notifications_route_ohne_token_gibt_401(api_client):
     resp = api_client.get("/api/v1/me/notifications")
     assert resp.status_code == 401
+
+
+# --- Robustness: bounded limit query param -----------------------------
+
+
+def test_notifications_limit_out_of_range_gibt_422(api_client, auth_headers_factory):
+    headers, _u, _ = auth_headers_factory(email="notiflimit@example.com")
+    assert api_client.get("/api/v1/me/notifications?limit=0", headers=headers).status_code == 422
+    assert api_client.get("/api/v1/me/notifications?limit=201", headers=headers).status_code == 422
+
+
+def test_notifications_limit_kappt_ergebnis(api_client, auth_headers_factory):
+    import accounts.notification_storage as notification_storage
+    import uuid as _uuid
+
+    headers, user, _ = auth_headers_factory(email="notiflimitcap@example.com")
+    for i in range(4):
+        notification_storage.create_notification(
+            api_client.db_path, _uuid.uuid4().hex, user["id"], None, "invitation", f"n{i}"
+        )
+    resp = api_client.get("/api/v1/me/notifications?limit=2", headers=headers)
+    assert resp.status_code == 200
+    assert len(resp.json()) == 2

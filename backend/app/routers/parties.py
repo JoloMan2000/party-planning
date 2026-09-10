@@ -14,6 +14,7 @@ import accounts.notification_storage as notification_storage
 import accounts.party_storage as party_storage
 import accounts.user_storage as user_storage
 import organizers.storage as organizers_storage
+import social.blocks as blocks
 import social.follows as follows
 import social.friendships as friendships
 from accounts.domain import DiscoverAction, PartyRole, RsvpStatus, User
@@ -87,13 +88,19 @@ def _notify_new_publication(db_path: Path, party) -> None:
     "Follower irgendeines verifizierten Organizers des Hosts". Ein Host, der
     in mehreren Organizern Mitglied ist, pingt für eine unabhängige private
     Party alle deren Follower. Präzise Event->Organizer-Zuordnung gehört in
-    eine spätere Phase mit echtem Event-Erstellungs-Flow."""
+    eine spätere Phase mit echtem Event-Erstellungs-Flow.
+
+    Follower, die den Host geblockt haben (oder umgekehrt), bekommen nichts
+    (Spec §80/§128 - Block stoppt Organizer-Notifications). ``is_blocked``
+    ist bidirektional."""
     notified: set[str] = set()
     for organizer, _membership in organizers_storage.list_organizers_for_user(db_path, party.host_user_id):
         if organizer.verification_status.value != "verified":
             continue
         for follower_id in follows.list_organizer_follower_ids(db_path, organizer.id):
             if follower_id in notified or follower_id == party.host_user_id:
+                continue
+            if blocks.is_blocked(db_path, follower_id, party.host_user_id):
                 continue
             if not notification_settings_storage.get_notification_settings(db_path, follower_id).organizer_updates:
                 continue
@@ -107,10 +114,13 @@ def _notify_new_publication(db_path: Path, party) -> None:
 def _notify_event_changed(db_path: Path, party, changes: list[str], actor_id: str) -> None:
     """Datum/Ort eines gefolgten (noch veröffentlichten) Events hat sich
     geändert (Spec §72/§90). ``_EVENT_UPDATE_DEDUP_MINUTES`` unterdrückt
-    Doppel-Notifications bei schnell aufeinanderfolgenden Edits."""
+    Doppel-Notifications bei schnell aufeinanderfolgenden Edits. Follower,
+    die den Host geblockt haben (oder umgekehrt), bekommen nichts."""
     label = " and ".join(changes)
     for follower_id in follows.list_event_follower_ids(db_path, party.id):
         if follower_id == actor_id:
+            continue
+        if blocks.is_blocked(db_path, follower_id, party.host_user_id):
             continue
         if not notification_settings_storage.get_notification_settings(db_path, follower_id).followed_event_updates:
             continue
@@ -124,17 +134,20 @@ def _notify_event_changed(db_path: Path, party, changes: list[str], actor_id: st
         )
 
 
-def _notify_event_cancelled(db_path: Path, party_id: str, party_name: str, actor_id: str) -> None:
+def _notify_event_cancelled(db_path: Path, party, actor_id: str) -> None:
     """Ein gefolgtes, veröffentlichtes Event wurde depubliziert = abgesagt
-    (Spec §106). Danach keine weiteren normalen Follow-Updates."""
-    for follower_id in follows.list_event_follower_ids(db_path, party_id):
+    (Spec §106). Danach keine weiteren normalen Follow-Updates. Follower,
+    die den Host geblockt haben (oder umgekehrt), bekommen nichts."""
+    for follower_id in follows.list_event_follower_ids(db_path, party.id):
         if follower_id == actor_id:
+            continue
+        if blocks.is_blocked(db_path, follower_id, party.host_user_id):
             continue
         if not notification_settings_storage.get_notification_settings(db_path, follower_id).followed_event_updates:
             continue
         notification_storage.create_notification(
-            db_path, uuid.uuid4().hex, follower_id, party_id, "event_cancelled",
-            f"{party_name} has been cancelled.",
+            db_path, uuid.uuid4().hex, follower_id, party.id, "event_cancelled",
+            f"{party.name} has been cancelled.",
         )
 
 
@@ -245,7 +258,7 @@ def unpublish_party(
     party = party_storage.get_party(db_path, party_id)
     discover_storage.unpublish_party(db_path, party_id)
     if was_published and party is not None:
-        _notify_event_cancelled(db_path, party_id, party.name, membership.user_id)
+        _notify_event_cancelled(db_path, party, membership.user_id)
 
 
 @router.post("/{party_id}/cover-image", response_model=PartyPublic)

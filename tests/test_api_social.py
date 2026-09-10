@@ -886,3 +886,14 @@ def test_event_relationship_view(api_client, auth_headers_factory):
     body2 = api_client.get(f"/api/v1/events/{party_id}/relationship", headers=me_headers).json()
     assert body2["is_following"] is True
     assert body2["interest_status"] == "going"
+
+
+# --- Robustness: bounded search limit query param ----------------------
+
+
+def test_search_limit_out_of_range_gibt_422(api_client, auth_headers_factory):
+    headers, _u, _ = auth_headers_factory(email="searchlimit@example.com")
+    assert api_client.get("/api/v1/users/search?q=ab&limit=0", headers=headers).status_code == 422
+    assert api_client.get("/api/v1/users/search?q=ab&limit=101", headers=headers).status_code == 422
+    assert api_client.get("/api/v1/search?q=ab&limit=0", headers=headers).status_code == 422
+    assert api_client.get("/api/v1/search?q=ab&limit=101", headers=headers).status_code == 422
