@@ -14,6 +14,7 @@ import '../state/social_providers.dart';
 // discovery_preferences_screen.dart's _kPricePreferences-Muster.
 const _kFriendListVisibility = ['nobody', 'friends', 'everyone'];
 const _kFriendRequestPrivacy = ['nobody', 'everyone'];
+const _kFollowingVisibility = ['nobody', 'friends', 'everyone']; // Social-Graph-Phase-7
 
 /// Social-Graph-Phase-3: Privacy-Einstellungen für den Social Graph -
 /// "Wer sieht meine Freundesliste?", "Wer darf mir eine Freundschaftsanfrage
@@ -37,6 +38,7 @@ class _SocialPrivacyScreenState extends ConsumerState<SocialPrivacyScreen> {
   String _friendRequestPrivacy = 'everyone';
   bool _discoverableByUsername = true;
   bool _discoverableByName = true;
+  String _followingVisibility = 'nobody';
 
   void _seedFrom(SocialPrivacy privacy) {
     if (_initialized) return;
@@ -45,6 +47,7 @@ class _SocialPrivacyScreenState extends ConsumerState<SocialPrivacyScreen> {
     _friendRequestPrivacy = privacy.friendRequestPrivacy;
     _discoverableByUsername = privacy.discoverableByUsername;
     _discoverableByName = privacy.discoverableByName;
+    _followingVisibility = privacy.followingVisibility;
   }
 
   Future<void> _save() async {
@@ -57,6 +60,7 @@ class _SocialPrivacyScreenState extends ConsumerState<SocialPrivacyScreen> {
             friendRequestPrivacy: 'everyone',
             discoverableByUsername: true,
             discoverableByName: true,
+            followingVisibility: 'nobody',
           );
       await ref.read(socialPrivacyProvider.notifier).save(
             current.copyWith(
@@ -64,6 +68,7 @@ class _SocialPrivacyScreenState extends ConsumerState<SocialPrivacyScreen> {
               friendRequestPrivacy: _friendRequestPrivacy,
               discoverableByUsername: _discoverableByUsername,
               discoverableByName: _discoverableByName,
+              followingVisibility: _followingVisibility,
             ),
           );
       if (mounted) messenger.showSnackBar(const SnackBar(content: Text('Social privacy settings saved.')));
@@ -125,6 +130,20 @@ class _SocialPrivacyScreenState extends ConsumerState<SocialPrivacyScreen> {
                             selected: _friendRequestPrivacy == value,
                             onSelected: (selected) =>
                                 setState(() => _friendRequestPrivacy = selected ? value : _friendRequestPrivacy),
+                          ))
+                      .toList(),
+                ),
+                const SizedBox(height: 20),
+                Text('Who can see who I follow?', style: Theme.of(context).textTheme.titleSmall),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: _kFollowingVisibility
+                      .map((value) => ChoiceChip(
+                            label: Text(value[0].toUpperCase() + value.substring(1)),
+                            selected: _followingVisibility == value,
+                            onSelected: (selected) =>
+                                setState(() => _followingVisibility = selected ? value : _followingVisibility),
                           ))
                       .toList(),
                 ),

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../api/api_client.dart';
 import '../models/profile.dart';
+import '../state/auth_providers.dart';
+import '../state/notification_settings_providers.dart';
 import '../state/organizer_providers.dart';
 import '../state/profile_providers.dart';
 import '../state/social_providers.dart';
@@ -216,6 +218,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     title: const Text('Following'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => ref.read(showFollowingProvider.notifier).state = true,
+                  ),
+                ),
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.notifications_outlined),
+                    title: const Text('Notification Settings'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => ref.read(showNotificationSettingsProvider.notifier).state = true,
+                  ),
+                ),
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.delete_forever, color: Colors.red),
+                    title: const Text('Delete Account'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => ref.read(showDeleteAccountProvider.notifier).state = true,
                   ),
                 ),
               ],

@@ -1,16 +1,18 @@
-/// Social-Graph-Phase-3 - Verhaltens-Policies, die steuern, was ANDERE User
+/// Social-Graph-Phase-3/7 - Verhaltens-Policies, die steuern, was ANDERE User
 /// über einen sehen/tun dürfen (`backend/app/schemas/social.py::SocialPrivacyPublic`).
 class SocialPrivacy {
   final String friendListVisibility; // "nobody" | "friends" | "everyone"
   final String friendRequestPrivacy; // "nobody" | "everyone"
   final bool discoverableByUsername;
   final bool discoverableByName;
+  final String followingVisibility; // Phase 7 - "nobody" | "friends" | "everyone"
 
   const SocialPrivacy({
     required this.friendListVisibility,
     required this.friendRequestPrivacy,
     required this.discoverableByUsername,
     required this.discoverableByName,
+    required this.followingVisibility,
   });
 
   factory SocialPrivacy.fromJson(Map<String, dynamic> json) => SocialPrivacy(
@@ -18,6 +20,7 @@ class SocialPrivacy {
         friendRequestPrivacy: json['friend_request_privacy'] as String,
         discoverableByUsername: json['discoverable_by_username'] as bool,
         discoverableByName: json['discoverable_by_name'] as bool,
+        followingVisibility: (json['following_visibility'] as String?) ?? 'nobody',
       );
 
   Map<String, dynamic> toJson() => {
@@ -25,6 +28,7 @@ class SocialPrivacy {
         'friend_request_privacy': friendRequestPrivacy,
         'discoverable_by_username': discoverableByUsername,
         'discoverable_by_name': discoverableByName,
+        'following_visibility': followingVisibility,
       };
 
   SocialPrivacy copyWith({
@@ -32,11 +36,13 @@ class SocialPrivacy {
     String? friendRequestPrivacy,
     bool? discoverableByUsername,
     bool? discoverableByName,
+    String? followingVisibility,
   }) =>
       SocialPrivacy(
         friendListVisibility: friendListVisibility ?? this.friendListVisibility,
         friendRequestPrivacy: friendRequestPrivacy ?? this.friendRequestPrivacy,
         discoverableByUsername: discoverableByUsername ?? this.discoverableByUsername,
         discoverableByName: discoverableByName ?? this.discoverableByName,
+        followingVisibility: followingVisibility ?? this.followingVisibility,
       );
 }

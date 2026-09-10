@@ -54,6 +54,19 @@ final eventFollowStatusProvider = FutureProvider.family<EventFollowStatus, Strin
   return ref.watch(apiClientProvider).getEventFollowStatus(token, onRefresh(ref), partyId);
 });
 
+/// Gefolgte Organizer/Events eines ANDEREN Users (Social-Graph-Phase-7) -
+/// serverseitig über dessen `following_visibility` gegated (403 = privat,
+/// siehe `backend/app/routers/social.py::get_user_followed_*`).
+final userFollowedOrganizersProvider = FutureProvider.family<List<Organizer>, String>((ref, userId) {
+  final token = ref.watch(requiredAccessTokenProvider);
+  return ref.watch(apiClientProvider).getUserFollowedOrganizers(token, onRefresh(ref), userId);
+});
+
+final userFollowedEventsProvider = FutureProvider.family<List<FollowedEvent>, String>((ref, userId) {
+  final token = ref.watch(requiredAccessTokenProvider);
+  return ref.watch(apiClientProvider).getUserFollowedEvents(token, onRefresh(ref), userId);
+});
+
 // --- Actions ------------------------------------------------------
 
 /// Organizer anlegen - mirrort `CreatePartyNotifier` in `auth_providers.dart`
@@ -201,3 +214,7 @@ final showMyOrganizersProvider = StateProvider<bool>((ref) => false);
 final creatingOrganizerProvider = StateProvider<bool>((ref) => false);
 final selectedOrganizerIdProvider = StateProvider<String?>((ref) => null);
 final showFollowingProvider = StateProvider<bool>((ref) => false);
+
+/// Navigations-Flag mit Payload (mirrort `viewingUserFriendsUserIdProvider`)
+/// - die Following-Liste eines anderen Users (Social-Graph-Phase-7).
+final viewingUserFollowingUserIdProvider = StateProvider<String?>((ref) => null);

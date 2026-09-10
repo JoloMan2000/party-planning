@@ -8,6 +8,7 @@ import 'screens/admin_dashboard_screen.dart';
 import 'screens/confirm_party_location_screen.dart';
 import 'screens/create_organizer_screen.dart';
 import 'screens/create_party_screen.dart';
+import 'screens/delete_account_screen.dart';
 import 'screens/discovery_preferences_screen.dart';
 import 'screens/edit_party_screen.dart';
 import 'screens/following_screen.dart';
@@ -17,23 +18,28 @@ import 'screens/home_shell.dart';
 import 'screens/invitation_detail_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/my_organizers_screen.dart';
+import 'screens/notification_settings_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'screens/organizer_detail_screen.dart';
 import 'screens/party_detail_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/request_account_unlock_screen.dart';
 import 'screens/reset_password_screen.dart';
+import 'screens/search_screen.dart';
 import 'screens/signup_screen.dart';
 import 'screens/social_privacy_screen.dart';
 import 'screens/social_profile_screen.dart';
 import 'screens/spotify_connect_screen.dart';
 import 'screens/unlock_account_screen.dart';
+import 'screens/user_following_screen.dart';
 import 'screens/user_friends_screen.dart';
 import 'screens/verify_email_screen.dart';
 import 'state/auth_providers.dart';
 import 'state/geo_providers.dart';
+import 'state/notification_settings_providers.dart';
 import 'state/organizer_providers.dart';
 import 'state/profile_providers.dart';
+import 'state/search_providers.dart';
 import 'state/social_providers.dart';
 import 'state/spotify_providers.dart';
 import 'theme/party_theme.dart';
@@ -148,6 +154,10 @@ class _PartyAppState extends ConsumerState<PartyApp> {
       final creatingOrganizer = ref.watch(creatingOrganizerProvider);
       final selectedOrganizerId = ref.watch(selectedOrganizerIdProvider);
       final showFollowing = ref.watch(showFollowingProvider);
+      final viewingUserFollowingUserId = ref.watch(viewingUserFollowingUserIdProvider);
+      final showSearch = ref.watch(showSearchProvider);
+      final showNotificationSettings = ref.watch(showNotificationSettingsProvider);
+      final showDeleteAccount = ref.watch(showDeleteAccountProvider);
       final showSpotifyConnect = ref.watch(showSpotifyConnectProvider);
       final selectedPartyId = ref.watch(selectedPartyIdProvider);
       final selectedInvitationId = ref.watch(selectedInvitationIdProvider);
@@ -181,6 +191,8 @@ class _PartyAppState extends ConsumerState<PartyApp> {
         home = const SocialPrivacyScreen();
       } else if (viewingUserFriendsUserId != null) {
         home = UserFriendsScreen(userId: viewingUserFriendsUserId);
+      } else if (viewingUserFollowingUserId != null) {
+        home = UserFollowingScreen(userId: viewingUserFollowingUserId);
       } else if (creatingOrganizer) {
         home = const CreateOrganizerScreen();
       } else if (selectedOrganizerId != null) {
@@ -189,6 +201,12 @@ class _PartyAppState extends ConsumerState<PartyApp> {
         home = const MyOrganizersScreen();
       } else if (showFollowing) {
         home = const FollowingScreen();
+      } else if (showSearch) {
+        home = const SearchScreen();
+      } else if (showNotificationSettings) {
+        home = const NotificationSettingsScreen();
+      } else if (showDeleteAccount) {
+        home = const DeleteAccountScreen();
       } else if (showNotifications) {
         home = const NotificationsScreen();
       } else if (showDiscoveryPreferences) {

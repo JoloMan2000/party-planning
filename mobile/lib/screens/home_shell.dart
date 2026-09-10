@@ -9,6 +9,7 @@ import '../models/invitation.dart';
 import '../state/auth_providers.dart';
 import '../state/geo_providers.dart';
 import '../state/profile_providers.dart';
+import '../state/search_providers.dart';
 import '../widgets/image_source_picker.dart';
 import 'discover_screen.dart';
 import 'invitation_list_screen.dart';
@@ -50,6 +51,11 @@ class HomeShell extends ConsumerWidget {
               tooltip: 'Discovery preferences',
               onPressed: () => ref.read(showDiscoveryPreferencesProvider.notifier).state = true,
             ),
+          IconButton(
+            icon: const Icon(Icons.search),
+            tooltip: 'Search',
+            onPressed: () => ref.read(showSearchProvider.notifier).state = true,
+          ),
           IconButton(
             icon: const Icon(Icons.person_outline),
             tooltip: 'Profile',
