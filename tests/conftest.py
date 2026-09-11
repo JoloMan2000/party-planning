@@ -10,6 +10,7 @@ import uuid
 
 import pytest
 
+from equipment_engine.catalog import load_catalog as load_equipment_catalog
 from party_engine.catalog import load_catalog
 from party_engine.domain import PartyConfig
 
@@ -22,6 +23,13 @@ def catalog():
 @pytest.fixture()
 def config():
     return PartyConfig()
+
+
+@pytest.fixture(scope="session")
+def equipment_catalog():
+    """Der echte Equipment-Katalog aus ``catalog/equipment/*.json`` (kein
+    Mocking, mirrort ``catalog()`` oben) - einmal pro Testsession geladen."""
+    return load_equipment_catalog()
 
 
 @pytest.fixture(autouse=True)

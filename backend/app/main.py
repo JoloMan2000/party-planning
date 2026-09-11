@@ -24,6 +24,7 @@ import accounts.party_storage as party_storage
 import accounts.profile_storage as profile_storage
 import accounts.spotify_storage as spotify_storage
 import accounts.user_storage as user_storage
+import equipment_engine.storage as equipment_storage
 import event_theme
 import geo.storage as geo_storage
 import music_engine.admin_settings as music_admin_settings
@@ -36,6 +37,7 @@ import social.friendships as social_friendships
 from backend.app.core.config import settings, warn_if_insecure_defaults
 from backend.app.routers import (
     admin_catalog_curation,
+    admin_equipment,
     admin_music,
     admin_organizers,
     admin_party_context,
@@ -49,6 +51,7 @@ from backend.app.routers import (
     discover,
     discovery_catalogs,
     discovery_preferences,
+    equipment_inventory,
     follows,
     geo as geo_router,
     guest,
@@ -102,6 +105,7 @@ for router in (
     admin_recommendations.router,
     admin_music.router,
     admin_shopping_list.router,
+    admin_equipment.router,
     admin_users.router,
     admin_organizers.router,
     profile.router,
@@ -113,6 +117,7 @@ for router in (
     party_locations.router,
     social.router,
     follows.router,
+    equipment_inventory.router,
 ):
     app.include_router(router)
 
@@ -159,6 +164,7 @@ def on_startup() -> None:
     init_catalog_curation(db_path)
     response_storage.init_db(db_path)
     geo_storage.init_geo_storage(db_path)
+    equipment_storage.init_equipment_storage(db_path)
 
     # WAL-Modus reduziert "database is locked"-Risiko bei parallelem
     # Schreibzugriff von Streamlit- und FastAPI-Prozess (Plan Schritt 2) -

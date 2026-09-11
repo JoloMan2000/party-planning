@@ -17,6 +17,8 @@ from functools import lru_cache
 from pathlib import Path
 
 from backend.app.core.config import settings
+from equipment_engine.catalog import load_catalog as load_equipment_catalog
+from equipment_engine.domain import EquipmentCatalog
 from geo.providers import GeoSearchProvider, get_default_geo_search_provider
 from music_engine.catalog import load_music_catalog
 from music_engine.domain import MusicCatalog, MusicOccasionProfile
@@ -53,6 +55,11 @@ def get_music_catalog() -> MusicCatalog:
 @lru_cache(maxsize=1)
 def get_music_occasions() -> dict[str, MusicOccasionProfile]:
     return load_all_music_occasions()
+
+
+@lru_cache(maxsize=1)
+def get_equipment_catalog() -> EquipmentCatalog:
+    return load_equipment_catalog()
 
 
 @dataclass
