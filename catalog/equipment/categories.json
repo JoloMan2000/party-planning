@@ -1,0 +1,13 @@
+{
+  "tableware": {"id": "tableware", "name": "Tableware", "parent_id": null, "description": "Plates, cutlery and everyday dining items."},
+  "tableware_reusable": {"id": "tableware_reusable", "name": "Reusable Tableware", "parent_id": "tableware", "description": ""},
+  "tableware_disposable": {"id": "tableware_disposable", "name": "Disposable Tableware", "parent_id": "tableware", "description": ""},
+  "glassware": {"id": "glassware", "name": "Glassware", "parent_id": "tableware", "description": ""},
+  "bar_equipment": {"id": "bar_equipment", "name": "Bar Equipment", "parent_id": null, "description": "Tools and cooling for serving drinks."},
+  "bar_tools": {"id": "bar_tools", "name": "Bar Tools", "parent_id": "bar_equipment", "description": ""},
+  "ice_cooling": {"id": "ice_cooling", "name": "Ice & Cooling", "parent_id": "bar_equipment", "description": ""},
+  "cleaning_hygiene": {"id": "cleaning_hygiene", "name": "Cleaning & Hygiene", "parent_id": null, "description": "Trash, cleaning and hygiene supplies."},
+  "party_games": {"id": "party_games", "name": "Party Games", "parent_id": null, "description": "Games and activity equipment."},
+  "beer_pong": {"id": "beer_pong", "name": "Beer Pong", "parent_id": "party_games", "description": ""},
+  "tabletop_games": {"id": "tabletop_games", "name": "Tabletop Games", "parent_id": "party_games", "description": ""}
+}

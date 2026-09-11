@@ -1,0 +1,22 @@
+{
+  "paper_plate": [{"size": 25, "unit": "pcs", "pack_label": "Pack of 25", "pack_count": 1}],
+  "paper_bowl": [{"size": 20, "unit": "pcs", "pack_label": "Pack of 20", "pack_count": 1}],
+  "paper_cup": [{"size": 50, "unit": "pcs", "pack_label": "Pack of 50", "pack_count": 1}],
+  "plastic_cutlery_set": [{"size": 24, "unit": "pcs", "pack_label": "Pack of 24 sets", "pack_count": 1}],
+  "wooden_cutlery_set": [{"size": 20, "unit": "pcs", "pack_label": "Pack of 20 sets", "pack_count": 1}],
+  "paper_straw": [{"size": 100, "unit": "pcs", "pack_label": "Pack of 100", "pack_count": 1}],
+  "table_napkin": [{"size": 100, "unit": "pcs", "pack_label": "Pack of 100", "pack_count": 1}],
+  "cocktail_napkin": [{"size": 50, "unit": "pcs", "pack_label": "Pack of 50", "pack_count": 1}],
+
+  "trash_bag": [{"size": 10, "unit": "pcs", "pack_label": "Pack of 10", "pack_count": 1}],
+  "paper_towel_roll": [
+    {"size": 1, "unit": "pcs", "pack_label": "Single roll", "pack_count": 1},
+    {"size": 1, "unit": "pcs", "pack_label": "Pack of 6", "pack_count": 6}
+  ],
+  "toilet_paper_roll": [{"size": 1, "unit": "pcs", "pack_label": "Pack of 8", "pack_count": 8}],
+  "dish_soap": [{"size": 1, "unit": "pcs", "pack_label": "Bottle", "pack_count": 1}],
+  "sponge": [{"size": 5, "unit": "pcs", "pack_label": "Pack of 5", "pack_count": 1}],
+  "hand_sanitizer": [{"size": 1, "unit": "pcs", "pack_label": "Bottle", "pack_count": 1}],
+
+  "beer_pong_ball_set": [{"size": 6, "unit": "pcs", "pack_label": "Set of 6 balls", "pack_count": 1}]
+}
