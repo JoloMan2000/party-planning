@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../api/api_client.dart';
 import '../models/profile.dart';
 import '../state/auth_providers.dart';
+import '../state/equipment_providers.dart';
 import '../state/notification_settings_providers.dart';
 import '../state/organizer_providers.dart';
 import '../state/profile_providers.dart';
@@ -226,6 +227,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     title: const Text('Notification Settings'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => ref.read(showNotificationSettingsProvider.notifier).state = true,
+                  ),
+                ),
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.inventory_2),
+                    title: const Text('My Equipment'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => ref.read(showMyEquipmentProvider.notifier).state = true,
                   ),
                 ),
                 Card(

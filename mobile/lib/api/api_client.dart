@@ -15,6 +15,9 @@ import '../models/discover_action_result.dart';
 import '../models/discover_card.dart';
 import '../models/discovery_catalog_item.dart';
 import '../models/discovery_preferences.dart';
+import '../models/equipment_catalog_item.dart';
+import '../models/equipment_demand_result.dart';
+import '../models/equipment_inventory_item.dart';
 import '../models/event_type.dart';
 import '../models/guest_response.dart';
 import '../models/invitation.dart';
@@ -1902,6 +1905,125 @@ class ApiClient {
     if (resp.statusCode >= 400) {
       throw ApiException(resp.statusCode, resp.body);
     }
+  }
+
+  // ---------------------------------------------------------------------
+  // Equipment Engine (Mobile UI Phase) - Katalog-Browsing, Host-Inventar,
+  // Party-Equipment-Bedarf. Siehe equipment_engine/ (Phase 1 Backend).
+  // ---------------------------------------------------------------------
+
+  Future<List<EquipmentCatalogItem>> getEquipmentCatalog(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/equipment/catalog'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return _decodeList(resp)
+        .map((e) => EquipmentCatalogItem.fromJson((e as Map).cast<String, dynamic>()))
+        .toList();
+  }
+
+  Future<List<EquipmentInventoryItem>> getMyEquipmentInventory(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.get(_uri('/api/v1/me/equipment-inventory'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    return _decodeList(resp)
+        .map((e) => EquipmentInventoryItem.fromJson((e as Map).cast<String, dynamic>()))
+        .toList();
+  }
+
+  Future<EquipmentInventoryItem> createEquipmentInventoryItem(
+    String accessToken,
+    Future<String?> Function() onRefresh, {
+    required String equipmentItemId,
+    double quantity = 1.0,
+    String condition = '',
+    bool available = true,
+    String notes = '',
+  }) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.post(
+        _uri('/api/v1/me/equipment-inventory'),
+        headers: _authHeaders(token),
+        body: jsonEncode({
+          'equipment_item_id': equipmentItemId,
+          'quantity': quantity,
+          'condition': condition,
+          'available': available,
+          'notes': notes,
+        }),
+      ),
+      accessToken,
+      onRefresh,
+    );
+    return EquipmentInventoryItem.fromJson(_decodeObject(resp));
+  }
+
+  Future<EquipmentInventoryItem> updateEquipmentInventoryItem(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String inventoryItemId, {
+    double? quantity,
+    String? condition,
+    bool? available,
+    String? notes,
+  }) async {
+    final body = <String, dynamic>{};
+    if (quantity != null) body['quantity'] = quantity;
+    if (condition != null) body['condition'] = condition;
+    if (available != null) body['available'] = available;
+    if (notes != null) body['notes'] = notes;
+
+    final resp = await _authorizedRequest(
+      (token) => _http.patch(
+        _uri('/api/v1/me/equipment-inventory/$inventoryItemId'),
+        headers: _authHeaders(token),
+        body: jsonEncode(body),
+      ),
+      accessToken,
+      onRefresh,
+    );
+    return EquipmentInventoryItem.fromJson(_decodeObject(resp));
+  }
+
+  Future<void> deleteEquipmentInventoryItem(
+    String accessToken,
+    Future<String?> Function() onRefresh,
+    String inventoryItemId,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.delete(_uri('/api/v1/me/equipment-inventory/$inventoryItemId'), headers: _authHeaders(token)),
+      accessToken,
+      onRefresh,
+    );
+    if (resp.statusCode >= 400) {
+      throw ApiException(resp.statusCode, resp.body);
+    }
+  }
+
+  Future<EquipmentDemandResult> computeEquipmentDemand(
+    String partyId,
+    String accessToken,
+    Future<String?> Function() onRefresh,
+  ) async {
+    final resp = await _authorizedRequest(
+      (token) => _http.post(
+        _uri('/api/v1/parties/$partyId/admin/equipment-demand'),
+        headers: _authHeaders(token),
+        body: jsonEncode(<String, dynamic>{}),
+      ),
+      accessToken,
+      onRefresh,
+    );
+    return EquipmentDemandResult.fromJson(_decodeObject(resp));
   }
 
   void close() => _http.close();

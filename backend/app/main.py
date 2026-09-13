@@ -51,6 +51,7 @@ from backend.app.routers import (
     discover,
     discovery_catalogs,
     discovery_preferences,
+    equipment_catalog,
     equipment_inventory,
     follows,
     geo as geo_router,
@@ -118,6 +119,7 @@ for router in (
     social.router,
     follows.router,
     equipment_inventory.router,
+    equipment_catalog.router,
 ):
     app.include_router(router)
 
