@@ -17,6 +17,7 @@ import 'screens/friends_screen.dart';
 import 'screens/home_shell.dart';
 import 'screens/invitation_detail_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/my_equipment_screen.dart';
 import 'screens/my_organizers_screen.dart';
 import 'screens/notification_settings_screen.dart';
 import 'screens/notifications_screen.dart';
@@ -35,6 +36,7 @@ import 'screens/user_following_screen.dart';
 import 'screens/user_friends_screen.dart';
 import 'screens/verify_email_screen.dart';
 import 'state/auth_providers.dart';
+import 'state/equipment_providers.dart';
 import 'state/geo_providers.dart';
 import 'state/notification_settings_providers.dart';
 import 'state/organizer_providers.dart';
@@ -150,6 +152,7 @@ class _PartyAppState extends ConsumerState<PartyApp> {
       final selectedFriendProfileUserId = ref.watch(selectedFriendProfileUserIdProvider);
       final showSocialPrivacy = ref.watch(showSocialPrivacyProvider);
       final viewingUserFriendsUserId = ref.watch(viewingUserFriendsUserIdProvider);
+      final showMyEquipment = ref.watch(showMyEquipmentProvider);
       final showMyOrganizers = ref.watch(showMyOrganizersProvider);
       final creatingOrganizer = ref.watch(creatingOrganizerProvider);
       final selectedOrganizerId = ref.watch(selectedOrganizerIdProvider);
@@ -197,6 +200,8 @@ class _PartyAppState extends ConsumerState<PartyApp> {
         home = const CreateOrganizerScreen();
       } else if (selectedOrganizerId != null) {
         home = OrganizerDetailScreen(organizerId: selectedOrganizerId);
+      } else if (showMyEquipment) {
+        home = const MyEquipmentScreen();
       } else if (showMyOrganizers) {
         home = const MyOrganizersScreen();
       } else if (showFollowing) {

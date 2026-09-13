@@ -35,6 +35,22 @@ class EquipmentInventoryItemPublic(BaseModel):
     notes: str
 
 
+class EquipmentCatalogItemPublic(BaseModel):
+    """Ein Katalog-Item für die Mobile-Katalog-Browsing-/Such-UI (mirrort
+    `CatalogPicker`'s Erwartungen: Name, Kategorie server-seitig aufgelöst,
+    kein zweiter Lookup-Call nötig)."""
+
+    id: str
+    name: str
+    equipment_type: str
+    unit: str
+    category_id: str
+    category_name: str
+    subcategory_id: str | None = None
+    subcategory_name: str | None = None
+    tags: list[str] = []
+
+
 class EquipmentDemandComputeRequest(BaseModel):
     """Phase-1-Stub - ``station_activity_interest``/``capacity_need_overrides``
     sind manuelle Platzhalter für die noch nicht gebaute echte Activities-/

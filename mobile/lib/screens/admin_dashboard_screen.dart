@@ -5,6 +5,7 @@ import '../state/auth_providers.dart';
 import '../state/providers.dart';
 import '../theme/party_theme.dart';
 import '../widgets/admin/catalog_curation_section.dart';
+import '../widgets/admin/equipment_section.dart';
 import '../widgets/admin/party_context_dashboard_section.dart';
 import '../widgets/admin/party_context_overrides_section.dart';
 import '../widgets/admin/party_context_section.dart';
@@ -74,6 +75,8 @@ class AdminDashboardScreen extends ConsumerWidget {
               ResponsesSection(partyId: partyId),
               const SizedBox(height: 16),
               ShoppingListSection(partyId: partyId),
+              const SizedBox(height: 16),
+              EquipmentSection(partyId: partyId),
             ],
           ),
         ),
