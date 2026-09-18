@@ -25,7 +25,7 @@ def test_every_item_demand_rule_id_resolves(equipment_catalog):
 
 def test_search_by_category_returns_only_matching_items(equipment_catalog):
     results = equipment_catalog.search(category_id="ice_cooling")
-    assert {r.id for r in results} == {"ice_bucket", "cooler_box", "cool_bag", "large_beverage_cooler"}
+    assert {r.id for r in results} == {"ice_bucket", "cooler_box", "cool_bag", "large_beverage_cooler", "ice_bag"}
 
 
 def test_search_by_equipment_type_excludes_other_types(equipment_catalog):

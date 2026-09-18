@@ -73,5 +73,8 @@
   "rule_sun_shade_parasol": {"id": "rule_sun_shade_parasol", "driver_type": "fixed", "base_quantity": 1},
   "rule_outdoor_heater": {"id": "rule_outdoor_heater", "driver_type": "fixed", "base_quantity": 1},
   "rule_outdoor_string_lights": {"id": "rule_outdoor_string_lights", "driver_type": "fixed", "base_quantity": 1},
-  "rule_trash_bag_duration_topup": {"id": "rule_trash_bag_duration_topup", "driver_type": "per_duration", "base_quantity": 0.0, "per_duration": 0.05, "target_item_id": "trash_bag"}
+  "rule_trash_bag_duration_topup": {"id": "rule_trash_bag_duration_topup", "driver_type": "per_duration", "base_quantity": 0.0, "per_duration": 0.05, "target_item_id": "trash_bag"},
+  "rule_ice_bag_capacity": {"id": "rule_ice_bag_capacity", "driver_type": "capacity_based", "capacity_per_unit": 2.0},
+  "rule_cake_knife": {"id": "rule_cake_knife", "driver_type": "fixed", "base_quantity": 1},
+  "rule_cake_server": {"id": "rule_cake_server", "driver_type": "fixed", "base_quantity": 1}
 }

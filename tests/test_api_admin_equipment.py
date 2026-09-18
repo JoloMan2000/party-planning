@@ -117,3 +117,34 @@ def test_context_recommendations_appear_for_hot_outdoor_party(api_client, host_p
     assert resp.status_code == 200
     recs = resp.json()["context_recommendations"]
     assert "sun_shade_parasol" in {r["item_id"] for r in recs}
+
+
+def test_real_beverage_and_food_plan_drive_cooler_and_cake_accessories(api_client, host_party_factory):
+    """Spec §49/§51/§150 end-to-end: eine echte, über die Guest-API
+    eingereichte Antwort mit einem Bier (kalte Familie) und einem Kuchen
+    treibt reale Equipment-Demand - nicht einen manuell getippten Override."""
+    party_id, headers, _user = host_party_factory()
+
+    submit_resp = api_client.post(
+        f"/api/v1/guest/{party_id}/responses",
+        json={"name": "Anna", "start_time": "19:00", "drinks": ["beer_pils"], "food": ["kaesekuchen"]},
+    )
+    assert submit_resp.status_code == 201, submit_resp.text
+
+    resp = api_client.post(f"/api/v1/parties/{party_id}/admin/equipment-demand", json={}, headers=headers)
+    assert resp.status_code == 200, resp.text
+    demand = resp.json()["demand"]
+
+    # party_engine always adds a baseline per-guest water demand
+    # (PartyConfig.water_l_per_guest=1.5, scaled by the derived context's
+    # water_multiplier and water's own 0.15 reserve_pct) ON TOP OF the
+    # explicitly chosen beer - both "water" and "beer" are cold families, so
+    # BOTH correctly count toward real cooler capacity (verified by running
+    # the real pipeline directly against this exact response: water =
+    # 2.61625L, beer_pils = 0.84L). This is real, comprehensive integration,
+    # not a manually-typed override.
+    cooler = demand["large_beverage_cooler"]
+    assert cooler["raw_quantity"] == pytest.approx((2.61625 + 0.84) / 30.0)
+
+    assert demand["cake_knife"]["raw_quantity"] == 1.0
+    assert demand["cake_server"]["raw_quantity"] == 1.0

@@ -1,6 +1,6 @@
-"""Party-gescopte Equipment-Endpunkte: Demand-Compute (Phase 1, jetzt mit
-PartyContext-Integration, Phase 2) + Venue-Provisions-CRUD (Phase 2, Spec
-§98/§146 "Venue provides 40 chairs").
+"""Party-gescopte Equipment-Endpunkte: Demand-Compute (Phase 1, PartyContext-
+Integration in Phase 2, Beverage+Food-Plan-Integration in Phase 3) +
+Venue-Provisions-CRUD (Phase 2, Spec §98/§146 "Venue provides 40 chairs").
 
 Demand-Compute mirrort ``backend/app/routers/admin_shopping_list.py`` exakt
 (``require_party_role``, ``to_jsonable(result)``-Antwort, kein eigenes
@@ -8,6 +8,13 @@ Response-Schema). ``guest_count`` kommt aus den echten ACCEPTED/TENTATIVE-
 Memberships der Party; ``host_inventory`` aus dem Inventar des ECHTEN Hosts
 (``party.host_user_id``), nicht des Aufrufers - ein Co-Host, der das hier
 berechnet, sieht weiterhin das tatsächliche Host-Inventar.
+
+Phase 3 (Spec §49/§51/§150): ruft zusätzlich ``party_engine.engine
+.compute_party_demand`` (dieselbe "Demand Engine" wie
+``admin_shopping_list.py``) mit derselben ``len(rows)``-``guest_count``-Basis
+auf, damit Equipment und Shopping List für dieselbe Party immer identische
+Getränke-/Eis-Zahlen zugrunde legen - bewusst NICHT dieselbe RSVP-basierte
+``guest_count`` wie oben (siehe ``equipment_engine.food_beverage_integration``).
 
 Venue-Provisions-CRUD mirrort ``backend/app/routers/equipment_inventory.py``'s
 404-statt-403-Konvention bei fremdem/falsch-gescoptem Datensatz, aber
@@ -26,10 +33,11 @@ import accounts.party_storage as party_storage
 import equipment_engine.storage as equipment_storage
 import event_theme
 import party_engine.context_orchestration as context_orchestration
+import party_engine.response_storage as response_storage
 from accounts.domain import PartyMembership, PartyRole, RsvpStatus
 from backend.app.core.auth import require_party_role
 from backend.app.core.dataclass_json import to_jsonable
-from backend.app.core.deps import get_db_path, get_equipment_catalog
+from backend.app.core.deps import get_catalog, get_db_path, get_equipment_catalog
 from backend.app.schemas.equipment import (
     EquipmentDemandComputeRequest,
     EquipmentProvisionCreate,
@@ -39,6 +47,13 @@ from backend.app.schemas.equipment import (
 from equipment_engine.context import compute_seating_and_table_capacity_needs
 from equipment_engine.domain import EquipmentCatalog, PartyEquipmentProvision
 from equipment_engine.engine import calculate_equipment_demand
+from equipment_engine.food_beverage_integration import (
+    compute_beverage_capacity_needs,
+    compute_food_triggered_item_ids,
+)
+from party_engine.domain import PartyCatalog, PartyConfig
+from party_engine.engine import compute_party_demand
+from party_engine.legacy_adapter import guest_response_from_row
 
 router = APIRouter(prefix="/api/v1/parties/{party_id}/admin/equipment-demand", tags=["admin"])
 provisions_router = APIRouter(
@@ -56,6 +71,7 @@ def compute_equipment_demand(
     payload: EquipmentDemandComputeRequest,
     db_path: Path = Depends(get_db_path),
     catalog: EquipmentCatalog = Depends(get_equipment_catalog),
+    party_catalog: PartyCatalog = Depends(get_catalog),
     membership: PartyMembership = Depends(_require_admin),
 ) -> dict:
     party = party_storage.get_party(db_path, party_id)
@@ -72,12 +88,28 @@ def compute_equipment_demand(
     derived_context = context_orchestration.get_derived_party_context(db_path, party_id, settings, guest_count)
 
     context_capacity_needs = compute_seating_and_table_capacity_needs(guest_count, raw_context.seating_ratio)
-    capacity_need_overrides = {**context_capacity_needs, **payload.capacity_need_overrides}
+
+    # Phase 3 (Spec §49/§51/§150): echte Food+Beverage-Demand-Zahlen statt
+    # manueller Stub-Overrides. Eigener ``get_derived_party_context``-Aufruf
+    # mit ``len(rows)`` statt der RSVP-basierten ``guest_count`` oben, damit
+    # dies exakt dieselben Zahlen liefert wie
+    # ``admin_shopping_list.py::compute_shopping_list`` für dieselbe Party.
+    rows = response_storage.load_responses(db_path, party_id)
+    guest_responses = [guest_response_from_row(row, party_catalog) for row in rows]
+    food_beverage_context = context_orchestration.get_derived_party_context(db_path, party_id, settings, len(rows))
+    food_beverage_result = compute_party_demand(
+        party_catalog, guest_responses, PartyConfig(), derived_context=food_beverage_context
+    )
+    beverage_capacity_needs = compute_beverage_capacity_needs(food_beverage_result, party_catalog)
+    food_triggered_item_ids = compute_food_triggered_item_ids(food_beverage_result)
+
+    capacity_need_overrides = {**context_capacity_needs, **beverage_capacity_needs, **payload.capacity_need_overrides}
+    selected_item_ids = list(set(payload.selected_item_ids) | food_triggered_item_ids)
 
     result = calculate_equipment_demand(
         catalog,
         guest_count=guest_count,
-        selected_item_ids=payload.selected_item_ids,
+        selected_item_ids=selected_item_ids,
         station_activity_interest=payload.station_activity_interest,
         capacity_need_overrides=capacity_need_overrides,
         host_inventory=host_inventory,

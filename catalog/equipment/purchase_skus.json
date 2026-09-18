@@ -18,5 +18,7 @@
   "sponge": [{"size": 5, "unit": "pcs", "pack_label": "Pack of 5", "pack_count": 1}],
   "hand_sanitizer": [{"size": 1, "unit": "pcs", "pack_label": "Bottle", "pack_count": 1}],
 
-  "beer_pong_ball_set": [{"size": 6, "unit": "pcs", "pack_label": "Set of 6 balls", "pack_count": 1}]
+  "beer_pong_ball_set": [{"size": 6, "unit": "pcs", "pack_label": "Set of 6 balls", "pack_count": 1}],
+
+  "ice_bag": [{"size": 1, "unit": "pcs", "pack_label": "Ice Bag (2kg)", "pack_count": 1}]
 }
