@@ -1,6 +1,8 @@
 """Haupteinstiegspunkt der Equipment Engine (Phase 1 + PartyContext-
-Integration in Phase 2) - mirrort ``party_engine.engine.compute_party_demand``
-/ ``music_engine.engine.plan_party_music`` (eine schlichte Top-Level-Funktion,
+Integration in Phase 2 + Beverage/Food-Integration in Phase 3 + Activities-/
+Guest-Voting-Integration in Phase 4) - mirrort
+``party_engine.engine.compute_party_demand`` /
+``music_engine.engine.plan_party_music`` (eine schlichte Top-Level-Funktion,
 KEINE Engine-Klasse - abweichend vom Klassen-Beispiel der rohen Spec §168,
 aber konsistent mit jedem anderen Planning-Entry-Point dieser Codebase)."""
 
@@ -33,22 +35,25 @@ def calculate_equipment_demand(
 ) -> EquipmentDemandResult:
     """Bewusst NICHT die volle Signatur aus Spec §12 (``party, derived_context,
     guest_responses, food_plan, beverage_plan, music_plan``) - siehe
-    ``equipment_engine/__init__.py`` für die geplanten Phase-3-Landeplätze.
-    Drei Parameter bleiben explizite Platzhalter für noch nicht gebaute
-    Features:
+    ``equipment_engine/__init__.py`` für die geplanten späteren Landeplätze.
+    Zwei Parameter bleiben Vektoren für Werte, die der AUFRUFER (nicht diese
+    Funktion) aus externen Domänen berechnet und VOR diesem Funktionsaufruf
+    mit einem optionalen Host-Override mergt (Payload gewinnt bei Konflikt,
+    siehe ``backend/app/routers/admin_equipment.py``):
 
-    ``station_activity_interest``: Platzhalter für echte Activities +
-    Gäste-Voting (Phase 3, Spec §89/§90). Wert = Anzahl GLEICHZEITIGER
-    Stationen für diese ``station_id`` DIREKT - noch kein von Popularität/
-    Fläche abgeleiteter Stationsanzahl-Algorithmus (Spec §58, Phase 3).
+    ``station_activity_interest``: Wert = Anzahl GLEICHZEITIGER Stationen für
+    diese ``station_id`` DIREKT - kein Popularitäts-/Flächen-Algorithmus
+    HIER (der lebt eine Ebene darüber, siehe ``equipment_engine
+    .activity_integration.compute_station_activity_interest``, Phase 4).
+    Seit Phase 4 vom Aufrufer aus echten Guest-Votes (``activities``-Domain,
+    Spec §89/§90) berechnet, davor ein rein manueller Host-Wert.
 
-    ``capacity_need_overrides``: Platzhalter für echte Beverage-/Food-Plan-
-    Anbindung (Phase 3). ``item_id -> Rohbedarf`` in der Treiber-Einheit des
-    Items (z.B. Liter gekühlter Getränke für "large_beverage_cooler"). Phase
-    2 füllt hier bereits die Seating-/Tisch-Einträge über
-    ``equipment_engine.context.compute_seating_and_table_capacity_needs``
-    (vom Aufrufer VOR diesem Funktionsaufruf gemergt, siehe
-    ``backend/app/routers/admin_equipment.py``).
+    ``capacity_need_overrides``: ``item_id -> Rohbedarf`` in der Treiber-
+    Einheit des Items (z.B. Liter gekühlter Getränke für
+    "large_beverage_cooler"). Phase 2 füllt hier die Seating-/Tisch-Einträge
+    über ``equipment_engine.context.compute_seating_and_table_capacity_needs``,
+    Phase 3 die Beverage-/Food-Einträge über
+    ``equipment_engine.food_beverage_integration.compute_beverage_capacity_needs``.
 
     ``derived_context``: Phase-2-Ergänzung. Wenn übergeben, werden zusätzlich
     ``context_recommendations`` (Spec §83/§147/§154, advisory-only - siehe

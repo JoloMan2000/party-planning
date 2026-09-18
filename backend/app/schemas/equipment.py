@@ -52,11 +52,15 @@ class EquipmentCatalogItemPublic(BaseModel):
 
 
 class EquipmentDemandComputeRequest(BaseModel):
-    """``station_activity_interest``/``capacity_need_overrides`` sind manuelle
-    Platzhalter für die noch nicht gebaute echte Activities-/Beverage-
-    Integration (siehe ``equipment_engine.engine.calculate_equipment_demand``-
-    Docstring). ``guest_count``/``duration_hours``/``derived_context``/
-    ``venue_provisions`` werden serverseitig aufgelöst, nicht vom Client
+    """``station_activity_interest``/``capacity_need_overrides`` sind
+    OPTIONALE Host-Overrides, die serverseitig berechnete Defaults
+    überschreiben (Payload gewinnt bei Konflikt) - keine reinen Stub-
+    Platzhalter mehr: ``capacity_need_overrides`` seit Phase 2/3 (Seating/
+    Tische + echter Beverage-/Food-Plan), ``station_activity_interest`` seit
+    Phase 4 (echtes Gäste-Voting über die ``activities``-Domain, siehe
+    ``equipment_engine.activity_integration``). ``guest_count``/
+    ``duration_hours``/``derived_context``/``venue_provisions`` werden
+    weiterhin ausschließlich serverseitig aufgelöst, nicht vom Client
     übergeben."""
 
     selected_item_ids: list[str] = []

@@ -148,3 +148,38 @@ def test_real_beverage_and_food_plan_drive_cooler_and_cake_accessories(api_clien
 
     assert demand["cake_knife"]["raw_quantity"] == 1.0
     assert demand["cake_server"]["raw_quantity"] == 1.0
+
+
+def test_real_activity_votes_drive_beer_pong_equipment_demand(api_client, host_party_factory, auth_headers_factory):
+    """Spec §89/§90 end-to-end: echte, über die Activities-API eingereichte
+    Guest-Votes treiben reale ``beer_pong_*``-Equipment-Demand - nicht ein
+    manuell getippter ``station_activity_interest``-Override."""
+    from equipment_engine.activity_integration import compute_station_activity_interest
+
+    party_id, headers, _user = host_party_factory()
+    activity_resp = api_client.post(
+        f"/api/v1/parties/{party_id}/admin/activities",
+        json={"name": "Beer Pong", "station_id": "beer_pong"},
+        headers=headers,
+    )
+    assert activity_resp.status_code == 201, activity_resp.text
+    activity_id = activity_resp.json()["id"]
+
+    vote_count = 20
+    for i in range(vote_count):
+        guest_headers = _make_guest_headers(api_client, auth_headers_factory, party_id)
+        vote_resp = api_client.post(
+            f"/api/v1/parties/{party_id}/activities/{activity_id}/vote", headers=guest_headers
+        )
+        assert vote_resp.status_code == 200, vote_resp.text
+
+    expected_stations = compute_station_activity_interest({"beer_pong": vote_count})["beer_pong"]
+
+    resp = api_client.post(f"/api/v1/parties/{party_id}/admin/equipment-demand", json={}, headers=headers)
+    assert resp.status_code == 200, resp.text
+    demand = resp.json()["demand"]
+
+    # rule_beer_pong_table_station: per_station=1.0 -> raw == station count.
+    assert demand["beer_pong_table"]["raw_quantity"] == expected_stations
+    # rule_beer_pong_rack_station: per_station=2.0 -> raw == 2 * station count.
+    assert demand["beer_pong_rack"]["raw_quantity"] == 2 * expected_stations

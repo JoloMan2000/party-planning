@@ -1,6 +1,7 @@
 """Party-gescopte Equipment-Endpunkte: Demand-Compute (Phase 1, PartyContext-
-Integration in Phase 2, Beverage+Food-Plan-Integration in Phase 3) +
-Venue-Provisions-CRUD (Phase 2, Spec §98/§146 "Venue provides 40 chairs").
+Integration in Phase 2, Beverage+Food-Plan-Integration in Phase 3,
+Activities-/Guest-Voting-Integration in Phase 4) + Venue-Provisions-CRUD
+(Phase 2, Spec §98/§146 "Venue provides 40 chairs").
 
 Demand-Compute mirrort ``backend/app/routers/admin_shopping_list.py`` exakt
 (``require_party_role``, ``to_jsonable(result)``-Antwort, kein eigenes
@@ -16,6 +17,11 @@ auf, damit Equipment und Shopping List für dieselbe Party immer identische
 Getränke-/Eis-Zahlen zugrunde legen - bewusst NICHT dieselbe RSVP-basierte
 ``guest_count`` wie oben (siehe ``equipment_engine.food_beverage_integration``).
 
+Phase 4 (Spec §89/§90): liest echte, über die ``activities``-Domain
+eingereichte Guest-Votes statt eines rein manuellen
+``station_activity_interest``-Host-Overrides (siehe
+``equipment_engine.activity_integration``).
+
 Venue-Provisions-CRUD mirrort ``backend/app/routers/equipment_inventory.py``'s
 404-statt-403-Konvention bei fremdem/falsch-gescoptem Datensatz, aber
 party- statt user-gescopt (daher ein zweiter ``APIRouter`` mit eigenem
@@ -30,6 +36,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, status
 
 import accounts.party_storage as party_storage
+import activities.storage as activities_storage
 import equipment_engine.storage as equipment_storage
 import event_theme
 import party_engine.context_orchestration as context_orchestration
@@ -44,6 +51,7 @@ from backend.app.schemas.equipment import (
     EquipmentProvisionPublic,
     EquipmentProvisionUpdateRequest,
 )
+from equipment_engine.activity_integration import compute_station_activity_interest
 from equipment_engine.context import compute_seating_and_table_capacity_needs
 from equipment_engine.domain import EquipmentCatalog, PartyEquipmentProvision
 from equipment_engine.engine import calculate_equipment_demand
@@ -103,6 +111,24 @@ def compute_equipment_demand(
     beverage_capacity_needs = compute_beverage_capacity_needs(food_beverage_result, party_catalog)
     food_triggered_item_ids = compute_food_triggered_item_ids(food_beverage_result)
 
+    # Phase 4 (Spec §89/§90): echte Gäste-Votes statt eines rein manuellen
+    # Host-Overrides. Zwei Activities derselben Party mit demselben
+    # station_id (z.B. zwei separate "Beer Pong"-Vorschläge) summieren ihre
+    # Votes VOR der Stationsanzahl-Berechnung - sie konkurrieren um
+    # dieselbe Equipment-Ressource (dieselbe additive Grundregel wie
+    # equipment_engine.demand's globale Aggregation).
+    party_activities = activities_storage.list_activities_for_party(db_path, party_id)
+    activity_vote_counts = activities_storage.count_votes_by_activity_for_party(db_path, party_id)
+    vote_counts_by_station: dict[str, int] = {}
+    for activity in party_activities:
+        if activity.station_id is None:
+            continue
+        vote_counts_by_station[activity.station_id] = (
+            vote_counts_by_station.get(activity.station_id, 0) + activity_vote_counts.get(activity.id, 0)
+        )
+    real_station_activity_interest = compute_station_activity_interest(vote_counts_by_station)
+    station_activity_interest = {**real_station_activity_interest, **payload.station_activity_interest}
+
     capacity_need_overrides = {**context_capacity_needs, **beverage_capacity_needs, **payload.capacity_need_overrides}
     selected_item_ids = list(set(payload.selected_item_ids) | food_triggered_item_ids)
 
@@ -110,7 +136,7 @@ def compute_equipment_demand(
         catalog,
         guest_count=guest_count,
         selected_item_ids=selected_item_ids,
-        station_activity_interest=payload.station_activity_interest,
+        station_activity_interest=station_activity_interest,
         capacity_need_overrides=capacity_need_overrides,
         host_inventory=host_inventory,
         duration_hours=raw_context.duration_hours,

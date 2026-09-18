@@ -22,6 +22,8 @@ Architektur (gespiegelt an ``party_engine/``/``music_engine/``):
                                          Sitzplätze/Tische)
     equipment_engine/food_beverage_integration.py -> Food-/Beverage-Plan-Integration
                                          (Kühlkapazität, Eisbedarf, Kuchen-Zubehör)
+    equipment_engine/activity_integration.py -> Activities-/Guest-Voting-Integration
+                                         (echtes station_activity_interest)
 
 Phase 1 implementierte die vier kontextfreien Demand-Driver
 (``fixed``/``per_guest``/``capacity_based``/``per_station``) gegen einen
@@ -30,16 +32,18 @@ kleinen Starter-Katalog und das Host-Inventar. Phase 2 ergänzte
 Capabilities, Sitzplätze/Tische, ``per_duration``-Driver, Venue-Provisions).
 Phase 3 ergänzte ``equipment_engine/food_beverage_integration.py`` (echte
 Food-/Beverage-Plan-Anbindung: Kühlkapazität + Eisbedarf aus dem realen
-Getränkeplan statt manueller Overrides, Kuchen-Zubehör-Trigger). Spätere
-Phasen (noch nicht implementiert, Landeplätze vorgemerkt):
+Getränkeplan statt manueller Overrides, Kuchen-Zubehör-Trigger). Phase 4
+ergänzte ``equipment_engine/activity_integration.py`` (echtes, Gäste-
+Voting-getriebenes ``station_activity_interest`` statt Host-Stub-Override -
+siehe das neue Top-Level-Paket ``activities/`` für die Domain selbst).
+Spätere Phasen (noch nicht implementiert, Landeplätze vorgemerkt):
 
-    equipment_engine/bundles.py      -> Phase 4: EquipmentBundle (Beer Pong Station,
-                                         Cocktail Bar, BBQ, Buffet) + Activities-Integration
-                                         (echtes station_activity_interest statt Stub)
-    equipment_engine/procurement.py  -> Phase 5: Buy/Rent/Borrow-Strategie,
+    equipment_engine/bundles.py      -> Phase 5: EquipmentBundle (Beer Pong Station,
+                                         Cocktail Bar, BBQ, Buffet)
+    equipment_engine/procurement.py  -> Phase 6: Buy/Rent/Borrow-Strategie,
                                          RentalSKU, EquipmentOverride
-    equipment_engine/substitution.py -> Phase 5: EquipmentSubstitutionRule
-    equipment_engine/checklist.py    -> Phase 5: Equipment-Checkliste (Buy/Rent/
+    equipment_engine/substitution.py -> Phase 6: EquipmentSubstitutionRule
+    equipment_engine/checklist.py    -> Phase 6: Equipment-Checkliste (Buy/Rent/
                                          Bring/Setup/Return)
 
 Wie bei ``party_engine/``/``music_engine/`` sind alle Module bewusst
