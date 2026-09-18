@@ -83,3 +83,18 @@ def test_fixed_driver_item_ignores_guest_count(equipment_catalog):
     small = calculate_equipment_demand(equipment_catalog, guest_count=5)
     large = calculate_equipment_demand(equipment_catalog, guest_count=500)
     assert small.demand["cocktail_shaker"].raw_quantity == large.demand["cocktail_shaker"].raw_quantity == 1.0
+
+
+def test_per_duration_rule_adds_extra_trash_bags_for_long_parties(equipment_catalog):
+    """rule_trash_bag_duration_topup (Phase 2, Spec §56) stockt trash_bag
+    UNABHÄNGIG von dessen eigener per-guest-Baseline auf - derselbe
+    Multi-Source-Beweis wie paper_cup's per_station-Zuschlag, nur mit dem
+    neuen per_duration-Driver (Pass 3)."""
+    short = calculate_equipment_demand(equipment_catalog, guest_count=20, duration_hours=0.0)
+    long = calculate_equipment_demand(equipment_catalog, guest_count=20, duration_hours=10.0)
+    baseline = 0.3 * 20  # rule_trash_bag per_guest baseline
+    topup = 0.05 * 10.0  # rule_trash_bag_duration_topup
+    assert short.demand["trash_bag"].raw_quantity == pytest.approx(baseline)
+    assert long.demand["trash_bag"].raw_quantity == pytest.approx(baseline + topup)
+    sources = {c.source.split(":")[0] for c in long.demand["trash_bag"].contributions}
+    assert sources == {"item_baseline", "duration"}

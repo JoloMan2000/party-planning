@@ -107,6 +107,7 @@ for router in (
     admin_music.router,
     admin_shopping_list.router,
     admin_equipment.router,
+    admin_equipment.provisions_router,
     admin_users.router,
     admin_organizers.router,
     profile.router,

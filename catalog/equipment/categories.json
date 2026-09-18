@@ -9,5 +9,7 @@
   "cleaning_hygiene": {"id": "cleaning_hygiene", "name": "Cleaning & Hygiene", "parent_id": null, "description": "Trash, cleaning and hygiene supplies."},
   "party_games": {"id": "party_games", "name": "Party Games", "parent_id": null, "description": "Games and activity equipment."},
   "beer_pong": {"id": "beer_pong", "name": "Beer Pong", "parent_id": "party_games", "description": ""},
-  "tabletop_games": {"id": "tabletop_games", "name": "Tabletop Games", "parent_id": "party_games", "description": ""}
+  "tabletop_games": {"id": "tabletop_games", "name": "Tabletop Games", "parent_id": "party_games", "description": ""},
+  "furniture": {"id": "furniture", "name": "Furniture", "parent_id": null, "description": "Seating and tables."},
+  "weather_outdoor": {"id": "weather_outdoor", "name": "Weather & Outdoor Equipment", "parent_id": null, "description": "Weather protection and comfort for outdoor parties."}
 }

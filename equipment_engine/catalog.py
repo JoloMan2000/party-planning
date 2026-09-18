@@ -44,6 +44,7 @@ def _build_recommendation(row: dict | None) -> EquipmentRecommendationMetadata:
         tags=set(row.get("tags", [])),
         required_capabilities=set(row.get("required_capabilities", [])),
         preferred_capabilities=set(row.get("preferred_capabilities", [])),
+        weather_trigger=row.get("weather_trigger"),
     )
 
 
@@ -76,6 +77,7 @@ def _build_demand_rule(row: dict) -> EquipmentDemandRule:
         maximum_quantity=row.get("maximum_quantity"),
         station_id=row.get("station_id"),
         target_item_id=row.get("target_item_id"),
+        per_duration=row.get("per_duration"),
     )
 
 
@@ -134,6 +136,9 @@ if __name__ == "__main__":
     for rule in catalog.demand_rules.values():
         if rule.driver_type == "per_station":
             assert rule.station_id and rule.target_item_id, f"{rule.id}: per_station rule missing station_id/target_item_id"
+            assert rule.target_item_id in catalog.items, f"{rule.id}: unknown target_item_id {rule.target_item_id}"
+        if rule.driver_type == "per_duration":
+            assert rule.target_item_id, f"{rule.id}: per_duration rule missing target_item_id"
             assert rule.target_item_id in catalog.items, f"{rule.id}: unknown target_item_id {rule.target_item_id}"
     for item_id in catalog.purchase_skus:
         assert item_id in catalog.items, f"purchase_skus.json: unknown item_id {item_id}"

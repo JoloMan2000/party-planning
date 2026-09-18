@@ -52,11 +52,35 @@ class EquipmentCatalogItemPublic(BaseModel):
 
 
 class EquipmentDemandComputeRequest(BaseModel):
-    """Phase-1-Stub - ``station_activity_interest``/``capacity_need_overrides``
-    sind manuelle Platzhalter für die noch nicht gebaute echte Activities-/
-    Beverage-Integration (siehe ``equipment_engine.engine.calculate_equipment_demand``-
-    Docstring)."""
+    """``station_activity_interest``/``capacity_need_overrides`` sind manuelle
+    Platzhalter für die noch nicht gebaute echte Activities-/Beverage-
+    Integration (siehe ``equipment_engine.engine.calculate_equipment_demand``-
+    Docstring). ``guest_count``/``duration_hours``/``derived_context``/
+    ``venue_provisions`` werden serverseitig aufgelöst, nicht vom Client
+    übergeben."""
 
     selected_item_ids: list[str] = []
     station_activity_interest: dict[str, int] = {}
     capacity_need_overrides: dict[str, float] = {}
+
+
+class EquipmentProvisionCreate(BaseModel):
+    equipment_item_id: str
+    quantity: float
+    notes: str = ""
+
+
+class EquipmentProvisionUpdateRequest(BaseModel):
+    """``None`` bedeutet je Feld "unverändert lassen" (mirrort
+    ``EquipmentInventoryItemUpdateRequest``)."""
+
+    quantity: float | None = None
+    notes: str | None = None
+
+
+class EquipmentProvisionPublic(BaseModel):
+    id: str
+    party_id: str
+    equipment_item_id: str
+    quantity: float
+    notes: str

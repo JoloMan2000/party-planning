@@ -16,13 +16,19 @@ import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 
-from equipment_engine.domain import PartyEquipmentInventoryItem
+from equipment_engine.domain import PartyEquipmentInventoryItem, PartyEquipmentProvision
 
 
 class InventoryItemAlreadyExistsError(Exception):
     """Es existiert bereits eine Inventar-Zeile für (owner_user_id,
     equipment_item_id) - der Aufrufer sollte stattdessen ``update_inventory_item``
     verwenden."""
+
+
+class ProvisionAlreadyExistsError(Exception):
+    """Es existiert bereits eine Provision-Zeile für (party_id,
+    equipment_item_id) - der Aufrufer sollte stattdessen ``update_provision``
+    verwenden (mirrort ``InventoryItemAlreadyExistsError``)."""
 
 
 def init_equipment_storage(db_path: str | Path) -> None:
@@ -49,6 +55,23 @@ def init_equipment_storage(db_path: str | Path) -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_equipment_inventory_owner ON equipment_inventory(owner_user_id)"
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS party_equipment_provisions (
+                id TEXT PRIMARY KEY,
+                party_id TEXT NOT NULL,
+                equipment_item_id TEXT NOT NULL,
+                quantity REAL NOT NULL DEFAULT 0.0,
+                notes TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                UNIQUE(party_id, equipment_item_id)
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_party_equipment_provisions_party ON party_equipment_provisions(party_id)"
         )
 
 
@@ -152,6 +175,94 @@ def delete_inventory_item(db_path: str | Path, item_id: str) -> None:
         conn.execute("DELETE FROM equipment_inventory WHERE id = ?", (item_id,))
 
 
+def _row_to_provision(row: sqlite3.Row) -> PartyEquipmentProvision:
+    return PartyEquipmentProvision(
+        id=row["id"],
+        party_id=row["party_id"],
+        equipment_item_id=row["equipment_item_id"],
+        quantity=row["quantity"],
+        notes=row["notes"],
+    )
+
+
+def create_provision(
+    db_path: str | Path,
+    provision_id: str,
+    party_id: str,
+    equipment_item_id: str,
+    *,
+    quantity: float = 0.0,
+    notes: str = "",
+) -> PartyEquipmentProvision:
+    now = datetime.now(timezone.utc).isoformat()
+    with sqlite3.connect(db_path) as conn:
+        try:
+            conn.execute(
+                """
+                INSERT INTO party_equipment_provisions
+                    (id, party_id, equipment_item_id, quantity, notes, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (provision_id, party_id, equipment_item_id, quantity, notes, now, now),
+            )
+        except sqlite3.IntegrityError as exc:
+            raise ProvisionAlreadyExistsError(
+                f"party {party_id} already has a provision row for {equipment_item_id}"
+            ) from exc
+    return PartyEquipmentProvision(
+        id=provision_id, party_id=party_id, equipment_item_id=equipment_item_id, quantity=quantity, notes=notes,
+    )
+
+
+def list_provisions_for_party(db_path: str | Path, party_id: str) -> list[PartyEquipmentProvision]:
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(
+            "SELECT * FROM party_equipment_provisions WHERE party_id = ? ORDER BY created_at", (party_id,)
+        ).fetchall()
+    return [_row_to_provision(r) for r in rows]
+
+
+def get_provision(db_path: str | Path, provision_id: str) -> PartyEquipmentProvision | None:
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        row = conn.execute(
+            "SELECT * FROM party_equipment_provisions WHERE id = ?", (provision_id,)
+        ).fetchone()
+    return _row_to_provision(row) if row is not None else None
+
+
+def update_provision(
+    db_path: str | Path,
+    provision_id: str,
+    *,
+    quantity: float | None = None,
+    notes: str | None = None,
+) -> PartyEquipmentProvision | None:
+    """Partial Update, mirrort ``update_inventory_item``."""
+    fields: dict[str, object] = {}
+    if quantity is not None:
+        fields["quantity"] = quantity
+    if notes is not None:
+        fields["notes"] = notes
+
+    if fields:
+        fields["updated_at"] = datetime.now(timezone.utc).isoformat()
+        set_clause = ", ".join(f"{col} = ?" for col in fields)
+        with sqlite3.connect(db_path) as conn:
+            conn.execute(
+                f"UPDATE party_equipment_provisions SET {set_clause} WHERE id = ?",
+                (*fields.values(), provision_id),
+            )
+    return get_provision(db_path, provision_id)
+
+
+def delete_provision(db_path: str | Path, provision_id: str) -> None:
+    """No-Op, falls keine Zeile existiert (mirrort ``delete_inventory_item``)."""
+    with sqlite3.connect(db_path) as conn:
+        conn.execute("DELETE FROM party_equipment_provisions WHERE id = ?", (provision_id,))
+
+
 if __name__ == "__main__":
     import tempfile
     import uuid
@@ -180,5 +291,25 @@ if __name__ == "__main__":
         delete_inventory_item(db_path, item_id)
         assert get_inventory_item(db_path, item_id) is None
         delete_inventory_item(db_path, item_id)  # idempotent, kein Fehler
+
+        party_id = uuid.uuid4().hex
+        provision_id = uuid.uuid4().hex
+        created_provision = create_provision(db_path, provision_id, party_id, "folding_chair", quantity=40.0)
+        assert created_provision.quantity == 40.0
+
+        try:
+            create_provision(db_path, uuid.uuid4().hex, party_id, "folding_chair", quantity=1.0)
+            raise AssertionError("expected ProvisionAlreadyExistsError")
+        except ProvisionAlreadyExistsError:
+            pass
+
+        assert len(list_provisions_for_party(db_path, party_id)) == 1
+
+        updated_provision = update_provision(db_path, provision_id, quantity=50.0)
+        assert updated_provision is not None and updated_provision.quantity == 50.0
+
+        delete_provision(db_path, provision_id)
+        assert get_provision(db_path, provision_id) is None
+        delete_provision(db_path, provision_id)  # idempotent, kein Fehler
 
         print("OK: equipment_engine.storage self-test passed.")
