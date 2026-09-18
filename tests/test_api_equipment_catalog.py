@@ -13,7 +13,7 @@ def test_returns_all_active_items_with_resolved_category_names(api_client, auth_
     resp = api_client.get("/api/v1/equipment/catalog", headers=headers)
     assert resp.status_code == 200
     body = resp.json()
-    assert len(body) == 66  # 59 (Phase 1) + 7 (Phase 2: furniture + weather_outdoor)
+    assert len(body) == 69  # 59 (Phase 1) + 7 (Phase 2) + 3 (Phase 3: ice_bag, cake_knife, cake_server)
 
     by_id = {row["id"]: row for row in body}
     cooler = by_id["large_beverage_cooler"]
