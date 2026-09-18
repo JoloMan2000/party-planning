@@ -18,6 +18,7 @@ from equipment_engine.domain import (
     EquipmentDemandContribution,
     EquipmentDemandRule,
     PartyEquipmentInventoryItem,
+    PartyEquipmentProvision,
 )
 
 _EPSILON = 1e-9
@@ -31,9 +32,10 @@ def evaluate_rule_quantity(
     guest_count: int = 0,
     station_count: float = 0.0,
     capacity_need: float = 0.0,
+    duration_hours: float = 0.0,
 ) -> float:
     """Wertet EINE Regel zu ihrem Roh-Beitrag aus (Spec §56/§57/§58).
-    Keine Rundung - nur die vier Phase-1-Driver-Typen."""
+    Keine Rundung - fünf Driver-Typen (Phase 1 + ``per_duration`` in Phase 2)."""
     if rule.driver_type == "fixed":
         qty = rule.base_quantity
     elif rule.driver_type == "per_guest":
@@ -42,8 +44,10 @@ def evaluate_rule_quantity(
         qty = rule.base_quantity + (rule.per_station or 0.0) * station_count
     elif rule.driver_type == "capacity_based":
         qty = (capacity_need / rule.capacity_per_unit) if rule.capacity_per_unit else 0.0
+    elif rule.driver_type == "per_duration":
+        qty = rule.base_quantity + (rule.per_duration or 0.0) * duration_hours
     else:
-        raise ValueError(f"unsupported driver_type in Phase 1: {rule.driver_type!r}")
+        raise ValueError(f"unsupported driver_type in Phase 1/2: {rule.driver_type!r}")
 
     if rule.minimum_quantity is not None:
         qty = max(qty, rule.minimum_quantity)
@@ -59,8 +63,9 @@ def aggregate_equipment_demand(
     selected_item_ids: list[str],
     station_activity_interest: dict[str, int],
     capacity_need_overrides: dict[str, float],
+    duration_hours: float = 0.0,
 ) -> dict[str, EquipmentDemand]:
-    """Zwei Pässe, beide rein additiv in denselben Dict - mirrort
+    """Drei Pässe, alle rein additiv in denselben Dict - mirrort
     ``party_engine.bom.explode_to_ingredient_demand``'s dict-keyed-by-id +
     contributions-Liste-Aggregation."""
     demand: dict[str, EquipmentDemand] = {}
@@ -105,6 +110,15 @@ def aggregate_equipment_demand(
         amount = evaluate_rule_quantity(rule, guest_count=guest_count, station_count=station_count)
         _add(rule.target_item_id, amount, f"station:{rule.station_id}:{rule.id}")
 
+    # Pass 3 (Phase 2): unabhängige per_duration-Zuschlags-Regeln - mirrort
+    # Pass 2, aber ohne "Interesse"-Gate: sobald duration_hours bekannt ist,
+    # gilt die Regel immer (kein Analogon zu station_activity_interest nötig).
+    for rule in catalog.demand_rules.values():
+        if rule.driver_type != "per_duration" or not rule.target_item_id:
+            continue
+        amount = evaluate_rule_quantity(rule, duration_hours=duration_hours)
+        _add(rule.target_item_id, amount, f"duration:{rule.id}")
+
     return demand
 
 
@@ -120,14 +134,23 @@ def apply_reserve(demand: dict[str, EquipmentDemand], catalog: EquipmentCatalog)
 
 
 def net_against_inventory(
-    demand: dict[str, EquipmentDemand], host_inventory: list[PartyEquipmentInventoryItem]
+    demand: dict[str, EquipmentDemand],
+    host_inventory: list[PartyEquipmentInventoryItem],
+    venue_provisions: list[PartyEquipmentProvision] | None = None,
 ) -> dict[str, EquipmentDemand]:
-    """Spec §8: Required - Existing = Procurement Need. Nicht verfügbare
-    (``available=False``) Inventar-Zeilen tragen nichts zur Deckung bei."""
+    """Spec §8/§98: Required - (Host-Inventar + Venue-Provisions) = Procurement
+    Need. Nicht verfügbare (``available=False``) Host-Inventar-Zeilen tragen
+    nichts zur Deckung bei; Venue-Provisions gelten immer (kein
+    ``available``-Flag - eine Location "hat" ihre Stühle einfach). Beide
+    Quellen fließen additiv in denselben Akkumulator (keine getrennte
+    Nachverfolgung auf ``EquipmentDemand`` - das gilt bereits für mehrere
+    ``host_inventory``-Zeilen desselben Items)."""
     existing_by_item: dict[str, float] = defaultdict(float)
     for inv in host_inventory:
         if inv.available:
             existing_by_item[inv.equipment_item_id] += inv.quantity
+    for provision in venue_provisions or []:
+        existing_by_item[provision.equipment_item_id] += provision.quantity
 
     for item_id, entry in demand.items():
         entry.existing_quantity = existing_by_item.get(item_id, 0.0)

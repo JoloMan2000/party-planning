@@ -1,7 +1,10 @@
 """API-Tests für ``POST /api/v1/parties/{id}/admin/equipment-demand``
-(Phase 1) - mirrort ``tests/test_api_admin_shopping_list.py``'s Muster."""
+(Phase 1 + PartyContext-Integration in Phase 2) - mirrort
+``tests/test_api_admin_shopping_list.py``'s Muster."""
 
 from __future__ import annotations
+
+import pytest
 
 
 def _make_guest_headers(api_client, auth_headers_factory, party_id: str) -> dict:
@@ -76,3 +79,41 @@ def test_host_inventory_is_netted_against_computed_demand(api_client, host_party
     wine_glass = resp.json()["demand"]["wine_glass"]
     assert wine_glass["existing_quantity"] == 40.0
     assert wine_glass["missing_quantity"] == 0.0  # Host hat schon genug (nur 1 Gast/Host in der Party)
+
+
+def test_venue_chairs_cover_seating_demand_no_new_procurement(api_client, host_party_factory, auth_headers_factory):
+    """Spec §146 "TEST - VENUE PROVIDES CHAIRS" exakt: 50 Gäste * 0.6
+    seating_ratio = 30 benötigte Sitzplätze, Venue stellt 40 Stühle ->
+    keine neue Beschaffung."""
+    import accounts.party_storage as party_storage
+    from accounts.domain import PartyRole, RsvpStatus
+
+    party_id, headers, _user = host_party_factory()
+    # 49 zusätzliche Gäste + Host = 50 Gäste gesamt.
+    for i in range(49):
+        guest_headers, guest_user, _ = auth_headers_factory(email=f"venuechair{i}@example.com")
+        party_storage.upsert_membership(api_client.db_path, party_id, guest_user["id"], PartyRole.GUEST, RsvpStatus.ACCEPTED)
+
+    api_client.post(f"/api/v1/parties/{party_id}/admin/party-context", json={"seating_ratio": 0.6}, headers=headers)
+    api_client.post(
+        f"/api/v1/parties/{party_id}/admin/equipment-venue-inventory",
+        json={"equipment_item_id": "folding_chair", "quantity": 40.0}, headers=headers,
+    )
+
+    resp = api_client.post(f"/api/v1/parties/{party_id}/admin/equipment-demand", json={}, headers=headers)
+    assert resp.status_code == 200, resp.text
+    chair = resp.json()["demand"]["folding_chair"]
+    assert chair["raw_quantity"] == pytest.approx(30.0)  # 50 * 0.6 = 30 seats needed (§146)
+    assert chair["missing_quantity"] == 0.0  # 40 vorhanden >= 30 benötigt
+
+
+def test_context_recommendations_appear_for_hot_outdoor_party(api_client, host_party_factory):
+    party_id, headers, _user = host_party_factory()
+    api_client.post(
+        f"/api/v1/parties/{party_id}/admin/party-context",
+        json={"indoor_outdoor": "outdoor", "expected_temperature_c": 35.0}, headers=headers,
+    )
+    resp = api_client.post(f"/api/v1/parties/{party_id}/admin/equipment-demand", json={}, headers=headers)
+    assert resp.status_code == 200
+    recs = resp.json()["context_recommendations"]
+    assert "sun_shade_parasol" in {r["item_id"] for r in recs}

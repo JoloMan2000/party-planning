@@ -65,5 +65,13 @@
   "rule_poker_set": {"id": "rule_poker_set", "driver_type": "fixed", "base_quantity": 1},
   "rule_dice_set": {"id": "rule_dice_set", "driver_type": "fixed", "base_quantity": 2},
   "rule_giant_jenga": {"id": "rule_giant_jenga", "driver_type": "fixed", "base_quantity": 1},
-  "rule_cornhole_set": {"id": "rule_cornhole_set", "driver_type": "fixed", "base_quantity": 1}
+  "rule_cornhole_set": {"id": "rule_cornhole_set", "driver_type": "fixed", "base_quantity": 1},
+  "rule_folding_chair_capacity": {"id": "rule_folding_chair_capacity", "driver_type": "capacity_based", "capacity_per_unit": 1.0},
+  "rule_dining_table_capacity": {"id": "rule_dining_table_capacity", "driver_type": "capacity_based", "capacity_per_unit": 8.0},
+  "rule_buffet_table_capacity": {"id": "rule_buffet_table_capacity", "driver_type": "capacity_based", "capacity_per_unit": 25.0},
+  "rule_rain_cover_gazebo": {"id": "rule_rain_cover_gazebo", "driver_type": "fixed", "base_quantity": 1},
+  "rule_sun_shade_parasol": {"id": "rule_sun_shade_parasol", "driver_type": "fixed", "base_quantity": 1},
+  "rule_outdoor_heater": {"id": "rule_outdoor_heater", "driver_type": "fixed", "base_quantity": 1},
+  "rule_outdoor_string_lights": {"id": "rule_outdoor_string_lights", "driver_type": "fixed", "base_quantity": 1},
+  "rule_trash_bag_duration_topup": {"id": "rule_trash_bag_duration_topup", "driver_type": "per_duration", "base_quantity": 0.0, "per_duration": 0.05, "target_item_id": "trash_bag"}
 }

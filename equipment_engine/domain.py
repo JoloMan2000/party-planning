@@ -22,8 +22,10 @@ __all__ = [
     "EquipmentDemandContribution",
     "EquipmentDemand",
     "EquipmentPurchasePlanItem",
+    "EquipmentContextRecommendation",
     "EquipmentDemandResult",
     "PartyEquipmentInventoryItem",
+    "PartyEquipmentProvision",
     "EquipmentCatalog",
 ]
 
@@ -56,27 +58,31 @@ class EquipmentRecommendationMetadata:
     tags: set[str] = field(default_factory=set)
     required_capabilities: set[str] = field(default_factory=set)
     preferred_capabilities: set[str] = field(default_factory=set)
+    weather_trigger: str | None = None  # "rain" | "heat" | "cold" (Phase 2, Spec §24/§147)
 
 
 @dataclass
 class EquipmentDemandRule:
-    """Datengetriebene Demand-Regel (Spec §55). Phase 1 unterstützt vier
-    Driver-Typen (Spec §56): ``fixed``, ``per_guest``, ``capacity_based``,
-    ``per_station`` - die vier, die ohne echte PartyContext-/Food-/
-    Beverage-Integration testbar sind (die übrigen Driver-Typen ``per_table``/
-    ``per_area``/``per_room``/``per_duration``/``per_food_service``/
-    ``per_drink_service``/``per_activity``/``conditional`` kommen mit
-    Phase 2/3).
+    """Datengetriebene Demand-Regel (Spec §55). Unterstützt fünf Driver-Typen
+    (Spec §56): ``fixed``, ``per_guest``, ``capacity_based``, ``per_station``
+    (Phase 1) und ``per_duration`` (Phase 2) - die übrigen Driver-Typen
+    ``per_table``/``per_area``/``per_room``/``per_food_service``/
+    ``per_drink_service``/``per_activity``/``conditional`` bleiben Phase 3+
+    zurückgestellt (sie brauchen Food-/Beverage-/Activities-Integration bzw.
+    eine zweistufige Tisch-Typ-Berechnung, die erst mit einem reicheren
+    Möbel-Katalog sinnvoll wird).
 
     ``station_id``/``target_item_id`` sind Phase-1-Ergänzungen gegenüber der
     rohen Spec: sie erlauben einer ``per_station``-Regel, ein Item
     "aufzustocken", das UNABHÄNGIG davon bereits eine eigene Baseline-Regel
     hat (z.B. Becher: per-guest-Baseline + Beer-Pong-Station-Zuschlag) -
     genau das macht den echten Multi-Source-Aggregations-Testfall möglich
-    (mirrort ``test_vodka_from_two_different_cocktails_aggregates_into_one_entry``)."""
+    (mirrort ``test_vodka_from_two_different_cocktails_aggregates_into_one_entry``).
+    ``per_duration``-Regeln nutzen dasselbe ``target_item_id``-Muster, um ein
+    Item analog "aufzustocken" (z.B. mehr Müllbeutel bei langen Partys)."""
 
     id: str
-    driver_type: str  # "fixed" | "per_guest" | "capacity_based" | "per_station"
+    driver_type: str  # "fixed" | "per_guest" | "capacity_based" | "per_station" | "per_duration"
     base_quantity: float = 0.0
     per_guest: float | None = None
     per_station: float | None = None
@@ -85,6 +91,7 @@ class EquipmentDemandRule:
     maximum_quantity: float | None = None
     station_id: str | None = None
     target_item_id: str | None = None
+    per_duration: float | None = None  # Phase 2 (Spec §56)
 
 
 @dataclass
@@ -162,6 +169,20 @@ class EquipmentPurchasePlanItem:
 
 
 @dataclass
+class EquipmentContextRecommendation:
+    """Advisory-only Empfehlung (Spec §83/§147/§154: "Recommendation ≠
+    Demand") - wird NIE automatisch zu ``selected_item_ids``/echtem
+    Procurement Demand, nur der Host kann das über die bestehende
+    ``selected_item_ids``-API real auswählen. Getrennt von ``ReviewIssue``,
+    weil es kein Problem meldet, sondern eine Opportunity (z.B. "Outdoor +
+    Regenrisiko: Gazebo erwägen")."""
+
+    item_id: str
+    name: str
+    reason: str
+
+
+@dataclass
 class EquipmentDemandResult:
     """Ergebnis von ``calculate_equipment_demand()`` - mirrort
     ``party_engine.domain.PartyDemandResult``."""
@@ -169,6 +190,7 @@ class EquipmentDemandResult:
     demand: dict[str, EquipmentDemand] = field(default_factory=dict)
     purchase_plan: list[EquipmentPurchasePlanItem] = field(default_factory=list)
     review_issues: list[ReviewIssue] = field(default_factory=list)
+    context_recommendations: list[EquipmentContextRecommendation] = field(default_factory=list)
 
 
 @dataclass
@@ -184,6 +206,24 @@ class PartyEquipmentInventoryItem:
     quantity: float = 1.0
     condition: str = ""
     available: bool = True
+    notes: str = ""
+
+
+@dataclass
+class PartyEquipmentProvision:
+    """Was die VENUE/Location bereits stellt (Spec §98: "Tables included,
+    Chairs included" - Infrastructure > generic recommendation; Test §146),
+    party-gescoped statt owner_user_id-gescoped wie
+    ``PartyEquipmentInventoryItem``. Eigene Tabelle statt neuer Spalte auf
+    ``equipment_inventory`` - eine Spalten-Erweiterung dort hätte den
+    ``UNIQUE(owner_user_id, equipment_item_id)``-Constraint aufgebrochen und
+    "mein Besitz" mit "von der Location gestellt" vermischt (siehe
+    ``equipment_engine/storage.py``)."""
+
+    id: str
+    party_id: str
+    equipment_item_id: str
+    quantity: float = 0.0
     notes: str = ""
 
 
